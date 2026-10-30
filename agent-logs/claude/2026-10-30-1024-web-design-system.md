@@ -24,6 +24,7 @@ Run in `apps/web` against `next start` on port 3100 with `/api/auth/me` stubbed 
 - Layout checks (two-column rhythm, no overlaps, no overflow at 320/360/390/820 px): 24 pass, 0 fail
 - Interaction checks (pointer vars, tick snap, sprites wander and veer away, loop pauses off-screen/hidden, reveal on scroll, scroll progress, reduced motion, no JS, touch, no console errors): 15 pass, 0 fail
 - Typography (Thai uses Prompt, no uppercase/tracking; EN Barlow/Geist/Geist Mono), WCAG contrast from the live tokens, 2px focus ring on every tab stop, skip link first, sign-in links, signed-in "Open dashboard", language switch both ways, `#how` anchor, FAQ opens, `?auth_error` forwards to `/dashboard`, one `/api/auth/me` request per load, no overflow on all four pages signed in/out at 320 and 360 px, long MCP URL stays in its box: 55 pass, 0 fail
+- Thai font fallback (found in review): on `/th`, Latin letters in headings fell back to the OS font (Inter); fixed with `--font-thai` = Prompt, Geist. Test via Chrome DevTools `getPlatformFontsForNode`: RED (Inter used) then GREEN (Geist used); whole suite re-run green after the fix (15, 24, 15 and 55 checks, 0 failures; `tsc` and `check:design` ok).
 - Stray hex search: only `themeColor` in `layout.tsx`.
 - The Playwright scripts are in `/tmp` and are not committed (Playwright is not a repo dependency).
 
@@ -33,6 +34,9 @@ Run in `apps/web` against `next start` on port 3100 with `/api/auth/me` stubbed 
 - Favicons (`app/icon.png`, `app/apple-icon.png`) and `public/og.png` keep the earlier art.
 - Not tested on real touch hardware or Safari/Firefox (Chromium only).
 - Cursor sprites and scroll animation deliberately go beyond the design system's flat-motion rule (owner request); landing page only.
+
+## Review
+One fresh-context whole-branch review (Opus). No Critical findings. Important: Thai Latin fallback (fixed, above); commit author identity is the checkout's `Claude <noreply@anthropic.com>`, not the owner's (left for the owner to re-author or accept at squash). Deferred minors: footer text tracked on `/th`; page prints blank below the fold (reveal has no print override); sprites never settle back and move 2x faster on 120 Hz; media queries read once at mount; memory panel `role="img"` hides module status from screen readers; some dead code/markup; `getBoundingClientRect` every frame.
 
 ## Decisions and assumptions
 - Needs owner approval (AGENTS.md): new dependencies `@fontsource/barlow`, `@fontsource-variable/geist`, `@fontsource-variable/geist-mono` (owner approved in chat).
