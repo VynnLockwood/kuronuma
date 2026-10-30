@@ -86,11 +86,21 @@ Google is the only identity provider for now. Users never create a Nemosyne pass
 
 ## Plutus (spending)
 
-Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`, destructive), `list_transactions` and `get_spending_summary` (`plutus:read`). The tool descriptions instruct the assistant to show what it read from a slip and get the user's confirmation before saving.
+Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`, destructive), `list_transactions` and `get_spending_summary` (`plutus:read`). The tool descriptions instruct the assistant to show what it read from a slip and get the user's confirmation before saving. A category must be in the user's list (see Themis); an unknown one is refused.
 
 - Amounts are stored as hundredths of the currency unit (`bigint`); input with more than two decimals is rejected rather than rounded. Totals are reported per currency and never mixed.
 - Duplicates: a unique index on `(user_id, reference)` blocks saving the same slip twice. Without a reference, an identical amount, currency, date and merchant is flagged and only saved if the user confirms (`allow_duplicate`).
 - Slip images are read by the user's own assistant and are never sent to or stored by Nemosyne.
+
+## Themis (categories)
+
+One category list per user, shared by every module. Records refer to a category by name; the server checks the name against the list when saving, and `uncategorized` is always valid. An unknown category is refused with the user's list in the message, so the assistant asks the user (or omits the category) instead of inventing one.
+
+Tools: `list_categories` (`categories:read`), `create_category` and `rename_category` (`categories:write`), `merge_categories` (`categories:write`, destructive). Rename and merge update every record that uses the name in one transaction. A name that is in use but missing from the list shows as `unlisted` so it can be merged.
+
+- Migration 00004 builds each user's starting list from the categories they already use.
+- Existing connectors keep the scopes they were granted; the user re-authorizes to see the new tools. `add_transaction` still works with `plutus:write` alone.
+- Next: payee rules (Plutus) and flexible memory items (Atlas) build on this list. See `docs/superpowers/specs/2026-10-31-memory-and-categories-design.md`.
 
 ## Build status
 
