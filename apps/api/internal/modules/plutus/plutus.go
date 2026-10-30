@@ -76,6 +76,9 @@ type Store interface {
 	DeleteTransaction(ctx context.Context, userID, id string) (bool, error)
 	// ExportTransactions returns every record of the user, newest first.
 	ExportTransactions(ctx context.Context, userID string) ([]Transaction, error)
+	// ImportTransactions merges rows into the user's records atomically: all planned inserts happen
+	// or none do. Which rows are skipped is decided by PlanImport.
+	ImportTransactions(ctx context.Context, userID string, rows []NewTransaction) (ImportResult, error)
 }
 
 // Module wires the spending tools into the MCP server.

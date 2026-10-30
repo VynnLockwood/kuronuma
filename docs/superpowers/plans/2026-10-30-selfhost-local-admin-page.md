@@ -16,7 +16,7 @@
 - Backup file: `{"format":"nemosyne-backup","version":1,"exported_at":...,"transactions":[...]}`; no user id, no database ids; unknown `format` or `version` > 1 rejected.
 - Upload cap default 10 MB (`http.MaxBytesReader`); JSON decoder rejects unknown fields.
 - One invalid row rejects the whole file; valid rows written in one DB transaction; merge only, nothing deleted.
-- Skip a row when its `reference` exists for the owner, or amount + currency + date + merchant (case-insensitive) exists.
+- Skip rule (as implemented, see spec 6.3): a row with a reference is skipped only if that reference exists or repeats in the file; a row without one is matched on amount + currency + date + lower(merchant) with multiset counting (adds `max(0, N - existing)`).
 - Owner user id comes from the server, never from the file. Result page shows counts, row numbers and static reasons only; never file text. Logs: method, path, status only.
 - Page security: `Host` must be `localhost` or `127.0.0.1` with the admin port (else `404`); `POST /import` needs the per-process CSRF token (else `403`) and matching `Origin`/`Referer` (else `403`); headers `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; style-src 'self'; form-action 'self'`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`; no cookies.
 - Never rendered: `HADES_KEY`, DB password, key hashes, full connector keys.
@@ -27,7 +27,7 @@
 
 - Empty or minimal file (`{}` with valid header, `"transactions": []`): accepted, 0 added, no crash. Pinned in Task 2.
 - Wrong kind of file (CSV, PNG, truncated JSON, UTF-8 BOM prefix): clear error, nothing written. Pinned in Task 2.
-- Same row twice inside one file: second is skipped, not added twice. Pinned in Task 3.
+- Same row twice inside one file: with a reference the second is skipped; without one both are kept (two real identical payments) and a re-import adds nothing. Pinned in Task 3.
 - HTML or script in `merchant`/`note`: stored sanitised, never rendered into any page. Pinned in Task 5.
 - Double-click or re-upload of the same file: second import adds 0. Pinned in Task 3.
 - `Host: LOCALHOST:8082` (case) and a wrong port: case-insensitive match accepted, wrong port `404`. Pinned in Task 4.

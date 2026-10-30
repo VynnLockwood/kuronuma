@@ -81,9 +81,9 @@ Never shown: `HADES_KEY`, the database password, key hashes, any secret. All val
 - The owner's user id comes from the server (the single owner row), never from the file.
 - Upload size is capped (default 10 MB) with `http.MaxBytesReader`; the JSON decoder rejects unknown fields.
 - Each row is validated with the same rules Plutus applies to `add_transaction` (positive amount, three-letter currency, valid date, field length limits). **One invalid row rejects the whole file** and nothing is written.
-- Valid rows are written in **one database transaction**. A row is skipped, not inserted, when:
-  - its `reference` already exists for the owner (existing unique index), or
-  - a record with the same amount, currency, date and merchant (case-insensitive) already exists.
+- Valid rows are written in **one database transaction**. Skipping works like this (decided during implementation so a restore never loses real payments):
+  - A row **with a `reference`** is skipped only if that reference already exists for the owner, or repeats earlier in the file. It is never skipped just because amount, date and merchant match another record.
+  - A row **without a reference** is matched on amount, currency, date and merchant (case-insensitive). A file with N identical rows against E stored matches adds `max(0, N - E)`, so two genuine identical payments survive a restore and re-importing the same file adds nothing.
 - The result page shows counts only: added, skipped, rejected (if any), plus a row number and reason for a rejected row. It **never echoes file text** (merchant, note) back into the page or logs.
 - Implementation note: the current store methods use the pool, not a transaction. Import needs a store method that takes a transaction. This is a code addition, not a migration.
 

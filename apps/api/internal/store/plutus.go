@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -168,4 +169,90 @@ func (p *Postgres) ExportTransactions(ctx context.Context, userID string) ([]plu
 		out = append(out, t)
 	}
 	return out, rows.Err()
+}
+
+// ImportTransactions merges rows into the user's records in one database transaction: either every
+// planned insert is committed or none is. Which rows to skip is decided by plutus.PlanImport.
+func (p *Postgres) ImportTransactions(ctx context.Context, userID string, rows []plutus.NewTransaction) (plutus.ImportResult, error) {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return plutus.ImportResult{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }() // no-op after Commit
+
+	counts := map[string]int{}
+	existing, err := tx.Query(ctx,
+		`SELECT amount_minor, currency, occurred_on, merchant FROM transactions WHERE user_id = $1::uuid`, userID)
+	if err != nil {
+		return plutus.ImportResult{}, err
+	}
+	for existing.Next() {
+		var (
+			amount             int64
+			currency, merchant string
+			date               time.Time
+		)
+		if err := existing.Scan(&amount, &currency, &date, &merchant); err != nil {
+			existing.Close()
+			return plutus.ImportResult{}, err
+		}
+		counts[plutus.DuplicateKey(amount, currency, date, merchant)]++
+	}
+	existing.Close()
+	if err := existing.Err(); err != nil {
+		return plutus.ImportResult{}, err
+	}
+
+	var wanted []string
+	for _, r := range rows {
+		if r.Reference != "" {
+			wanted = append(wanted, r.Reference)
+		}
+	}
+	refs := map[string]bool{}
+	if len(wanted) > 0 {
+		found, err := tx.Query(ctx,
+			`SELECT reference FROM transactions WHERE user_id = $1::uuid AND reference = ANY($2)`, userID, wanted)
+		if err != nil {
+			return plutus.ImportResult{}, err
+		}
+		for found.Next() {
+			var ref string
+			if err := found.Scan(&ref); err != nil {
+				found.Close()
+				return plutus.ImportResult{}, err
+			}
+			refs[ref] = true
+		}
+		found.Close()
+		if err := found.Err(); err != nil {
+			return plutus.ImportResult{}, err
+		}
+	}
+
+	insert, skipped := plutus.PlanImport(rows, counts, refs)
+	res := plutus.ImportResult{Skipped: skipped}
+	for _, t := range insert {
+		var ref any // NULL when there is no reference, so the unique index ignores the row
+		if t.Reference != "" {
+			ref = t.Reference
+		}
+		tag, err := tx.Exec(ctx, `
+			INSERT INTO transactions (user_id, amount_minor, currency, merchant, category, occurred_on, note, reference)
+			VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8)
+			ON CONFLICT (user_id, reference) WHERE reference IS NOT NULL DO NOTHING`,
+			userID, t.AmountMinor, t.Currency, t.Merchant, t.Category, t.OccurredOn, t.Note, ref)
+		if err != nil {
+			return plutus.ImportResult{}, err
+		}
+		if tag.RowsAffected() == 0 { // the same slip was saved concurrently
+			res.Skipped++
+		} else {
+			res.Added++
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return plutus.ImportResult{}, err
+	}
+	return res, nil
 }
