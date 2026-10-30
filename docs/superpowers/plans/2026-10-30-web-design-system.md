@@ -12,13 +12,14 @@
 
 ## Global Constraints
 
-- Dark only. No light theme, no `prefers-color-scheme`. `themeColor` is `#000000`.
-- No copy changes in `components/landing/copy.ts` or any page text. No route, API or behaviour changes.
+- Light only, using the design system's light token values. No dark theme, no `prefers-color-scheme`. `themeColor` is `#ffffff`. (Revision 2)
+- Copy is memory-first (Revision 2): Nemo is the memory for your AI; Spending is the first module. Describe only what is built; unbuilt modules say "Coming soon"; no invented stats. No route, API or sign-in behaviour changes.
 - Fonts: `@fontsource/barlow` (500, 600), `@fontsource-variable/geist`, `@fontsource-variable/geist-mono`. Keep `@fontsource/prompt` Thai subsets only (400, 500, 600, 700); drop its Latin imports.
-- No hex colours in `globals.css` (only in `tokens.css`). No `box-shadow` except `var(--shadow-overlay)`. No `border-radius` above `var(--radius-md)` except `var(--radius-full)` on dots. No `gradient` except the Hero hairline grid.
+- No hex colours in `globals.css` (only in `tokens.css`). No `box-shadow` except `var(--shadow-overlay)`. No `border-radius` above `var(--radius-md)` except `var(--radius-full)` on dots. No `gradient` except `.hero::before` and `.hero-field` rules.
 - Display type: Barlow 600 uppercase, tracking 0.02-0.04em. Controls: Barlow 500 uppercase, tracking 0.14em. Labels: Geist Mono uppercase, tracking 0.12em. Thai (`[lang="th"]`): Prompt, no uppercase, no tracking.
-- Logo: never rendered larger than 256 CSS px.
-- Motion: 200 ms colour, 400 ms width/transform, `cubic-bezier(0.2, 0, 0, 1)`; respect `prefers-reduced-motion`.
+- Logo: never rendered larger than 256 CSS px. Use the original black-ink `nemo-logo.png` and ink `nemo-mark.svg`.
+- Motion: 200 ms colour, 400 ms width/transform, `cubic-bezier(0.2, 0, 0, 1)`; respect `prefers-reduced-motion`. Landing page only: cursor-reactive hero field and scroll reveals (owner override of the system's flat-motion rule). No new dependencies.
+- Payee-category MCP tools are out of scope (separate plan/PR).
 - Do not touch `deploy/`, Dockerfiles, CI, `.env.example`, favicons, `public/og.png`.
 - Work on branch `feat/web-design-system`; never push to `main`; no AI `Co-Authored-By` trailers; Conventional Commits.
 
@@ -26,11 +27,11 @@
 
 Failure modes the spec implies but nothing else exercises, most likely first:
 
-1. Thai pages: headings, buttons, nav, badges and eyebrows must not be uppercased or tracked, and must use Prompt (Barlow/Geist have no Thai glyphs). Pinned in Task 4.
-2. Narrow phones (320 px): uppercase tracked `nowrap` buttons and the language switch must not cause horizontal scroll. Pinned in Task 4.
-3. Long unbroken strings (the MCP URL in `/connect`) must wrap or scroll inside their box, not widen the page. Pinned in Task 4.
-4. Keyboard focus: every link, button, `summary` and language-switch link shows a visible 2px focus ring on black. Pinned in Task 4.
-5. `prefers-reduced-motion: reduce`: no running animations or transitions. Pinned in Task 4.
+1. Reduced motion, touch and no-JS: with `prefers-reduced-motion: reduce` sprites are static and reveals do not hide content; with JS disabled all content is visible; on touch (no fine pointer) nothing throws and nothing is stuck mid-fade. Pinned in Task 5.
+2. Thai pages: headings, buttons, nav, badges and eyebrows are not uppercased or tracked and use Prompt. Pinned in Task 6.
+3. Narrow phones (320 px): sprites, the memory panel and tracked buttons must not cause horizontal scroll. Pinned in Task 6.
+4. Performance: the sprite loop stops when the hero is off-screen or the tab is hidden. Pinned in Task 5.
+5. Contrast on white: `--ink-muted`/`--ink-subtle` on `--surface-0..2` >= 4.5:1, `--line-strong` >= 3:1, status colours >= 4.5:1 on `--surface-1`. Pinned in Task 6.
 
 ---
 
@@ -40,8 +41,9 @@ Failure modes the spec implies but nothing else exercises, most likely first:
 - Rewrite `apps/web/app/globals.css`: all component and page styles, tokens only.
 - Create `apps/web/scripts/check-design.mjs`: static conformance check, run as `npm run check:design`.
 - Modify `apps/web/app/layout.tsx`: font imports, `themeColor`.
-- Modify `apps/web/components/landing/Landing.tsx`: section indexes, hero logo, ticks.
-- Modify `apps/web/public/brand/nemo-mark.svg` (white fill); create `apps/web/public/brand/nemo-logo-white.png`.
+- Modify `apps/web/components/landing/Landing.tsx` and `copy.ts`: memory-first content, mission section, section indexes, ticks.
+- Create `apps/web/components/landing/HeroField.tsx`, `Reveal.tsx`, `ScrollProgress.tsx` (client components, no dependencies).
+- Modify `apps/web/public/brand/nemo-mark.svg` (back to ink fill); delete `apps/web/public/brand/nemo-logo-white.png`.
 - Modify `apps/web/package.json`, `package-lock.json`: three font packages, `check:design` script.
 - Modify `docs/design.md`; create `agent-logs/claude/<date>-<time>-web-design-system.md`.
 
@@ -102,69 +104,85 @@ Failure modes the spec implies but nothing else exercises, most likely first:
 
 ---
 
-### Task 3: Landing page styles and markup
+### Task 3: Light tokens and memory-first content
 
 **Files:**
-- Modify: `apps/web/app/globals.css` (hero, mocks, chips, sections, cards, steps, features, modules, badges, privacy, FAQ, CTA band, responsive `@media`, reduced-motion), `apps/web/components/landing/Landing.tsx`, `apps/web/components/Logo.tsx`
+- Modify: `apps/web/app/tokens.css`, `apps/web/app/layout.tsx`, `apps/web/public/brand/nemo-mark.svg`, `apps/web/components/landing/copy.ts`, `apps/web/components/landing/Landing.tsx`
+- Delete: `apps/web/public/brand/nemo-logo-white.png`
 
 **Interfaces:**
-- Consumes: Task 2 base. `SectionHead({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string })` is extended with `index: number`.
-- Produces: `SectionHead({ index, eyebrow, title, sub })` rendering `<p class="eyebrow"><span class="eyebrow-index">0{index}</span> / {eyebrow}</p>`; `demo-copy` eyebrow gets index 1 the same way. Indexes follow section order: demo 01, how 02, features 03, modules 04, privacy 05, faq 06.
+- Consumes: Task 1 token names (unchanged); Task 2 classes.
+- Produces: `Copy` type changes in `copy.ts`: remove `mock.month`, `mock.categories`, `mock.total`; add `hero.panelTitle: string`, `hero.panelNote: string`, and `mission: { eyebrow: string; title: string; sub: string; items: { title: string; body: string }[]; note: string }`. Add `{ id: "mission", label: "Mission" }` to `nav` (after Modules). `Eyebrow({ index, children })` and `SectionHead({ index, eyebrow, title, sub })` in `Landing.tsx`. Section indexes: demo 01, how 02, features 03, modules 04, mission 05, privacy 06, faq 07.
 
-- [ ] **Step 1: Run the conformance check and confirm it still fails** (landing rules still old).
-  Run: `cd apps/web && npm run check:design`
-  Expected: exit 1 listing violations in the landing rules only.
-- [ ] **Step 2: Markup edits in `Landing.tsx`.**
-  - Add the `index` prop to `SectionHead`; pass 2-6 from the existing call sites; render the demo eyebrow with index 1 via a small shared `Eyebrow({ index, children })` component in the same file.
-  - Hero eyebrow keeps its sparkle icon (a stroke icon in `currentColor`) and drops the `pill` class; style it as a plain mono eyebrow.
-  - Hero logo `<img>`: `src="/brand/nemo-logo-white.png"`, `width={256} height={256}`, same `alt`.
-  - Add `<span className="tick tl" aria-hidden />` and `tr`/`bl`/`br` siblings inside the `module-card live` item only (class names `.bx-tick`-style: `.tick-corner`, `.tick-tl`, `.tick-tr`, `.tick-bl`, `.tick-br`; do not reuse the existing `.tick` check-mark class).
-  - Keep the `accent` span on the second hero title word; style `.accent` as `--ink` with a 2px `--ink` bottom border (no colour accent exists).
-  - `Logo.tsx` stays on `nemo-mark.svg` (now white); no change unless the build shows a problem.
-- [ ] **Step 3: Landing CSS.** Hero: `--surface-0`, hairline grid via `.hero::before` (two `linear-gradient`s of `var(--line)` at `var(--space-8)` pitch, opacity 0.35, masked to fade at top and bottom), no halo, no `float`/`rise` keyframes, `.hero-logo` max width 256 px. `.mock`, `.float-toast`, `.mock-summary`, `.bubble-*`, `.facts`, `.slip`: `--surface-1`, 1px `--line`, no shadow; toast keeps its position. `.chips li` and `.badge`: mono 11 px uppercase, `--line-strong` border, `--radius-sm`; `.badge-ok` uses `--success` text and border. `.section` padding `var(--space-9)` desktop and `var(--space-8)` mobile; `.section.surface` uses `--surface-1` with top/bottom `--line`. `.section-head` left-aligned, h2 per display style, `.eyebrow` mono 12 px `--ink-muted`, `.eyebrow-index` `--ink`. Cards flat; `.feature:hover, .module-card:hover` only brighten the border, no lift. `.module-card.live`: `--line-strong` border, `position: relative`, ticks 11 px `--ink` crosshairs offset -6 px at the corners. `.step-num` mono, square `--radius-sm`, `--action` fill. `.faq details`: no box, top `--line-strong` on the group, `--line` between items, plus/minus drawn with two 1px hairlines (replace the rotating chevron rule). `.cta-band`: `--surface-1`, 1px `--line-strong`, no gradient, no large radius. `.note` uses `--warning`. Drop every `@keyframes`; keep one `transition` set per control at 200 ms.
-- [ ] **Step 4: Responsive and motion.** Rewrite the `@media (max-width: 960px)` and `(max-width: 640px)` blocks for the new sizes (grids collapse to one column, header nav hides as today, hero padding `var(--space-7) var(--space-4)`). Add `@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }`.
-- [ ] **Step 5: Run the conformance check**
-  Run: `cd apps/web && npm run check:design`
-  Expected: exit 0, no output.
-- [ ] **Step 6: Verify build and screenshots**
-  Run: `cd apps/web && npx tsc --noEmit && npm run build && node /tmp/verify/shot.mjs`
-  Expected: build passes; `/` and `/th` screenshots at 1440/820/390 show black ground, uppercase Barlow headlines (Thai in Prompt, sentence case), `01 / …` eyebrows, hero emblem at most 256 px, four crosshair ticks only on the live module card.
-- [ ] **Step 7: Commit**
+- [ ] **Step 1: Write the failing test** `/tmp/verify/t3.cjs` (Playwright, outside the repo) asserting on `/` and `/th`: `.eyebrow-index` texts equal `["01".."07"]`; `#mission` exists; body computed background is `rgb(255, 255, 255)` and `h1` colour `rgb(0, 0, 0)`; hero logo `src` ends with `/brand/nemo-logo.png` and renders at most 256 px wide; four `.tick-corner` elements, all inside `.module-card.live`; hero contains all four module names (Plutus, Atlas, Horae, Hephaestus) in the memory panel; `/` hero text matches `/memory/i` and the hero contains no `฿` amount.
+- [ ] **Step 2: Run it to confirm it fails** (build, start `next start --port 3100`, run). Expected: FAIL on theme, mission, panel and indexes.
+- [ ] **Step 3: Flip `tokens.css` to the light values** from the artifact (`--surface-0: #ffffff; --surface-1: #f5f5f5; --surface-2: #ebebeb; --surface-3: #dedede; --ink: #000000; --ink-muted: #474747; --ink-subtle: #5e5e5e; --line: #d6d6d6; --line-strong: #767676; --action: #000000; --on-action: #ffffff; --action-hover: #333333; --focus: #000000; --success: #0d7a4a; --warning: #8a5a00; --danger: #c4281c; --info: #1558b0; --shadow-overlay: 0 24px 64px #00000040`), `color-scheme: light`; `layout.tsx` `themeColor` `#ffffff`; `nemo-mark.svg` fill `#000000`; delete the white logo.
+- [ ] **Step 4: Rewrite `copy.ts` EN and TH** to the new `Copy` shape, memory-first. EN hero title stays "Your assistant\u2019s memory, owned by you."; `sub` says Nemo gives your AI a memory it can read and write through MCP, and that spending is the first thing it remembers; `chips` drop "Slip photos never stored" in favour of "Memory you own"; `panelTitle` "Memory"; features reframed around memory (connect once, remember across assistants, you approve, open source), with the slip features moved under the Spending module wording; FAQ and footer lead with memory; mission copy per spec. TH mirrors EN meaning.
+- [ ] **Step 5: Update `Landing.tsx`.** Hero visual: replace the money summary card with a memory panel (`.memory-panel`) listing `c.modules.items` with status badges (Spending marked available, others "Coming soon"), headed by `c.hero.panelTitle`; keep the "Saved to Nemo" toast. Demo section heading framed as a Spending example (copy only). Add the mission section (`id="mission"`, `SectionHead index={5}`, a list of `c.mission.items`, and `c.mission.note`). Hero logo `src` `/brand/nemo-logo.png`, 256x256. Keep the Eyebrow/ticks edits already in the working tree.
+- [ ] **Step 6: Run the test to confirm it passes.** Expected: all PASS.
+- [ ] **Step 7: Verify and commit**
+  Run: `cd apps/web && npm run check:design && npx tsc --noEmit && npm run build`
+  Expected: all succeed.
   ```bash
-  git add apps/web && git commit -m "refactor(web): restyle landing page with design system"
+  git add -A apps/web && git commit -m "refactor(web): light theme and memory-first landing content"
   ```
 
 ---
 
-### Task 4: Behaviour and design checks, docs, log, PR
+### Task 4: Layout restyle
 
 **Files:**
-- Create: `/tmp/verify/check.mjs` (not committed), `agent-logs/claude/2026-10-30-<HHMM>-web-design-system.md`
-- Modify: `docs/design.md` (Branding and web section), `README.md` only if it mentions the white theme or Prompt
+- Modify: `apps/web/app/globals.css`
 
 **Interfaces:**
-- Consumes: the running site on port 3100 with `/api/auth/me` stubbed by Playwright route interception.
+- Consumes: Task 3 markup (`.memory-panel`, mission section, `.eyebrow-index`).
+- Produces: class contracts for Task 5: `.hero` is `position: relative`; `.hero-field` is an absolutely positioned layer inside `.hero` with `pointer-events: none`.
 
-- [ ] **Step 1: Write `check.mjs` with these assertions (all must pass).** Pinned to Review Focus:
-  - Thai typography: on `/th`, `h1`, `.btn-primary`, `.nav a`, `.badge`, `.eyebrow` have computed `text-transform: none`, `letter-spacing` `normal` or `0px`, and `font-family` starting with `Prompt`.
-  - English typography: on `/`, `h1` computed `text-transform: uppercase` and `font-family` starts with `Barlow`; `.eyebrow` starts with `Geist Mono`.
-  - Overflow: at viewport widths 320 and 360, for `/`, `/th`, `/dashboard`, `/connect`, both signed-out and signed-in, `document.documentElement.scrollWidth <= innerWidth`.
-  - Long string: on `/connect`, the MCP URL element's `scrollWidth <= its container's clientWidth + 1` or it has `overflow-x: auto`, and page scrollWidth stays within the viewport at 320.
-  - Focus: tabbing through `/` and `/connect`, every focused element has a computed `outline-style: solid` and `outline-width: 2px` (includes `summary` and the language links).
-  - Reduced motion: with `reducedMotion: 'reduce'`, `document.getAnimations().length === 0` after load and hovering a `.btn` shows computed `transition-duration` of `0s`.
-  - Logo cap: every `img[src*="nemo-logo"]` has rendered width <= 256.
-  - Behaviour (from the earlier branding work): sign-in buttons link to `/api/auth/google/login?next=%2Fdashboard`; signed-in state shows "Open dashboard"; language switch EN<->TH works; nav anchor `#how` scrolls; first Tab stop is the skip link; a FAQ `details` opens on click; `/?auth_error=access_denied` forwards to `/dashboard`; exactly one `/api/auth/me` request per page load.
-  - Contrast: compute WCAG ratios for `--ink-muted` and `--ink-subtle` on `--surface-0..2`, and each status colour on `--surface-1`; all >= 4.5:1; `--line-strong` on `--surface-0..2` >= 3:1.
-  - Static: `npm run check:design` exits 0; `rg -n '#[0-9a-fA-F]{3,8}' apps/web/app apps/web/components` finds hex values only in `tokens.css` and `layout.tsx`'s `themeColor`.
-- [ ] **Step 2: Run everything**
-  Run: `cd apps/web && npx tsc --noEmit && npm run build && npm run check:design && node /tmp/verify/check.mjs`
-  Expected: all exit 0; the script prints each assertion with PASS. Fix any failure in the owning CSS/TSX, re-run, and commit fixes as `fix(web): ...`.
-- [ ] **Step 3: Update docs.** In `docs/design.md` replace the "Theme" bullet (white tone, blue accent, Prompt only) with: dark-only nemosyne design system, tokens in `app/tokens.css`, fonts Barlow/Geist/Geist Mono plus Prompt for Thai, logo cap 256 px, and list favicons/`og.png` as still on the old light-theme art. Update the Known gaps line if needed. Check every linked path exists.
-- [ ] **Step 4: Write the agent log** from the template in `agent-logs/README.md`: goal, what changed, every command run with its result from Step 2, and not-verified items (Docker image build, real API/Google sign-in, Thai typography not proofread natively, favicons/`og.png` unchanged, new dependencies need owner approval).
-- [ ] **Step 5: Commit, push the branch and open the PR**
+- [ ] **Step 1: Write the failing check.** Extend `/tmp/verify/t3.cjs` with: at 1440 px the hero text column is left-aligned (h1 left edge equals the container's left edge), `.section-head` and section content sit in two columns (head width <= 40% of container) for sections 03-07, and no horizontal overflow at 320, 360 and 390 px for `/` and `/th`. Run it; expected FAIL on the two-column rhythm.
+- [ ] **Step 2: Restyle.** Asymmetric hero (copy column wider, memory panel offset down); sections 03-07 use a `label | content` two-column grid (sticky head on desktop, stacked below 960 px); `.memory-panel` flat hairline panel with mono module rows; mission section as a hairline-ruled list; hero h1 `clamp(2.5rem, 5.4vw, 4.5rem)` with `.accent` as a 2px underline (`text-decoration`), memory panel and toast positioned so nothing overlaps the 256 px emblem; no gradients except `.hero::before` and `.hero-field`.
+- [ ] **Step 3: Run the check, `npm run check:design`, tsc and build; take screenshots at 1440/820/390 and read them.** Expected: PASS and no overlaps or overflow.
+- [ ] **Step 4: Commit**
   ```bash
-  git add docs agent-logs README.md && git commit -m "docs(web): document design system and add agent log"
-  git push -u origin feat/web-design-system
-  gh pr create --title "refactor(web): apply nemosyne design system" --body-file <filled .github/pull_request_template.md>
+  git add apps/web && git commit -m "refactor(web): asymmetric layout and ruled sections"
   ```
-  Expected: PR opens against `main`; body lists new dependencies for owner approval and attaches the Step 2 results; do not merge. Wait for CI and report its result.
+
+---
+
+### Task 5: Cursor field and scroll animation
+
+**Files:**
+- Create: `apps/web/components/landing/HeroField.tsx`, `apps/web/components/landing/Reveal.tsx`, `apps/web/components/landing/ScrollProgress.tsx`
+- Modify: `apps/web/components/landing/Landing.tsx`, `apps/web/app/globals.css`, `apps/web/scripts/check-design.mjs`
+
+**Interfaces:**
+- Produces: `HeroField(): JSX.Element` (client component rendering `<div className="hero-field" aria-hidden="true">` with a grid-light layer, one `.field-tick`, five `.sprite` SVGs; sets CSS variables `--mx`, `--my` (px) on its parent `.hero`; sets `data-active="true|false"` on itself). `Reveal({ children, delay }: { children: React.ReactNode; delay?: number }): JSX.Element` (client; wraps in `<div data-reveal data-in?>`; adds class `reveal-ready` to `document.documentElement` on mount; sets `data-in` when intersecting; applies `transition-delay` of `delay` ms). `ScrollProgress(): JSX.Element` (client; renders `<div className="scroll-progress" role="presentation">` whose `--p` custom property is scroll fraction 0..1).
+- Consumes: Task 4 `.hero` / `.hero-field` contract.
+
+- [ ] **Step 1: Write the failing tests** (Playwright, `/tmp/verify/t5.cjs`): (a) moving the mouse to (900, 300) over the hero sets non-empty `--mx`/`--my` on `.hero` and moves `.field-tick`\u2019s bounding box to within 40 px of that point; (b) five `.sprite` elements exist; one sprite\u2019s bounding box changes over 600 ms; with the mouse placed on a sprite, its distance from the pointer is larger 600 ms later; (c) after scrolling the hero out of view, `.hero-field[data-active]` becomes `"false"` and sprite boxes stop changing; (d) with `reducedMotion: "reduce"`, sprite boxes do not change over 600 ms and every `[data-reveal]` has computed opacity `1`; (e) with `javaScriptEnabled: false`, `[data-reveal]` has computed opacity `1`; (f) at 1440 px, a `[data-reveal]` below the fold has opacity `0` before scrolling and `1` (with `data-in`) after scrolling to it; (g) `.scroll-progress` `--p` is `0` at top and `> 0.9` at the bottom; (h) with a touch context (`hasTouch: true`, no mouse) no console errors occur. Run: expected FAIL (nothing exists).
+- [ ] **Step 2: Implement `HeroField`.** Pointer tracking on the parent `.hero` via `pointermove`/`pointerleave` (only when `matchMedia("(pointer: fine)")` matches), throttled with one `requestAnimationFrame`. Tick position snaps to the nearest grid node (grid pitch `--space-8`) with a 200 ms transition. Sprites: five inline-SVG dragonflies built from the `nemo-mark.svg` polygons (stroke-only, `currentColor` ink, 28-44 px), each with position/velocity state; each frame: wander (small random steering), repel from the pointer within 140 px, soft-bound to the hero box. An `IntersectionObserver` on `.hero` and `document.visibilitychange` stop the loop and set `data-active="false"`. With `prefers-reduced-motion: reduce` or no fine pointer, render sprites at fixed seeded positions and never start the loop.
+- [ ] **Step 3: Implement `Reveal` and `ScrollProgress`; wire into `Landing.tsx`.** Wrap each section head, card grid item and the mission list items with `Reveal` (stagger `delay = index * 60`). Render `ScrollProgress` inside the sticky header. CSS: `.reveal-ready [data-reveal]:not([data-in]) { opacity: 0; transform: translateY(12px); }`, transition 400 ms `--ease`; `.scroll-progress` 1 px, `transform: scaleX(var(--p))`, origin left, `--ink`; `.hero-field` grid-light via a darker grid masked by `radial-gradient(circle 160px at var(--mx) var(--my), ...)`; `.sprite` and `.field-tick` styles; all disabled under `prefers-reduced-motion: reduce`. Update `check-design.mjs` allowlist to `.hero::before` and selectors starting with `.hero-field`.
+- [ ] **Step 4: Run the tests and `npm run check:design`, tsc, build.** Expected: all PASS.
+- [ ] **Step 5: Commit**
+  ```bash
+  git add apps/web && git commit -m "feat(web): cursor-reactive hero field and scroll reveals"
+  ```
+
+---
+
+### Task 6: Verification, docs, agent log and PR
+
+**Files:**
+- Create: `/tmp/verify/check.mjs` (not committed), `agent-logs/claude/<date>-<HHMM>-web-design-system.md`
+- Modify: `docs/design.md`, `README.md` only if it mentions the old theme
+
+- [ ] **Step 1: Write `check.mjs`** with: Thai typography (on `/th`, `h1`, `.btn-primary`, `.nav a`, `.badge`, `.eyebrow` have `text-transform: none`, `letter-spacing` `normal` or `0px`, `font-family` starting `Prompt`); English typography (`h1` uppercase and `Barlow`; `.eyebrow` `Geist Mono`); overflow (scrollWidth <= innerWidth at 320 and 360, on `/`, `/th`, `/dashboard`, `/connect`, signed out and in); long MCP URL on `/connect` stays inside its box at 320; every focused element while tabbing has a 2px solid outline; reduced motion shows `document.getAnimations().length === 0` and `transition-duration` `0s` on `.btn` hover; logos at most 256 px; behaviour checks (sign-in links to `/api/auth/google/login?next=%2Fdashboard`, "Open dashboard" when signed in, language switch both ways, `#how` anchor, skip link first Tab stop, FAQ `details` opens, `/?auth_error=access_denied` forwards to `/dashboard`, one `/api/auth/me` request per load); contrast ratios from computed token values (see Review Focus 5); static check (`npm run check:design` exit 0, no hex outside `tokens.css` and `themeColor`).
+- [ ] **Step 2: Run everything.** `cd apps/web && npx tsc --noEmit && npm run build && npm run check:design && node /tmp/verify/t3.cjs && node /tmp/verify/t5.cjs && node /tmp/verify/check.mjs` Expected: all exit 0. Fix failures in the owning file, re-run, commit fixes as `fix(web): ...`.
+- [ ] **Step 3: Docs.** `docs/design.md`: replace the Theme bullet with the light design system (tokens in `app/tokens.css`, Barlow/Geist/Geist Mono plus Prompt for Thai, logo cap 256 px), add the memory-first positioning, the cursor field and scroll reveals (landing only, reduced-motion safe) and a **Mission** section (Nemo gets better at more kinds of data: tasks, routines, work data; none promised by date). Check every linked path exists.
+- [ ] **Step 4: Agent log** from `agent-logs/README.md` template: goal, changes, every command and result from Step 2, not-verified items (Docker build, real API/Google sign-in, Thai copy not proofread natively, favicons/`og.png` unchanged, new dependencies need owner approval, payee tools not part of this PR).
+- [ ] **Step 5: Commit, push and open the PR**
+  ```bash
+  git add docs agent-logs README.md && git commit -m "docs(web): document light design system, memory positioning and mission"
+  git push -u origin feat/web-design-system
+  gh pr create --title "refactor(web): light design system, memory-first landing, cursor field" --body-file <filled .github/pull_request_template.md>
+  ```
+  Expected: PR opens against `main`; body lists the three new font dependencies for owner approval and the Step 2 results; do not merge. Wait for CI and report.

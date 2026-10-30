@@ -1,6 +1,20 @@
 # Web design system refactor (Olympus)
 
-Status: draft for owner review. Date: 2026-10-30. Branch: `feat/web-design-system`.
+Status: revised (see Revision 2). Date: 2026-10-30. Branch: `feat/web-design-system`.
+
+## Revision 2 (owner direction, 2026-10-30; supersedes conflicting parts below)
+
+The owner redirected the work after Tasks 1-2. Where this section conflicts with the sections below, this section wins.
+
+- **Theme: light only.** Use the design system's own **light** token values (white ground, black ink, same monochrome, hairline and square rules). Replaces "Dark only". `themeColor` is `#ffffff`. Logo: the original black-ink `nemo-logo.png`; `nemo-mark.svg` back to ink fill. `nemo-logo-white.png` is dropped.
+- **Memory first.** Nemo is the memory for your AI assistant; Spending (Plutus) is the first module attached to it. Hero, demo framing, chips, features, FAQ and footer lead with memory. The hero visual becomes a "memory" panel listing modules (Spending live; Tasks, Routines, Work data "Coming soon"). The slip demo stays as "an example from the Spending module". English is rewritten; Thai is updated to match and is not natively proofread. Copy rules still hold: describe only what is built, no invented stats or testimonials. Replaces "Copy: restyle only".
+- **Layout.** Left-aligned asymmetric hero; hairline-ruled sections with `01 / ...` indexes; a "label | content" two-column rhythm for sections instead of centred card grids; no gradients, glow, emoji or stock art. The dragonfly line art is the only illustration.
+- **Cursor interaction (no new dependencies).** (a) A second, darker hairline grid layer in the hero is revealed in a soft circle around the pointer; one crosshair tick snaps to the nearest grid node under the pointer. (b) Five small line-art dragonfly sprites (inline SVG built from the `nemo-mark.svg` shapes) wander the hero and veer away from the pointer, settling back when it leaves. Runs on `requestAnimationFrame`; pauses when the tab is hidden or the hero is off-screen. With `prefers-reduced-motion: reduce`, or with no fine pointer (touch), sprites are static and the grid layer stays flat.
+- **Scroll animation.** Sections and cards reveal on entering the viewport (opacity 0 to 1 and 12 px rise, 400 ms, `--ease`, staggered by index). A 1 px scroll-progress hairline sits under the header. No bounce, no parallax. Off under reduced motion. Content is fully visible when JavaScript is disabled or fails.
+- **Motion-rule exception.** The system says flat motion, no parallax, one to three ornaments. The owner's request for cursor-reactive sprites and scroll effects overrides that for the landing page only; dashboard and connect stay flat. Easing and durations still follow the system.
+- **Mission.** A new landing section after Modules (`#mission`, nav label "Mission"): Nemo's mission is to get better at more kinds of data (tasks, routines, work data), clearly marked as upcoming, no dates promised. Same wording is added to `docs/design.md` under "Mission".
+- **Check script.** `check-design.mjs` allows gradients only in `.hero::before`, `.hero-field` rules.
+- **Out of scope here.** The payee-category MCP tools (Go API, migration, Plutus tools) are a separate spec, plan and PR.
 
 ## Goal
 
