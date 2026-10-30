@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   authErrorMessages,
@@ -80,6 +81,16 @@ export default function Home() {
             <button className="button ghost" onClick={handleSignOut}>
               Sign out
             </button>
+          </section>
+
+          <section className="card connect">
+            <div>
+              <strong>Connect your assistant</strong>
+              <div className="muted">Add Nemosyne to Claude or any MCP-compatible assistant.</div>
+            </div>
+            <Link className="button" href="/connect">
+              Connect
+            </Link>
           </section>
 
           <h2>Your pantheon</h2>

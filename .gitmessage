@@ -1,0 +1,11 @@
+
+# <type>(<scope>): <summary, imperative mood, about 72 characters max>
+#
+# Why is this change needed? (The diff already shows what changed.)
+#
+# Types:   feat fix docs chore ci refactor test perf build revert
+# Scopes:  api web cerberus hermes plutus deploy ci docs deps
+# Breaking change: put "!" after the type or scope, e.g. feat(api)!: ...
+#
+# Do not add AI "Co-Authored-By" trailers (see AGENTS.md).
+# Enable this template once:  git config commit.template .gitmessage

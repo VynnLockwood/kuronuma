@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an improvement or a new module
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Data and privacy impact
+      description: What user data would this store or expose, and to whom?
