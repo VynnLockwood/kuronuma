@@ -15,6 +15,7 @@ import (
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus/google"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/plutus"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/store"
 )
@@ -94,6 +95,8 @@ func run(log *slog.Logger) error {
 		Scopes: []cerberus.Scope{
 			{Name: plutus.ScopeRead, Description: "Read your spending records and summaries"},
 			{Name: plutus.ScopeWrite, Description: "Add and delete your spending records"},
+			{Name: themis.ScopeRead, Description: "Read your category list"},
+			{Name: themis.ScopeWrite, Description: "Create, rename and merge your categories"},
 		},
 	}, log)
 	mcp := hermes.New(hermes.Options{
@@ -105,6 +108,7 @@ func run(log *slog.Logger) error {
 		ResourceMetadataURL: oauth.MetadataURL(),
 	}, mcpAuth{oauth: oauth}, log)
 	plutus.New(db, time.Now).Register(mcp)
+	themis.New(db).Register(mcp)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, r *http.Request) {

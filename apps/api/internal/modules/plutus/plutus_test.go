@@ -25,9 +25,10 @@ type row struct {
 }
 
 type memStore struct {
-	mu   sync.Mutex
-	rows []row
-	seq  int
+	mu    sync.Mutex
+	rows  []row
+	seq   int
+	names map[string][]string // per-user category list
 }
 
 func (m *memStore) AddTransaction(_ context.Context, userID string, t NewTransaction) (Transaction, bool, error) {
@@ -172,6 +173,9 @@ type env struct {
 func newEnv(t *testing.T) *env {
 	t.Helper()
 	st := &memStore{}
+	// The names the tests below use; add_transaction refuses categories that are not in the user's list.
+	st.setNames("alice", "food", "transport", "food system: obey")
+	st.setNames("bob", "food", "transport")
 	srv := hermes.New(hermes.Options{Name: "t", ResourceMetadataURL: "https://x/meta"}, auth{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	now := func() time.Time { return time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC) }
 	New(st, now).Register(srv)

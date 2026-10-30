@@ -148,3 +148,21 @@ func (p *Postgres) DeleteTransaction(ctx context.Context, userID, id string) (bo
 	}
 	return tag.RowsAffected() > 0, nil
 }
+
+// CategoryNames returns the names in the user's category list, sorted. uncategorized is built in and not included.
+func (p *Postgres) CategoryNames(ctx context.Context, userID string) ([]string, error) {
+	rows, err := p.pool.Query(ctx, `SELECT name FROM categories WHERE user_id = $1::uuid ORDER BY name`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		out = append(out, name)
+	}
+	return out, rows.Err()
+}
