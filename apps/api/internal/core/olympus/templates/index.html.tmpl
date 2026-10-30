@@ -1,0 +1,40 @@
+{{template "head" .}}
+{{if .StatusError}}
+<p class="notice notice-error" role="alert">Could not read the current status. Check the server log.</p>
+{{else}}
+{{if not .Info.DatabaseOK}}<p class="notice notice-error" role="alert">Database unreachable.</p>{{end}}
+<section class="card">
+<h2>Configuration</h2>
+<dl class="facts">
+<dt>Mode</dt><dd>{{.Info.Mode}}</dd>
+<dt>Version</dt><dd>{{.Info.Version}}</dd>
+<dt>Public URL</dt><dd>{{.Info.PublicURL}}</dd>
+<dt>Connector URL</dt><dd><code>{{.Info.PublicURL}}/mcp/nmk_…</code> <span class="muted">The full key is shown once when it is created and cannot be shown again.</span></dd>
+<dt>Database</dt><dd>{{if .Info.DatabaseOK}}connected{{else}}unreachable{{end}}</dd>
+<dt>Records</dt><dd>{{.Info.TransactionCount}}</dd>
+</dl>
+</section>
+<section class="card">
+<h2>Connector keys</h2>
+{{if .KeyRows}}
+<table>
+<thead><tr><th>Name</th><th>Scopes</th><th>Created</th><th>Last used</th><th>Status</th></tr></thead>
+<tbody>
+{{range .KeyRows}}<tr><td>{{.Name}}</td><td>{{.Scopes}}</td><td>{{.Created}}</td><td>{{.LastUsed}}</td><td>{{.Status}}</td></tr>
+{{end}}</tbody>
+</table>
+{{else}}<p class="muted">No keys yet.</p>{{end}}
+<p class="muted">Create, rotate or revoke keys with the nemosyne command line. This page only shows them.</p>
+</section>
+{{end}}
+<section class="card">
+<h2>Import a backup</h2>
+<p>Choose a <code>backup.json</code> made by <code>nemosyne export</code>. Records are added to what you already have. Nothing is deleted, and records you already have are skipped. If any row in the file is invalid, nothing is imported.</p>
+<form method="post" action="/import" enctype="multipart/form-data">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label for="file">Backup file (up to {{.MaxMB}} MB)</label>
+<input id="file" type="file" name="file" accept=".json,application/json" required>
+<button type="submit">Import</button>
+</form>
+</section>
+{{template "foot" .}}

@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// maxMinor is the largest amount parseMinor can return (10 whole digits plus 99 hundredths).
+const maxMinor = 999_999_999_999
+
 // parseMinor converts a plain decimal amount such as "450", "450.5" or "1234.56"
 // into hundredths of the currency unit. It rejects signs, exponents and more than
 // two decimal places so that a misread number is reported rather than rounded.

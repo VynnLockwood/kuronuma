@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -147,4 +148,91 @@ func (p *Postgres) DeleteTransaction(ctx context.Context, userID, id string) (bo
 		return false, err
 	}
 	return tag.RowsAffected() > 0, nil
+}
+
+// ExportTransactions returns every record of the user, newest first.
+func (p *Postgres) ExportTransactions(ctx context.Context, userID string) ([]plutus.Transaction, error) {
+	rows, err := p.pool.Query(ctx, `
+		SELECT `+txColumns+` FROM transactions
+		 WHERE user_id = $1::uuid
+		 ORDER BY occurred_on DESC, created_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []plutus.Transaction
+	for rows.Next() {
+		t, err := scanTx(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
+
+// ImportTransactions merges rows into the user's records in one database transaction: either every
+// planned insert is committed or none is. Which rows to skip is decided by plutus.PlanImport.
+func (p *Postgres) ImportTransactions(ctx context.Context, userID string, rows []plutus.NewTransaction) (plutus.ImportResult, error) {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return plutus.ImportResult{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }() // no-op after Commit
+
+	// Serialise imports for this user, across processes as well. Planning reads the stored records and
+	// the transaction runs at READ COMMITTED, so two imports at once would both plan from the same
+	// state and insert every row without a reference twice. The lock is released when the transaction ends.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, "nemosyne-import:"+userID); err != nil {
+		return plutus.ImportResult{}, err
+	}
+
+	idx := plutus.NewExistingIndex()
+	existing, err := tx.Query(ctx,
+		`SELECT amount_minor, currency, occurred_on, merchant, COALESCE(reference, '') FROM transactions WHERE user_id = $1::uuid`, userID)
+	if err != nil {
+		return plutus.ImportResult{}, err
+	}
+	for existing.Next() {
+		var (
+			amount                        int64
+			currency, merchant, reference string
+			date                          time.Time
+		)
+		if err := existing.Scan(&amount, &currency, &date, &merchant, &reference); err != nil {
+			existing.Close()
+			return plutus.ImportResult{}, err
+		}
+		idx.Add(amount, currency, date, merchant, reference)
+	}
+	existing.Close()
+	if err := existing.Err(); err != nil {
+		return plutus.ImportResult{}, err
+	}
+
+	insert, skipped := plutus.PlanImport(rows, idx)
+	res := plutus.ImportResult{Skipped: skipped}
+	for _, t := range insert {
+		var ref any // NULL when there is no reference, so the unique index ignores the row
+		if t.Reference != "" {
+			ref = t.Reference
+		}
+		tag, err := tx.Exec(ctx, `
+			INSERT INTO transactions (user_id, amount_minor, currency, merchant, category, occurred_on, note, reference)
+			VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8)
+			ON CONFLICT (user_id, reference) WHERE reference IS NOT NULL DO NOTHING`,
+			userID, t.AmountMinor, t.Currency, t.Merchant, t.Category, t.OccurredOn, t.Note, ref)
+		if err != nil {
+			return plutus.ImportResult{}, err
+		}
+		if tag.RowsAffected() == 0 { // the same slip was saved concurrently
+			res.Skipped++
+		} else {
+			res.Added++
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return plutus.ImportResult{}, err
+	}
+	return res, nil
 }
