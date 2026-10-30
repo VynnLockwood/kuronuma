@@ -63,5 +63,5 @@
   --font-display: "Barlow", "Prompt", "Arial Narrow", system-ui, sans-serif;
   --font-sans: "Geist Variable", "Prompt", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Geist Mono Variable", "Prompt", ui-monospace, "SF Mono", Menlo, monospace;
-  --font-thai: "Prompt", system-ui, sans-serif;
+  --font-thai: "Prompt", "Geist Variable", system-ui, sans-serif;
 }
