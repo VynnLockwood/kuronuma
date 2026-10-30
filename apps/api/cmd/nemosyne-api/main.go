@@ -16,6 +16,7 @@ import (
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus/google"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/atlas"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/plutus"
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/store"
 )
@@ -97,6 +98,8 @@ func run(log *slog.Logger) error {
 			{Name: plutus.ScopeWrite, Description: "Add and delete your spending records"},
 			{Name: themis.ScopeRead, Description: "Read your category list"},
 			{Name: themis.ScopeWrite, Description: "Create, rename and merge your categories"},
+			{Name: atlas.ScopeRead, Description: "Read your tasks, to-dos and notes"},
+			{Name: atlas.ScopeWrite, Description: "Add, change and delete your tasks, to-dos and notes"},
 		},
 	}, log)
 	mcp := hermes.New(hermes.Options{
@@ -109,6 +112,7 @@ func run(log *slog.Logger) error {
 	}, mcpAuth{oauth: oauth}, log)
 	plutus.New(db, time.Now).Register(mcp)
 	themis.New(db).Register(mcp)
+	atlas.New(db).Register(mcp)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, r *http.Request) {
