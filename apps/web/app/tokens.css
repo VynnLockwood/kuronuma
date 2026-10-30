@@ -1,0 +1,67 @@
+/* nemosyne design system tokens (dark theme). Source: the owner's "nemosyne" Design System artifact, project/tokens.json. */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --surface-0: #000000;
+  --surface-1: #0a0a0a;
+  --surface-2: #141414;
+  --surface-3: #1f1f1f;
+
+  /* Ink */
+  --ink: #ffffff;
+  --ink-muted: #b3b3b3;
+  --ink-subtle: #8f8f8f;
+
+  /* Lines */
+  --line: #262626;
+  --line-strong: #707070;
+
+  /* Action and focus */
+  --action: #ffffff;
+  --on-action: #000000;
+  --action-hover: #d4d4d4;
+  --focus: #ffffff;
+  --scrim: #000000b3;
+
+  /* Status (feedback only, always with a word or icon) */
+  --success: #5fd39a;
+  --warning: #f2b84b;
+  --danger: #ff6a5c;
+  --info: #6db6ff;
+
+  /* Spacing, 4px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Radius */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-full: 9999px;
+
+  /* Shadow: dialogs only */
+  --shadow-overlay: 0 24px 64px #000000cc;
+
+  /* Layers */
+  --z-nav: 50;
+  --z-overlay: 100;
+  --z-modal: 110;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Type. Barlow and Geist have no Thai glyphs, so Prompt follows them and leads on Thai pages. */
+  --font-display: "Barlow", "Prompt", "Arial Narrow", system-ui, sans-serif;
+  --font-sans: "Geist Variable", "Prompt", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", "Prompt", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-thai: "Prompt", system-ui, sans-serif;
+}

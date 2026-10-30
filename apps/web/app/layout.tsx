@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/prompt/latin-400.css";
-import "@fontsource/prompt/latin-500.css";
-import "@fontsource/prompt/latin-600.css";
-import "@fontsource/prompt/latin-700.css";
 import "@fontsource/prompt/thai-400.css";
 import "@fontsource/prompt/thai-500.css";
 import "@fontsource/prompt/thai-600.css";
 import "@fontsource/prompt/thai-700.css";
+import "@fontsource/barlow/latin-500.css";
+import "@fontsource/barlow/latin-600.css";
+import "@fontsource-variable/geist/index.css";
+import "@fontsource-variable/geist-mono/index.css";
+import "./tokens.css";
 import "./globals.css";
 import { copy } from "@/components/landing/copy";
 import { SITE_URL } from "@/lib/brand";
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   twitter: { card: SITE_URL ? "summary_large_image" : "summary", title, description, ...(SITE_URL ? { images: ["/og.png"] } : {}) },
 };
 
-export const viewport: Viewport = { themeColor: "#ffffff" };
+export const viewport: Viewport = { themeColor: "#000000" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
