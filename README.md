@@ -40,4 +40,4 @@ Snap a bank slip, attach it in your assistant's chat, confirm the extracted amou
 
 ## License
 
-To be decided.
+MIT. See [LICENSE](LICENSE).

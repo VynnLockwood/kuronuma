@@ -55,4 +55,4 @@ docs/
 - **Auth:** run an existing identity server as a container (recommended) vs. build OAuth in Go with a library.
 - **First target users:** technical early adopters, a specific community, or the general public.
 - **Go MCP SDK:** official SDK vs. `mcp-go`; confirm maturity before committing.
-- **License.**
+- ~~License~~: MIT (decided).
