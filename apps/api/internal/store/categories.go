@@ -17,6 +17,7 @@ var _ themis.Store = (*Postgres)(nil)
 // list, never from input. Add a table here when a new module stores a category.
 var categoryRefs = []struct{ table, label string }{
 	{"transactions", "spending"},
+	{"payee_rules", "payee_rules"},
 }
 
 // ListCategories returns the user's listed names plus every in-use name that is missing from the list.
