@@ -43,32 +43,38 @@ func day(s string) time.Time {
 }
 
 func TestPlanImport(t *testing.T) {
-	grab := func(ref string) NewTransaction {
-		return NewTransaction{AmountMinor: 12900, Currency: "THB", Merchant: "Grab", OccurredOn: day("2026-10-28"), Reference: ref}
+	grab := func(merchant, ref string) NewTransaction {
+		return NewTransaction{AmountMinor: 12900, Currency: "THB", Merchant: merchant, OccurredOn: day("2026-10-28"), Reference: ref}
 	}
-	key := DuplicateKey(12900, "THB", day("2026-10-28"), "GRAB")
 	cases := []struct {
 		name                  string
+		stored                []NewTransaction
 		rows                  []NewTransaction
-		counts                map[string]int
-		refs                  map[string]bool
 		wantInsert, wantSkips int
 	}{
-		{"all new", []NewTransaction{grab(""), grab("R1")}, nil, nil, 2, 0},
-		{"existing reference skipped", []NewTransaction{grab("R1")}, nil, map[string]bool{"R1": true}, 0, 1},
-		{"same reference twice in file", []NewTransaction{grab("R1"), grab("R1")}, nil, nil, 1, 1},
-		{"no-ref row matches existing triple, case-insensitive", []NewTransaction{grab("")}, map[string]int{key: 1}, nil, 0, 1},
-		{"two identical no-ref rows into empty store are both kept", []NewTransaction{grab(""), grab("")}, nil, nil, 2, 0},
-		{"two identical no-ref rows, one already stored", []NewTransaction{grab(""), grab("")}, map[string]int{key: 1}, nil, 1, 1},
-		{"two identical no-ref rows, both already stored", []NewTransaction{grab(""), grab("")}, map[string]int{key: 2}, nil, 0, 2},
-		{"row with its own reference is not a duplicate of a no-ref triple", []NewTransaction{grab("R9")}, map[string]int{key: 1}, nil, 1, 0},
-		{"ref row earlier in file does not hide a no-ref row", []NewTransaction{grab("R1"), grab("")}, nil, nil, 2, 0},
+		{"all new", nil, []NewTransaction{grab("Grab", ""), grab("Grab", "R1")}, 2, 0},
+		{"stored reference skipped", []NewTransaction{grab("Old", "R1")}, []NewTransaction{grab("Grab", "R1")}, 0, 1},
+		{"same reference twice in file", nil, []NewTransaction{grab("Grab", "R1"), grab("Grab", "R1")}, 1, 1},
+		{"no-ref row matches stored no-ref triple, case-insensitive", []NewTransaction{grab("GRAB", "")}, []NewTransaction{grab("Grab", "")}, 0, 1},
+		{"two identical no-ref rows into empty store are both kept", nil, []NewTransaction{grab("Grab", ""), grab("Grab", "")}, 2, 0},
+		{"two identical no-ref rows, one already stored", []NewTransaction{grab("Grab", "")}, []NewTransaction{grab("Grab", ""), grab("Grab", "")}, 1, 1},
+		{"two identical no-ref rows, both already stored", []NewTransaction{grab("Grab", ""), grab("Grab", "")}, []NewTransaction{grab("Grab", ""), grab("Grab", "")}, 0, 2},
+		{"row with its own reference is not a duplicate of a stored no-ref triple", []NewTransaction{grab("Grab", "")}, []NewTransaction{grab("Grab", "R9")}, 1, 0},
+		{"stored referenced row does not hide a no-ref row", []NewTransaction{grab("Grab", "R1")}, []NewTransaction{grab("Grab", "")}, 1, 0},
+		{"ref row earlier in file does not hide a no-ref row", nil, []NewTransaction{grab("Grab", "R1"), grab("Grab", "")}, 2, 0},
 	}
 	for _, tc := range cases {
-		insert, skipped := PlanImport(tc.rows, tc.counts, tc.refs)
+		idx := NewExistingIndex()
+		for _, s := range tc.stored {
+			idx.Add(s.AmountMinor, s.Currency, s.OccurredOn, s.Merchant, s.Reference)
+		}
+		insert, skipped := PlanImport(tc.rows, idx)
 		if len(insert) != tc.wantInsert || skipped != tc.wantSkips {
 			t.Errorf("%s: insert=%d skipped=%d, want %d and %d", tc.name, len(insert), skipped, tc.wantInsert, tc.wantSkips)
 		}
+	}
+	if insert, skipped := PlanImport([]NewTransaction{grab("Grab", "")}, nil); len(insert) != 1 || skipped != 0 {
+		t.Errorf("a nil index must behave like an empty one, got insert=%d skipped=%d", len(insert), skipped)
 	}
 }
 
@@ -199,5 +205,19 @@ func TestImport_RoundTrip(t *testing.T) {
 	}
 	if a, b := fingerprint(srcStore, "u1"), fingerprint(dstStore, "owner"); strings.Join(a, "\n") != strings.Join(b, "\n") {
 		t.Fatalf("round trip changed data:\n%v\n%v", a, b)
+	}
+}
+
+func TestImport_StoredReferencedRowDoesNotHideARowWithoutReference(t *testing.T) {
+	// The merge must not depend on which record arrived first: a stored slip with a reference and a
+	// file row without one are two different records, exactly as they are inside a single file.
+	m, st := newBackupModule()
+	seed(t, st, "u1", NewTransaction{AmountMinor: 12900, Currency: "THB", Merchant: "Grab", Category: "x", OccurredOn: day("2026-10-28"), Reference: "R1"})
+	content := fileOf(jrow(12900, "Grab", "2026-10-28", "R1"), jrow(12900, "Grab", "2026-10-28", ""))
+	if res := doImport(t, m, "u1", content); res != (ImportResult{Added: 1, Skipped: 1}) || st.count("u1") != 2 {
+		t.Fatalf("res=%+v stored=%d, want the no-reference row added and the R1 row skipped", res, st.count("u1"))
+	}
+	if res := doImport(t, m, "u1", content); res != (ImportResult{Skipped: 2}) || st.count("u1") != 2 {
+		t.Fatalf("re-import: res=%+v stored=%d, want nothing added", res, st.count("u1"))
 	}
 }

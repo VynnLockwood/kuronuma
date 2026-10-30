@@ -143,18 +143,13 @@ func (m *memStore) ExportTransactions(_ context.Context, userID string) ([]Trans
 func (m *memStore) ImportTransactions(_ context.Context, userID string, rows []NewTransaction) (ImportResult, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	counts := map[string]int{}
-	refs := map[string]bool{}
+	idx := NewExistingIndex()
 	for _, r := range m.rows {
-		if r.userID != userID {
-			continue
-		}
-		counts[DuplicateKey(r.tx.AmountMinor, r.tx.Currency, r.tx.OccurredOn, r.tx.Merchant)]++
-		if r.tx.Reference != "" {
-			refs[r.tx.Reference] = true
+		if r.userID == userID {
+			idx.Add(r.tx.AmountMinor, r.tx.Currency, r.tx.OccurredOn, r.tx.Merchant, r.tx.Reference)
 		}
 	}
-	insert, skipped := PlanImport(rows, counts, refs)
+	insert, skipped := PlanImport(rows, idx)
 	for _, t := range insert {
 		m.seq++
 		m.rows = append(m.rows, row{userID, Transaction{

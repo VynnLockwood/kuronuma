@@ -17,22 +17,49 @@ func DuplicateKey(amountMinor int64, currency string, occurredOn time.Time, merc
 	return fmt.Sprintf("%d|%s|%s|%s", amountMinor, currency, occurredOn.Format(dateLayout), strings.ToLower(merchant))
 }
 
+// ExistingIndex summarises what a user already has stored, for PlanImport. Feed it every stored
+// record with Add.
+type ExistingIndex struct {
+	counts map[string]int
+	refs   map[string]bool
+}
+
+// NewExistingIndex returns an empty index.
+func NewExistingIndex() *ExistingIndex {
+	return &ExistingIndex{counts: map[string]int{}, refs: map[string]bool{}}
+}
+
+// Add records one stored record. A record with a reference is known only by that reference; it never
+// counts toward the amount/date/merchant match used for rows without one. Both stores build their
+// index through this method, so they cannot disagree about what "already stored" means.
+func (x *ExistingIndex) Add(amountMinor int64, currency string, occurredOn time.Time, merchant, reference string) {
+	if reference != "" {
+		x.refs[reference] = true
+		return
+	}
+	x.counts[DuplicateKey(amountMinor, currency, occurredOn, merchant)]++
+}
+
 // PlanImport decides which rows to insert when merging a backup into existing records.
 //
-//   - A row with a reference is skipped only when that reference already exists (existingRefs)
-//     or appeared earlier in the same file. It is never treated as a duplicate of another record
-//     just because amount, date and merchant match: a different slip can look the same.
-//   - A row without a reference is matched on DuplicateKey. existingCounts says how many records
-//     with that key are already stored; a file holding N identical rows adds max(0, N-existing).
-//     So two real identical payments survive a restore, and importing the same file again adds nothing.
+// Records with a reference and records without one are two separate worlds, inside the file and
+// against what is stored, so the result never depends on which of them arrived first:
 //
-// existingRefs only needs the references that occur in rows.
-func PlanImport(rows []NewTransaction, existingCounts map[string]int, existingRefs map[string]bool) (insert []NewTransaction, skipped int) {
+//   - A row with a reference is skipped only when that reference is already stored or appeared
+//     earlier in the same file. It is never a duplicate of another record just because amount, date
+//     and merchant match: a different slip can look the same.
+//   - A row without a reference is matched on DuplicateKey against stored records that also have no
+//     reference; a file holding N identical rows adds max(0, N-stored). So two real identical
+//     payments survive a restore, and importing the same file again adds nothing.
+func PlanImport(rows []NewTransaction, existing *ExistingIndex) (insert []NewTransaction, skipped int) {
+	if existing == nil {
+		existing = NewExistingIndex()
+	}
 	seenKeys := map[string]int{}
 	seenRefs := map[string]bool{}
 	for _, r := range rows {
 		if r.Reference != "" {
-			if existingRefs[r.Reference] || seenRefs[r.Reference] {
+			if existing.refs[r.Reference] || seenRefs[r.Reference] {
 				skipped++
 				continue
 			}
@@ -42,7 +69,7 @@ func PlanImport(rows []NewTransaction, existingCounts map[string]int, existingRe
 		}
 		k := DuplicateKey(r.AmountMinor, r.Currency, r.OccurredOn, r.Merchant)
 		seenKeys[k]++
-		if existingCounts[k] >= seenKeys[k] {
+		if existing.counts[k] >= seenKeys[k] {
 			skipped++
 			continue
 		}

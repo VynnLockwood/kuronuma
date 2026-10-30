@@ -180,57 +180,30 @@ func (p *Postgres) ImportTransactions(ctx context.Context, userID string, rows [
 	}
 	defer func() { _ = tx.Rollback(ctx) }() // no-op after Commit
 
-	counts := map[string]int{}
+	idx := plutus.NewExistingIndex()
 	existing, err := tx.Query(ctx,
-		`SELECT amount_minor, currency, occurred_on, merchant FROM transactions WHERE user_id = $1::uuid`, userID)
+		`SELECT amount_minor, currency, occurred_on, merchant, COALESCE(reference, '') FROM transactions WHERE user_id = $1::uuid`, userID)
 	if err != nil {
 		return plutus.ImportResult{}, err
 	}
 	for existing.Next() {
 		var (
-			amount             int64
-			currency, merchant string
-			date               time.Time
+			amount                        int64
+			currency, merchant, reference string
+			date                          time.Time
 		)
-		if err := existing.Scan(&amount, &currency, &date, &merchant); err != nil {
+		if err := existing.Scan(&amount, &currency, &date, &merchant, &reference); err != nil {
 			existing.Close()
 			return plutus.ImportResult{}, err
 		}
-		counts[plutus.DuplicateKey(amount, currency, date, merchant)]++
+		idx.Add(amount, currency, date, merchant, reference)
 	}
 	existing.Close()
 	if err := existing.Err(); err != nil {
 		return plutus.ImportResult{}, err
 	}
 
-	var wanted []string
-	for _, r := range rows {
-		if r.Reference != "" {
-			wanted = append(wanted, r.Reference)
-		}
-	}
-	refs := map[string]bool{}
-	if len(wanted) > 0 {
-		found, err := tx.Query(ctx,
-			`SELECT reference FROM transactions WHERE user_id = $1::uuid AND reference = ANY($2)`, userID, wanted)
-		if err != nil {
-			return plutus.ImportResult{}, err
-		}
-		for found.Next() {
-			var ref string
-			if err := found.Scan(&ref); err != nil {
-				found.Close()
-				return plutus.ImportResult{}, err
-			}
-			refs[ref] = true
-		}
-		found.Close()
-		if err := found.Err(); err != nil {
-			return plutus.ImportResult{}, err
-		}
-	}
-
-	insert, skipped := plutus.PlanImport(rows, counts, refs)
+	insert, skipped := plutus.PlanImport(rows, idx)
 	res := plutus.ImportResult{Skipped: skipped}
 	for _, t := range insert {
 		var ref any // NULL when there is no reference, so the unique index ignores the row
