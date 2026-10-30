@@ -122,6 +122,24 @@ func (m *memStore) Summarize(_ context.Context, userID string, f SummaryFilter) 
 	return out, nil
 }
 
+func (m *memStore) ExportTransactions(_ context.Context, userID string) ([]Transaction, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var out []Transaction
+	for _, r := range m.rows {
+		if r.userID == userID {
+			out = append(out, r.tx)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if !out[i].OccurredOn.Equal(out[j].OccurredOn) {
+			return out[i].OccurredOn.After(out[j].OccurredOn)
+		}
+		return out[i].ID > out[j].ID
+	})
+	return out, nil
+}
+
 func (m *memStore) DeleteTransaction(_ context.Context, userID, id string) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

@@ -148,3 +148,24 @@ func (p *Postgres) DeleteTransaction(ctx context.Context, userID, id string) (bo
 	}
 	return tag.RowsAffected() > 0, nil
 }
+
+// ExportTransactions returns every record of the user, newest first.
+func (p *Postgres) ExportTransactions(ctx context.Context, userID string) ([]plutus.Transaction, error) {
+	rows, err := p.pool.Query(ctx, `
+		SELECT `+txColumns+` FROM transactions
+		 WHERE user_id = $1::uuid
+		 ORDER BY occurred_on DESC, created_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []plutus.Transaction
+	for rows.Next() {
+		t, err := scanTx(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}

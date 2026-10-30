@@ -74,6 +74,8 @@ type Store interface {
 	ListTransactions(ctx context.Context, userID string, f ListFilter) ([]Transaction, error)
 	Summarize(ctx context.Context, userID string, f SummaryFilter) ([]SummaryRow, error)
 	DeleteTransaction(ctx context.Context, userID, id string) (bool, error)
+	// ExportTransactions returns every record of the user, newest first.
+	ExportTransactions(ctx context.Context, userID string) ([]Transaction, error)
 }
 
 // Module wires the spending tools into the MCP server.
