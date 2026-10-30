@@ -67,7 +67,7 @@ func openFlow(secret []byte, value string, now time.Time) (flowState, error) {
 
 // safeNext only lets sign-in return to a same-site path, never another origin.
 func safeNext(next string) string {
-	if next == "" || next[0] != '/' || strings.HasPrefix(next, "//") {
+	if next == "" || len(next) > 2000 || next[0] != '/' || strings.HasPrefix(next, "//") {
 		return "/"
 	}
 	for _, r := range next {
