@@ -4,7 +4,9 @@
 
 Nemosyne is an open-source personal data hub exposed to AI assistants over [MCP](https://modelcontextprotocol.io). Users keep their spending, tasks, routines and work data in one place, and their own assistant reads and writes it through scoped tools.
 
-**Status:** early. Google sign-in (Cerberus), the web shell (Olympus), and the Docker/nginx setup exist. MCP (Hermes) and the spending module (Plutus) are next. See [docs/design.md](docs/design.md).
+**Status:** early. Working: Google sign-in (Cerberus), web shell (Olympus), Docker/nginx. Built and awaiting real-world testing: the MCP endpoint (Hermes), OAuth for assistants, and the spending tools (Plutus). See [docs/design.md](docs/design.md).
+
+**AI agents working in this repo:** read [AGENTS.md](AGENTS.md) first. It has the rules, and each agent keeps a log in `agent-logs/<name>/`.
 
 ## Getting started
 
@@ -35,11 +37,23 @@ docker compose -f deploy/docker-compose.yml --env-file .env up --build
 
 Until a client is configured the app runs with sign-in disabled.
 
+### Connect an assistant
+
+Once signed in, open **/connect** on your deployment for the MCP URL (`https://your-domain/mcp`) and setup steps.
+
+- **Claude:** Settings, Connectors, add a custom connector, paste the URL, then sign in with Google and approve.
+- **Claude Code:** `claude mcp add --transport http nemosyne https://your-domain/mcp`, then `/mcp` to sign in.
+
+Remote assistants need a public HTTPS address. Tools: `add_transaction`, `list_transactions`, `get_spending_summary`, `delete_transaction`. Scopes: `plutus:read`, `plutus:write`.
+
 ### CI
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR: Go vet and race tests, a check that `go.mod`/`go.sum` are committed and tidy, the web typecheck and build, Docker image builds, and `docker compose config` and `nginx -t`. Dependabot proposes weekly dependency updates.
 
 ### Develop without Docker
+
+Enable the commit template once: `git config commit.template .gitmessage` (Conventional Commits; CI checks PR titles).
+
 
 ```bash
 # API (needs a Postgres and the env vars from .env.example)
