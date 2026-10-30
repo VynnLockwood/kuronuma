@@ -77,6 +77,12 @@ type Store interface {
 	DeleteTransaction(ctx context.Context, userID, id string) (bool, error)
 	// CategoryNames returns the names in the user's category list, sorted. themis.Uncategorized is built in and not included.
 	CategoryNames(ctx context.Context, userID string) ([]string, error)
+	// PayeeRules returns all of the user's payee rules.
+	PayeeRules(ctx context.Context, userID string) ([]PayeeRule, error)
+	// SetPayeeRule creates the rule or updates the user's rule with the same PayeeNorm; created is true only for a new one.
+	SetPayeeRule(ctx context.Context, userID string, r PayeeRule) (rule PayeeRule, created bool, err error)
+	// DeletePayeeRule removes the user's rule for payeeNorm and reports whether it existed.
+	DeletePayeeRule(ctx context.Context, userID, payeeNorm string) (bool, error)
 }
 
 // Module wires the spending tools into the MCP server.
@@ -116,7 +122,7 @@ func (m *Module) Register(s *hermes.Server) {
 			"currency":        hermes.Prop("string", "ISO 4217 code, for example THB or USD."),
 			"merchant":        hermes.Prop("string", "Who was paid (max 100 characters)."),
 			"occurred_on":     hermes.Prop("string", "Date of the payment, YYYY-MM-DD."),
-			"category":        hermes.Prop("string", "A name from the user's category list (list_categories shows it); unknown names are refused. Optional, defaults to uncategorized."),
+			"category":        hermes.Prop("string", "A name from the user's category list (list_categories shows it); unknown names are refused. Optional: omit it to let the user's payee rules choose, else it is uncategorized. Passing uncategorized explicitly switches payee rules off for this save."),
 			"note":            hermes.Prop("string", "Optional note (max 300 characters)."),
 			"reference":       hermes.Prop("string", "Bank slip reference or transaction number. Optional but recommended."),
 			"allow_duplicate": hermes.Prop("boolean", "Set true only if the user confirms this is a separate payment identical to an existing one."),
@@ -162,6 +168,7 @@ func (m *Module) Register(s *hermes.Server) {
 		InputSchema: hermes.Schema(map[string]any{"id": hermes.Prop("string", "The record id from list_transactions.")}, "id"),
 		Handler:     m.delete,
 	})
+	m.registerPayeeTools(s)
 }
 
 // amount accepts a JSON number or a string, so a value like "1,000" reaches parseMinor
@@ -261,12 +268,30 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	if date.Before(time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC)) {
 		return "", hermes.Errorf("occurred_on is implausibly old. Check the date with the user.")
 	}
-	category := themis.NormalizeName(a.Category)
-	if category == "" {
-		category = themis.Uncategorized
-	}
-	if err := m.checkCategory(ctx, c.UserID, category); err != nil {
-		return "", err
+	// Category: what the caller gave wins (and must be in the user's list); with none given the user's
+	// payee rule for this merchant decides; otherwise uncategorized.
+	category, source, matched := themis.NormalizeName(a.Category), "given", ""
+	if category != "" {
+		if err := m.checkCategory(ctx, c.UserID, category); err != nil {
+			return "", err
+		}
+	} else {
+		category, source = themis.Uncategorized, "default"
+		rules, err := m.store.PayeeRules(ctx, c.UserID)
+		if err != nil {
+			return "", err
+		}
+		if r, ok := matchRule(rules, merchant); ok {
+			if err := m.checkCategory(ctx, c.UserID, r.Category); err == nil {
+				category, source, matched = r.Category, "payee_rule", r.Payee
+			} else {
+				// A rule whose category has left the list is skipped; a real failure is not.
+				var te hermes.ToolError
+				if !errors.As(err, &te) {
+					return "", err
+				}
+			}
+		}
 	}
 	n := NewTransaction{
 		AmountMinor: minor,
@@ -301,7 +326,11 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 			"message":     "A record with this reference already exists, so nothing new was saved.",
 		})
 	}
-	return hermes.Respond(map[string]any{"status": "saved", "transaction": toOut(tx)})
+	saved := map[string]any{"status": "saved", "transaction": toOut(tx), "category_source": source}
+	if matched != "" {
+		saved["matched_payee"] = hermes.Untrusted(matched, maxPayeeLen)
+	}
+	return hermes.Respond(saved)
 }
 
 // maxCategoriesInMessage caps how many of the user's categories a refusal lists.

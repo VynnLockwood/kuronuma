@@ -91,6 +91,7 @@ Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`,
 - Amounts are stored as hundredths of the currency unit (`bigint`); input with more than two decimals is rejected rather than rounded. Totals are reported per currency and never mixed.
 - Duplicates: a unique index on `(user_id, reference)` blocks saving the same slip twice. Without a reference, an identical amount, currency, date and merchant is flagged and only saved if the user confirms (`allow_duplicate`).
 - Slip images are read by the user's own assistant and are never sent to or stored by Nemosyne.
+- Payee rules: the user can teach Nemo what a payee is (`set_payee_rule`, `list_payee_rules`, `delete_payee_rule`, using the plutus scopes). A rule applies when the normalised merchant contains the rule's payee; the longest match wins, then the most recently updated. `add_transaction` resolves its category as the one given (always wins, even an explicit `uncategorized`), else the matching rule, else `uncategorized`, and reports `category_source` and `matched_payee`. Rules only affect new transactions, are limited to 500 per user, and follow their category when it is renamed or merged (Themis).
 
 ## Themis (categories)
 
