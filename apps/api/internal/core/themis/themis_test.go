@@ -55,11 +55,11 @@ func (f *fakeStore) ListCategories(_ context.Context, user string) ([]Category, 
 	var out []Category
 	for n := range f.listed[user] {
 		seen[n] = true
-		out = append(out, Category{Name: n, Listed: true, Uses: map[string]int{"spending": f.spending[user][n]}})
+		out = append(out, Category{Name: n, Listed: true, Uses: map[string]int{"spending": f.spending[user][n], "payee_rules": 0, "memory": 0}})
 	}
 	for n, c := range f.spending[user] {
 		if !seen[n] && c > 0 {
-			out = append(out, Category{Name: n, Listed: false, Uses: map[string]int{"spending": c}})
+			out = append(out, Category{Name: n, Listed: false, Uses: map[string]int{"spending": c, "payee_rules": 0, "memory": 0}})
 		}
 	}
 	return out, nil

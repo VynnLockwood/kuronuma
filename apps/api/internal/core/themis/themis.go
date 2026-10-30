@@ -34,8 +34,9 @@ var (
 	ErrNotFound = errors.New("themis: category not found")
 )
 
-// Category is one name with how much of the user's data uses it. Uses is keyed by module label
-// ("spending" today). Listed is false for a name that is in use but missing from the list.
+// Category is one name with how much of the user's data uses it. Uses is keyed by module label ("spending",
+// "payee_rules", "memory"); the Postgres store includes every label, zero when unused. Listed is false for a
+// name that is in use but missing from the list.
 type Category struct {
 	Name   string
 	Listed bool
