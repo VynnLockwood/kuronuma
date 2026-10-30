@@ -27,7 +27,7 @@ export async function signOut(): Promise<void> {
   await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
 }
 
-export const signInUrl = (next = "/") =>
+export const signInUrl = (next = "/dashboard") =>
   `/api/auth/google/login?next=${encodeURIComponent(next)}`;
 
 // Short codes set by the API on /?auth_error=...

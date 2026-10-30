@@ -1,5 +1,7 @@
 # Nemosyne
 
+**Nemo (เนโม่)** is the friendly name for Nemosyne, so it is easy to say and remember. Nemosyne stays the technical name (repository, MCP server name, environment variables).
+
 > Memory for your AI assistant. Named for the Greek goddess of memory (classically spelled *Mnemosyne*), mother of the Muses.
 
 Nemosyne is an open-source personal data hub exposed to AI assistants over [MCP](https://modelcontextprotocol.io). Users keep their spending, tasks, routines and work data in one place, and their own assistant reads and writes it through scoped tools.
@@ -36,6 +38,16 @@ docker compose -f deploy/docker-compose.yml --env-file .env up --build
 4. Put the client ID and secret in `.env`. The secret stays server-side and is never sent to the browser.
 
 Until a client is configured the app runs with sign-in disabled.
+
+### Web pages
+
+| Route | What it is |
+|---|---|
+| `/` and `/th` | Public homepage in English and Thai |
+| `/dashboard` | Sign in and your modules (sign-in returns here) |
+| `/connect` | MCP URL and setup steps for assistants |
+
+Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` adds a "Source code" link in the footer (leave unset while the repository is private), and `NEXT_PUBLIC_SITE_URL` (for example `https://nemo.example.com`) enables the social-preview image. The Docker build does not pass either yet.
 
 ### Connect an assistant
 

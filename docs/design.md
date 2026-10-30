@@ -50,6 +50,15 @@ docs/
 - Per-user isolation, audit logs, full export and delete-everything.
 - Mask account numbers; store only what reports need.
 
+## Branding and web (Olympus)
+
+- **Names:** Nemo (เนโม่) is the friendly name used in the UI and copy. Nemosyne remains the technical name: repository, MCP server name (`nemosyne`), cookies and environment variables do not change, so existing connectors keep working.
+- **Logo:** the owner's illustration (a geometric dragonfly among clouds, black ink on transparent) is used as the hero artwork. The small mark used in the header and favicon is a vector simplification traced from it (`public/brand/nemo-mark.svg`). The source image is 256 px wide, so the large logo is upscaled; a higher-resolution or SVG original would look sharper.
+- **Theme:** white tone. Tokens live at the top of `apps/web/app/globals.css` (ink and white, one blue accent, soft blue-gray surfaces). Text and badge colors meet WCAG AA contrast. Typeface: Prompt, self-hosted via `@fontsource/prompt` (covers Thai and Latin, no requests to Google Fonts).
+- **Routes:** `/` English homepage, `/th` Thai homepage, `/dashboard` (moved from `/`), `/connect`. Sign-in now returns to `/dashboard`. The API still reports sign-in errors as `/?auth_error=...`; the homepage forwards that to `/dashboard`, so no backend change was needed.
+- **Copy rules:** describe only what is built (modules not built are labeled "Coming soon"), no invented testimonials or user counts, and state the hosted-trust limit plainly (see Trust model in open decisions).
+- **Known gaps:** the social-preview image (`public/og.png`) is only referenced when `NEXT_PUBLIC_SITE_URL` is set at build time, which the Dockerfile and compose file do not pass yet. Dashboard and Connect pages are English only. Hosted-instance copy such as pricing is not written.
+
 ## Auth (Cerberus): Google sign-in (decided)
 
 Google is the only identity provider for now. Users never create a Nemosyne password.
