@@ -1,0 +1,26 @@
+# env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# node / next
+node_modules/
+.next/
+out/
+
+# go
+bin/
+*.test
+*.out
+
+# data
+*.sqlite
+*.db
+pgdata/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
