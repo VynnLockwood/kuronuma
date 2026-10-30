@@ -6,11 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
 )
 
 // OAuth scopes used by the tools below.
@@ -73,6 +75,8 @@ type Store interface {
 	ListTransactions(ctx context.Context, userID string, f ListFilter) ([]Transaction, error)
 	Summarize(ctx context.Context, userID string, f SummaryFilter) ([]SummaryRow, error)
 	DeleteTransaction(ctx context.Context, userID, id string) (bool, error)
+	// CategoryNames returns the names in the user's category list, sorted. themis.Uncategorized is built in and not included.
+	CategoryNames(ctx context.Context, userID string) ([]string, error)
 }
 
 // Module wires the spending tools into the MCP server.
@@ -112,7 +116,7 @@ func (m *Module) Register(s *hermes.Server) {
 			"currency":        hermes.Prop("string", "ISO 4217 code, for example THB or USD."),
 			"merchant":        hermes.Prop("string", "Who was paid (max 100 characters)."),
 			"occurred_on":     hermes.Prop("string", "Date of the payment, YYYY-MM-DD."),
-			"category":        hermes.Prop("string", "Short lowercase category such as food, transport, bills. Optional."),
+			"category":        hermes.Prop("string", "A name from the user's category list (list_categories shows it); unknown names are refused. Optional, defaults to uncategorized."),
 			"note":            hermes.Prop("string", "Optional note (max 300 characters)."),
 			"reference":       hermes.Prop("string", "Bank slip reference or transaction number. Optional but recommended."),
 			"allow_duplicate": hermes.Prop("boolean", "Set true only if the user confirms this is a separate payment identical to an existing one."),
@@ -196,8 +200,6 @@ func parseDate(field, s string) (time.Time, error) {
 	return t, nil
 }
 
-func normCategory(s string) string { return strings.ToLower(hermes.Untrusted(s, 40)) }
-
 type txOut struct {
 	ID         string `json:"id"`
 	Amount     string `json:"amount"`
@@ -259,9 +261,12 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	if date.Before(time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC)) {
 		return "", hermes.Errorf("occurred_on is implausibly old. Check the date with the user.")
 	}
-	category := normCategory(a.Category)
+	category := themis.NormalizeName(a.Category)
 	if category == "" {
-		category = "uncategorized"
+		category = themis.Uncategorized
+	}
+	if err := m.checkCategory(ctx, c.UserID, category); err != nil {
+		return "", err
 	}
 	n := NewTransaction{
 		AmountMinor: minor,
@@ -299,6 +304,45 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	return hermes.Respond(map[string]any{"status": "saved", "transaction": toOut(tx)})
 }
 
+// maxCategoriesInMessage caps how many of the user's categories a refusal lists.
+const maxCategoriesInMessage = 50
+
+// checkCategory refuses a category that is not in the user's list. uncategorized is always valid. The error
+// tells the assistant how to recover: ask the user, or omit the category (an assistant without
+// categories:write cannot create one).
+func (m *Module) checkCategory(ctx context.Context, userID, category string) error {
+	if category == themis.Uncategorized {
+		return nil
+	}
+	names, err := m.store.CategoryNames(ctx, userID)
+	if err != nil {
+		return err
+	}
+	for _, n := range names {
+		if n == category {
+			return nil
+		}
+	}
+	list := "They have no categories yet."
+	if len(names) > 0 {
+		shown := names
+		if len(shown) > maxCategoriesInMessage {
+			shown = shown[:maxCategoriesInMessage]
+		}
+		clean := make([]string, len(shown))
+		for i, n := range shown {
+			clean[i] = hermes.Untrusted(n, 40)
+		}
+		list = "Their categories: " + strings.Join(clean, ", ")
+		if more := len(names) - len(shown); more > 0 {
+			list += fmt.Sprintf(" and %d more", more)
+		}
+		list += "."
+	}
+	return hermes.Errorf("Category %q is not in the user's list. %s Ask the user whether to create it (create_category) or to choose one of these. "+
+		"If you cannot ask, omit the category to file it under uncategorized.", category, list)
+}
+
 func (m *Module) list(ctx context.Context, c hermes.Caller, raw json.RawMessage) (string, error) {
 	var a struct {
 		From     string `json:"from"`
@@ -309,7 +353,7 @@ func (m *Module) list(ctx context.Context, c hermes.Caller, raw json.RawMessage)
 	if err := hermes.DecodeArgs(raw, &a); err != nil {
 		return "", err
 	}
-	f := ListFilter{Category: normCategory(a.Category), Limit: a.Limit}
+	f := ListFilter{Category: themis.NormalizeName(a.Category), Limit: a.Limit}
 	if f.Limit < 1 {
 		f.Limit = 50
 	}
