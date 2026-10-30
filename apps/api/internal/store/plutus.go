@@ -180,6 +180,13 @@ func (p *Postgres) ImportTransactions(ctx context.Context, userID string, rows [
 	}
 	defer func() { _ = tx.Rollback(ctx) }() // no-op after Commit
 
+	// Serialise imports for this user, across processes as well. Planning reads the stored records and
+	// the transaction runs at READ COMMITTED, so two imports at once would both plan from the same
+	// state and insert every row without a reference twice. The lock is released when the transaction ends.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, "nemosyne-import:"+userID); err != nil {
+		return plutus.ImportResult{}, err
+	}
+
 	idx := plutus.NewExistingIndex()
 	existing, err := tx.Query(ctx,
 		`SELECT amount_minor, currency, occurred_on, merchant, COALESCE(reference, '') FROM transactions WHERE user_id = $1::uuid`, userID)

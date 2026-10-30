@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -219,5 +220,54 @@ func TestImport_StoredReferencedRowDoesNotHideARowWithoutReference(t *testing.T)
 	}
 	if res := doImport(t, m, "u1", content); res != (ImportResult{Skipped: 2}) || st.count("u1") != 2 {
 		t.Fatalf("re-import: res=%+v stored=%d, want nothing added", res, st.count("u1"))
+	}
+}
+
+// slowStore behaves like two READ COMMITTED transactions that do not block each other: it plans from
+// a snapshot of what is stored, pauses, then writes. It reproduces what concurrent imports do to the
+// real database when nothing serialises them.
+type slowStore struct{ *memStore }
+
+func (s slowStore) ImportTransactions(_ context.Context, userID string, rows []NewTransaction) (ImportResult, error) {
+	idx := NewExistingIndex()
+	s.mu.Lock()
+	for _, r := range s.rows {
+		if r.userID == userID {
+			idx.Add(r.tx.AmountMinor, r.tx.Currency, r.tx.OccurredOn, r.tx.Merchant, r.tx.Reference)
+		}
+	}
+	s.mu.Unlock()
+	insert, skipped := PlanImport(rows, idx)
+	time.Sleep(30 * time.Millisecond)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, t := range insert {
+		s.seq++
+		s.rows = append(s.rows, row{userID, Transaction{
+			ID:          fmt.Sprintf("00000000-0000-0000-0000-%012d", s.seq),
+			AmountMinor: t.AmountMinor, Currency: t.Currency, Merchant: t.Merchant, Category: t.Category,
+			OccurredOn: t.OccurredOn, Note: t.Note, Reference: t.Reference,
+		}})
+	}
+	return ImportResult{Added: len(insert), Skipped: skipped}, nil
+}
+
+func TestImport_ConcurrentImportsDoNotDuplicate(t *testing.T) {
+	st := &memStore{}
+	m := New(slowStore{st}, func() time.Time { return time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC) })
+	content := fileOf(jrow(100, "A", "2026-10-01", ""), jrow(200, "B", "2026-10-02", ""))
+	var wg sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := m.ImportBackup(context.Background(), "u1", strings.NewReader(content), 1<<20); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+	if n := st.count("u1"); n != 2 {
+		t.Fatalf("two simultaneous imports of the same 2 rows left %d records, want 2", n)
 	}
 }

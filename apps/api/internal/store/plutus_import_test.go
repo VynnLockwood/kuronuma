@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -72,5 +73,31 @@ func TestPostgresImport(t *testing.T) {
 	}
 	if n := count(); n != 3 {
 		t.Fatalf("failed import left %d rows, want the original 3 (rollback)", n)
+	}
+
+	// Two imports of the same new rows at once must not both insert them.
+	conc := []plutus.NewTransaction{
+		{AmountMinor: 5, Currency: "THB", Merchant: "Conc1", Category: "x", OccurredOn: date("2026-10-02")},
+		{AmountMinor: 6, Currency: "THB", Merchant: "Conc2", Category: "x", OccurredOn: date("2026-10-02")},
+	}
+	var wg sync.WaitGroup
+	errs := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := db.ImportTransactions(ctx, uid, conc)
+			errs <- err
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent import: %v", err)
+		}
+	}
+	if n := count(); n != 5 {
+		t.Fatalf("after two concurrent imports there are %d rows, want 5 (3 + 2, not 3 + 4)", n)
 	}
 }

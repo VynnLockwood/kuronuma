@@ -9,6 +9,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
@@ -85,6 +86,9 @@ type Store interface {
 type Module struct {
 	store Store
 	now   func() time.Time
+	// importMu serialises backup imports. Planning an import reads what is stored and then inserts, so
+	// two at once (a double-click) would both plan from the same state and insert every row twice.
+	importMu sync.Mutex
 }
 
 // New creates the module. now may be nil (defaults to time.Now).

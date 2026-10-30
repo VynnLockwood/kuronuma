@@ -88,5 +88,7 @@ func (m *Module) ImportBackup(ctx context.Context, userID string, r io.Reader, m
 	if len(rows) == 0 {
 		return ImportResult{}, nil
 	}
+	m.importMu.Lock()
+	defer m.importMu.Unlock()
 	return m.store.ImportTransactions(ctx, userID, rows)
 }
