@@ -356,12 +356,9 @@ func TestRegisterRedirectValidation(t *testing.T) {
 func TestRegisterMetadataValidation(t *testing.T) {
 	h := newOH(t)
 	cases := map[string]string{
-		"not json":      `nope`,
-		"no redirects":  `{"client_name":"x"}`,
-		"too many":      `{"redirect_uris":["https://a.example/1","https://a.example/2","https://a.example/3","https://a.example/4","https://a.example/5","https://a.example/6"]}`,
-		"secret client": `{"redirect_uris":["https://a.example/cb"],"token_endpoint_auth_method":"client_secret_basic"}`,
-		"bad grant":     `{"redirect_uris":["https://a.example/cb"],"grant_types":["password"]}`,
-		"bad response":  `{"redirect_uris":["https://a.example/cb"],"response_types":["token"]}`,
+		"not json":     `nope`,
+		"no redirects": `{"client_name":"x"}`,
+		"too many":     `{"redirect_uris":["https://a.example/1","https://a.example/2","https://a.example/3","https://a.example/4","https://a.example/5","https://a.example/6"]}`,
 	}
 	for name, body := range cases {
 		if rec := h.send("POST", "/api/oauth/register", "application/json", body, nil, nil); rec.Code != http.StatusBadRequest {
@@ -374,6 +371,29 @@ func TestRegisterMetadataValidation(t *testing.T) {
 	c, _ := h.store.GetClient(context.Background(), id)
 	if strings.ContainsAny(c.Name, "\n\u200b\u202e") || len([]rune(c.Name)) > 100 || !strings.HasPrefix(c.Name, "My App") {
 		t.Fatalf("name not cleaned: %q", c.Name)
+	}
+}
+
+// Real MCP clients send varied optional metadata. They must still be able to register;
+// the response tells them what we actually support.
+func TestRegisterIsLenientAboutOptionalMetadata(t *testing.T) {
+	h := newOH(t)
+	bodies := []string{
+		`{"redirect_uris":["https://claude.ai/api/mcp/auth_callback"],"token_endpoint_auth_method":"client_secret_post"}`,
+		`{"redirect_uris":["https://claude.ai/api/mcp/auth_callback"],"token_endpoint_auth_method":"client_secret_basic","grant_types":["authorization_code","refresh_token","client_credentials"]}`,
+		`{"redirect_uris":["https://claude.ai/api/mcp/auth_callback"],"response_types":["code","id_token"],"application_type":"web","scope":"openid profile"}`,
+		`{"client_name":"Claude","redirect_uris":["https://claude.ai/api/mcp/auth_callback","https://claude.com/api/mcp/auth_callback"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none"}`,
+	}
+	for _, body := range bodies {
+		rec := h.send("POST", "/api/oauth/register", "application/json; charset=utf-8", body, nil, nil)
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("body %s: status %d %s", body, rec.Code, rec.Body.String())
+		}
+		var out map[string]any
+		_ = json.Unmarshal(rec.Body.Bytes(), &out)
+		if out["token_endpoint_auth_method"] != "none" || out["client_id"] == "" || out["client_secret"] != nil {
+			t.Fatalf("response must describe a public client: %v", out)
+		}
 	}
 }
 

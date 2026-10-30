@@ -46,6 +46,31 @@ Once signed in, open **/connect** on your deployment for the MCP URL (`https://y
 
 Remote assistants need a public HTTPS address. Tools: `add_transaction`, `list_transactions`, `get_spending_summary`, `delete_transaction`. Scopes: `plutus:read`, `plutus:write`.
 
+### Updating a deployment
+
+```bash
+git pull
+docker compose -f deploy/docker-compose.yml --env-file .env up --build -d
+docker compose -f deploy/docker-compose.yml --env-file .env restart nginx   # nginx.conf is a bind mount and is not reloaded automatically
+```
+
+`PUBLIC_URL` must be exactly the https origin you give the assistant (same host, no trailing slash).
+
+### If connecting an assistant fails
+
+Replace `YOUR-DOMAIN` and run these. Each should return what is shown:
+
+```bash
+curl -i https://YOUR-DOMAIN/.well-known/oauth-protected-resource     # 200, JSON with "resource": ".../mcp"
+curl -i https://YOUR-DOMAIN/.well-known/oauth-authorization-server   # 200, JSON with "registration_endpoint"
+curl -i -X POST https://YOUR-DOMAIN/mcp -H 'Content-Type: application/json' -d '{}'   # 401 with a WWW-Authenticate header
+curl -i -X POST https://YOUR-DOMAIN/api/oauth/register -H 'Content-Type: application/json' \
+  -d '{"redirect_uris":["https://claude.ai/api/mcp/auth_callback"]}'                  # 201 with a client_id
+docker compose -f deploy/docker-compose.yml --env-file .env logs api | grep -E 'oauth|/mcp'
+```
+
+An HTML 404 page from the first two means nginx still has the old config (restart it). A 403 or a challenge page means a firewall or CDN in front is blocking the assistant's requests.
+
 ### CI
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR: Go vet and race tests, a check that `go.mod`/`go.sum` are committed and tidy, the web typecheck and build, Docker image builds, and `docker compose config` and `nginx -t`. Dependabot proposes weekly dependency updates.
