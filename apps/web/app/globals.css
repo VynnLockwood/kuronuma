@@ -292,7 +292,7 @@ section[id] {
   pointer-events: none;
 }
 
-/* Cursor-reactive layer (HeroField.tsx): grid lit around the pointer, a snapping crosshair tick, wandering sprites. */
+/* Cursor-reactive layer (HeroField.tsx): grid lit around the pointer and a snapping crosshair tick. */
 .hero-field {
   position: absolute;
   inset: 0;
@@ -340,20 +340,6 @@ section[id] {
   left: 0;
   height: 1px;
   width: 11px;
-}
-
-.hero-field .sprite {
-  position: absolute;
-  color: var(--ink-muted);
-  will-change: transform;
-}
-
-.sprite polygon {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
 }
 
 .hero-grid {
@@ -1506,9 +1492,6 @@ code,
   }
   .btn {
     text-align: center;
-  }
-  .hero-field .sprite:nth-of-type(n + 4) {
-    display: none;
   }
   .connect-card,
   .urlrow,
