@@ -274,7 +274,7 @@ export function Landing({ lang }: { lang: Lang }) {
         </section>
 
         {/* Privacy */}
-        <section id="privacy" className="section">
+        <section id="privacy" className="section surface">
           <div className="container">
             <SectionHead index={6} eyebrow={c.privacy.eyebrow} title={c.privacy.title} sub={c.privacy.sub} />
             <div className="privacy-grid">
@@ -312,7 +312,7 @@ export function Landing({ lang }: { lang: Lang }) {
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="section surface">
+        <section id="faq" className="section">
           <div className="container narrow">
             <SectionHead index={7} eyebrow={c.faq.eyebrow} title={c.faq.title} />
             <div className="faq">

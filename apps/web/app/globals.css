@@ -295,9 +295,9 @@ section[id] {
 .hero-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: var(--space-7);
-  align-items: center;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: var(--space-8);
+  align-items: start;
 }
 
 .eyebrow {
@@ -392,9 +392,10 @@ section[id] {
 /* Hero visual: the emblem (256 px at most) with flat product mockups beside it. */
 .hero-visual {
   position: relative;
-  min-height: 600px;
   display: grid;
-  place-items: start center;
+  gap: var(--space-4);
+  justify-items: start;
+  padding-top: var(--space-6);
 }
 
 .hero-logo {
@@ -402,7 +403,6 @@ section[id] {
   z-index: 1;
   width: min(256px, 70%);
   height: auto;
-  margin-top: 112px;
 }
 
 .mock {
@@ -422,10 +422,9 @@ section[id] {
 }
 
 .float-toast {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  left: 0;
-  top: var(--space-5);
+  margin-left: var(--space-6);
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -458,13 +457,6 @@ section[id] {
   line-height: 1.4;
 }
 
-.mock-summary {
-  position: absolute;
-  z-index: 2;
-  right: 0;
-  bottom: var(--space-4);
-  width: min(260px, 64%);
-}
 
 .mock-bar {
   display: flex;
@@ -629,6 +621,51 @@ section[id] {
   color: var(--ink-muted);
 }
 
+.memory-panel {
+  width: 100%;
+  max-width: 380px;
+}
+
+.memory-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line-strong);
+}
+
+.memory-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-muted);
+}
+
+.memory-list li.live {
+  color: var(--ink);
+}
+
+.memory-name {
+  font-weight: 500;
+}
+
+.memory-name em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-subtle);
+  margin-left: var(--space-2);
+}
+
+.memory-note {
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--ink-subtle);
+}
+
 .mock-title {
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -637,49 +674,11 @@ section[id] {
   color: var(--ink-muted);
 }
 
-.mock-total {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--ink);
-  line-height: 1.2;
-}
 
-.bars {
-  list-style: none;
-  display: grid;
-  gap: var(--space-3);
-  padding: 0;
-  margin: var(--space-3) 0 0;
-}
 
-.bar-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8125rem;
-  color: var(--ink-muted);
-}
 
-.bar-label em {
-  font-style: normal;
-  font-family: var(--font-mono);
-  color: var(--ink);
-}
 
-.bar-track {
-  display: block;
-  height: 2px;
-  background: var(--line-strong);
-  margin-top: 6px;
-}
 
-.bar-fill {
-  display: block;
-  height: 100%;
-  background: var(--ink);
-  transition: width 0.4s var(--ease);
-}
 
 /* ---------- Sections ---------- */
 .section {
@@ -693,8 +692,39 @@ section[id] {
 }
 
 .section-head {
-  max-width: 720px;
-  margin: 0 0 var(--space-7);
+  margin: 0 0 var(--space-6);
+}
+
+/* Label | content rhythm: the head sits in a left column and everything else in the right one. */
+.section:not(.cta-section) > .container:not(.demo-grid) {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr);
+  column-gap: var(--space-8);
+  align-items: start;
+}
+
+.section:not(.cta-section) > .container.narrow {
+  max-width: 1120px;
+}
+
+.section:not(.cta-section) > .container:not(.demo-grid) > :not(.section-head) {
+  grid-column: 2;
+}
+
+.section:not(.cta-section) > .container:not(.demo-grid) > .section-head {
+  grid-column: 1;
+  grid-row: 1 / span 6;
+  position: sticky;
+  top: 104px;
+  margin-bottom: 0;
+}
+
+.section:not(.cta-section) > .container:not(.demo-grid) .section-head h2 {
+  font-size: clamp(1.5rem, 2.6vw, 2.125rem);
+}
+
+.section + .section:not(.surface) {
+  border-top: 1px solid var(--line);
 }
 
 .section-head h2,
@@ -754,6 +784,31 @@ section[id] {
   align-items: center;
 }
 
+.mission-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line-strong);
+}
+
+.mission-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: var(--space-5);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.mission-list h3 {
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+}
+
+.mission-note {
+  margin-top: var(--space-5);
+  font-size: 0.875rem;
+}
+
 .demo-copy .ticks {
   margin-top: var(--space-5);
 }
@@ -764,7 +819,7 @@ section[id] {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--space-5);
 }
 
@@ -797,7 +852,7 @@ section[id] {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-5);
 }
 
@@ -812,7 +867,7 @@ section[id] {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-5);
 }
 
@@ -1302,29 +1357,19 @@ code,
     gap: var(--space-7);
   }
   .hero-visual {
-    min-height: 0;
-    display: grid;
-    gap: var(--space-4);
-    justify-items: center;
+    padding-top: 0;
   }
-  .hero-logo {
-    width: min(256px, 70%);
-    margin-top: 0;
+  .section:not(.cta-section) > .container:not(.demo-grid) {
+    display: block;
   }
-  .float-toast,
-  .mock-summary {
-    position: relative;
-    inset: auto;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    width: min(400px, 100%);
+  .section:not(.cta-section) > .container:not(.demo-grid) > .section-head {
+    position: static;
+    margin-bottom: var(--space-6);
   }
   .demo-grid {
     grid-template-columns: 1fr;
     gap: var(--space-6);
   }
-  .steps-grid,
   .feature-grid,
   .module-grid,
   .footer-grid {
@@ -1353,13 +1398,16 @@ code,
   .landing .header-actions .btn {
     display: none;
   }
-  .steps-grid,
   .feature-grid,
   .module-grid,
   .privacy-grid,
   .guide-grid,
-  .footer-grid {
+  .footer-grid,
+  .mission-list li {
     grid-template-columns: 1fr;
+  }
+  .float-toast {
+    margin-left: 0;
   }
   .section {
     padding: var(--space-7) 0;
