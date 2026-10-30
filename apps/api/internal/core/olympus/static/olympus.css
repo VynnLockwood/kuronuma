@@ -1,0 +1,52 @@
+/* Local admin page. Same black-and-white tokens as the Nemosyne design system; nothing is loaded from elsewhere. */
+:root {
+  color-scheme: light;
+  --surface-0: #ffffff;
+  --surface-1: #f5f5f5;
+  --ink: #000000;
+  --ink-muted: #474747;
+  --line: #d6d6d6;
+  --success: #0d7a4a;
+  --danger: #c4281c;
+  --focus: #000000;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--surface-1);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.page { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+.top { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.top h1 { margin: 0; font-size: 1.5rem; }
+.badge { border: 1px solid var(--line); border-radius: 9999px; padding: 2px 10px; font-size: 0.8rem; color: var(--ink-muted); }
+.card { background: var(--surface-0); border: 1px solid var(--line); border-radius: 4px; padding: 24px; margin-bottom: 16px; }
+.card h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 24px; margin: 0; }
+.facts dt { color: var(--ink-muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.muted { color: var(--ink-muted); font-size: 0.9rem; }
+code { background: var(--surface-1); padding: 1px 6px; border-radius: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); }
+.notice { border-left: 4px solid var(--line); padding: 8px 12px; background: var(--surface-0); }
+.notice-ok { border-left-color: var(--success); }
+.notice-error { border-left-color: var(--danger); }
+form { display: grid; gap: 12px; margin-top: 12px; }
+label { font-weight: 600; }
+input[type="file"] { padding: 8px 0; }
+button, .button {
+  justify-self: start;
+  display: inline-block;
+  background: var(--ink);
+  color: var(--surface-0);
+  border: 0;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+button:focus-visible, .button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rows { margin: 12px 0; padding-left: 20px; }

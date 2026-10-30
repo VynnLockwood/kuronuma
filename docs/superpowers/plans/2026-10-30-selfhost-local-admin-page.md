@@ -18,7 +18,7 @@
 - One invalid row rejects the whole file; valid rows written in one DB transaction; merge only, nothing deleted.
 - Skip rule (as implemented, see spec 6.3): a row with a reference is skipped only if that reference exists or repeats in the file; a row without one is matched on amount + currency + date + lower(merchant) with multiset counting (adds `max(0, N - existing)`).
 - Owner user id comes from the server, never from the file. Result page shows counts, row numbers and static reasons only; never file text. Logs: method, path, status only.
-- Page security: `Host` must be `localhost` or `127.0.0.1` with the admin port (else `404`); `POST /import` needs the per-process CSRF token (else `403`) and matching `Origin`/`Referer` (else `403`); headers `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; style-src 'self'; form-action 'self'`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`; no cookies.
+- Page security: `Host` must be `localhost` or `127.0.0.1` with the admin port (else `404`); `POST /import` needs the per-process CSRF token (else `403`) and matching `Origin`/`Referer` (else `403`); headers `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; style-src 'self'; form-action 'self'`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`, `X-Content-Type-Options: nosniff`; no cookies.
 - Never rendered: `HADES_KEY`, DB password, key hashes, full connector keys.
 - Verify per `AGENTS.md`: `gofmt -l .` empty, `go vet ./...`, `go test -race -count=1 ./...` from `apps/api`. No test may depend on a database in CI (CI has none).
 - Commits: Conventional Commits, no AI `Co-Authored-By` trailer, owner's git identity. Never push to `main`.

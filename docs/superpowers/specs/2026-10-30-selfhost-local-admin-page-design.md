@@ -96,7 +96,7 @@ A page on `127.0.0.1` can still be attacked by any site open in the owner's brow
 | `Host` header must be `localhost` or `127.0.0.1` with the admin port, else `404` | Stops DNS rebinding |
 | `POST /import` requires a per-process CSRF token (random at start, in a hidden field) | Stops cross-site posts |
 | `POST /import` requires `Origin` (or `Referer`) to match the admin origin | Second CSRF layer |
-| Response headers: `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; style-src 'self'; form-action 'self'`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff` | Hardening |
+| Response headers: `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; style-src 'self'; form-action 'self'`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin` (not `no-referrer`: that makes Chrome send `Origin: null` on the form post and locks the owner out), `X-Content-Type-Options: nosniff` | Hardening |
 | No cookies, no sessions | Nothing to steal |
 | Logs: method, path, status only. Never file contents or transaction data | `AGENTS.md` rule |
 | Admin listener is never added to any tunnel config; docs say so | Keeps the page off the internet |

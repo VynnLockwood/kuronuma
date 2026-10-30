@@ -122,8 +122,10 @@ func TestSecurityHeaders(t *testing.T) {
 		"Cache-Control":           "no-store",
 		"Content-Security-Policy": "default-src 'none'; style-src 'self'; form-action 'self'",
 		"X-Frame-Options":         "DENY",
-		"Referrer-Policy":         "no-referrer",
-		"X-Content-Type-Options":  "nosniff",
+		// same-origin, not no-referrer: with no-referrer Chrome sends "Origin: null" on the import form
+		// post, which the guard must refuse, so the owner could never import. Found with a real browser.
+		"Referrer-Policy":        "same-origin",
+		"X-Content-Type-Options": "nosniff",
 	}
 	responses := map[string]*httptest.ResponseRecorder{
 		"200":          get(h, "/", testAddr),
