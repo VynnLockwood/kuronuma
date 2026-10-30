@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -23,6 +24,9 @@ const (
 const Uncategorized = "uncategorized"
 
 const maxMergeSources = 10
+
+// maxCategoriesInMessage caps how many of the user's categories a refusal lists.
+const maxCategoriesInMessage = 50
 
 // ErrExists and ErrNotFound are returned by a Store; the module turns them into messages for the assistant.
 var (
@@ -57,6 +61,40 @@ type Store interface {
 // NormalizeName is the one rule for category names: lower case, whitespace collapsed, invisible and
 // control characters removed, at most 40 characters.
 func NormalizeName(s string) string { return strings.ToLower(hermes.Untrusted(s, 40)) }
+
+// Check refuses a category that is not in the user's list (names). Uncategorized is always valid. The
+// error is written for the assistant: it names the category, lists the user's categories (capped), and says
+// how to recover: ask the user, tell them they can reconnect (an assistant without categories:write cannot
+// create one), or omit the category. Every module that stores a category calls this.
+func Check(category string, names []string) error {
+	if category == Uncategorized {
+		return nil
+	}
+	for _, n := range names {
+		if n == category {
+			return nil
+		}
+	}
+	list := "They have no categories yet."
+	if len(names) > 0 {
+		shown := names
+		if len(shown) > maxCategoriesInMessage {
+			shown = shown[:maxCategoriesInMessage]
+		}
+		clean := make([]string, len(shown))
+		for i, n := range shown {
+			clean[i] = hermes.Untrusted(n, 40)
+		}
+		list = "Their categories: " + strings.Join(clean, ", ")
+		if more := len(names) - len(shown); more > 0 {
+			list += fmt.Sprintf(" and %d more", more)
+		}
+		list += "."
+	}
+	return hermes.Errorf("Category %q is not in the user's list. %s Ask the user whether to create it (create_category) or to choose one of these. "+
+		"If create_category is not available to you, tell the user they can reconnect Nemosyne to manage categories. "+
+		"If you cannot ask, omit the category to file it under uncategorized.", category, list)
+}
 
 // Module wires the category tools into the MCP server.
 type Module struct{ store Store }
