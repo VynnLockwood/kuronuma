@@ -18,6 +18,8 @@ export type Copy = {
     secondary: string;
     chips: string[];
     worksWith: string;
+    panelTitle: string;
+    panelNote: string;
   };
   mock: {
     example: string;
@@ -31,9 +33,6 @@ export type Copy = {
     save: string;
     edit: string;
     saved: string;
-    month: string;
-    categories: { name: string; value: string; pct: number }[];
-    total: string;
     slipAlt: string;
   };
   demo: { eyebrow: string; title: string; sub: string; points: string[] };
@@ -47,6 +46,7 @@ export type Copy = {
     soon: string;
     items: { god: string; area: string; body: string; live: boolean }[];
   };
+  mission: { eyebrow: string; title: string; sub: string; items: { title: string; body: string }[]; note: string };
   privacy: {
     eyebrow: string;
     title: string;
@@ -66,27 +66,30 @@ export type Copy = {
 const en: Copy = {
   htmlLang: "en",
   meta: {
-    title: "Nemo (เนโม่): memory for your AI assistant",
+    title: "Nemo (เนโม่): a memory for your AI assistant",
     description:
-      "Nemo, short for Nemosyne, is an open-source memory hub for AI assistants. Snap a bank slip, save it through MCP, and ask how much you spent.",
+      "Nemo, short for Nemosyne, is an open-source memory for AI assistants. Connect once through MCP and your assistant can remember what matters. Spending is the first module.",
   },
   nav: [
     { id: "features", label: "Features" },
     { id: "how", label: "How it works" },
     { id: "modules", label: "Modules" },
+    { id: "mission", label: "Mission" },
     { id: "privacy", label: "Privacy" },
     { id: "faq", label: "FAQ" },
   ],
   signIn: "Sign in with Google",
   openApp: "Open dashboard",
   hero: {
-    eyebrow: "Open-source memory for your AI assistant",
+    eyebrow: "Open-source memory for AI",
     title: ["Your assistant’s memory,", "owned by you."],
-    sub: "Nemo (short for Nemosyne) keeps your spending and more in one place, so any assistant that supports MCP can answer from your real data. Snap a bank slip, say “save this”, then ask how much you spent this month.",
+    sub: "Nemo (short for Nemosyne) gives any assistant that supports MCP a memory it can read and write. You approve what it can see. It starts with spending, and more kinds of data are on the way.",
     primary: "Get started",
     secondary: "See how it works",
-    chips: ["MIT licensed", "Google sign-in", "Self-host with Docker", "Slip photos never stored"],
+    chips: ["MIT licensed", "Google sign-in", "Self-host with Docker", "Memory you own"],
     worksWith: "Works with Claude and other assistants that support MCP connectors.",
+    panelTitle: "Memory",
+    panelNote: "Every assistant you approve reads the same memory.",
   },
   mock: {
     example: "Example",
@@ -100,23 +103,16 @@ const en: Copy = {
     save: "Save",
     edit: "Edit",
     saved: "Saved to Nemo",
-    month: "This month",
-    categories: [
-      { name: "Food", value: "฿3,240.50", pct: 100 },
-      { name: "Bills", value: "฿2,600.00", pct: 80 },
-      { name: "Transport", value: "฿1,120.00", pct: 35 },
-    ],
-    total: "฿6,960.50",
     slipAlt: "A bank slip",
   },
   demo: {
-    eyebrow: "See it in action",
-    title: "From a photo to an answer",
-    sub: "An illustration of a chat with an assistant connected to Nemo.",
+    eyebrow: "Example: Spending",
+    title: "From a photo to a memory",
+    sub: "One example from the Spending module: a chat with an assistant connected to Nemo.",
     points: [
       "Attach a bank slip",
       "Check the amount, payee and date",
-      "Say yes and it is saved",
+      "Say yes and it becomes a memory",
       "Ask for totals whenever you like",
     ],
   },
@@ -130,34 +126,24 @@ const en: Copy = {
         body: "Paste your Nemo URL into your assistant’s connector settings. Sign in with Google and approve.",
       },
       {
-        title: "Snap and confirm",
-        body: "Attach a bank slip. Your assistant reads it, shows the amount, payee and date, and saves it when you say yes.",
+        title: "Let it remember",
+        body: "Your assistant saves what you confirm. Today that means spending records, such as a bank slip you checked.",
       },
       {
         title: "Just ask",
-        body: "Ask for totals by category, month or merchant in plain language, whenever you like.",
+        body: "Ask your assistant what it remembers, in plain language. Totals by category, month or merchant work today.",
       },
     ],
   },
   features: {
     eyebrow: "Features",
-    title: "Everything your assistant needs to remember",
+    title: "Memory your assistant can actually use",
     sub: "Small, careful tools that do one job well.",
     items: [
       {
-        icon: "receipt",
-        title: "From slip to record",
-        body: "Attach a bank slip. Your assistant reads it, shows what it found, and saves only after you confirm.",
-      },
-      {
         icon: "chat",
-        title: "Ask in plain language",
-        body: "Totals by category, month or merchant on demand. Amounts in different currencies are never mixed.",
-      },
-      {
-        icon: "layers",
-        title: "No double entries",
-        body: "The same slip can’t be saved twice, and payments that look identical are flagged for you to confirm.",
+        title: "One memory, any assistant",
+        body: "Connect once. Every assistant you approve reads and writes the same memory.",
       },
       {
         icon: "shield",
@@ -165,9 +151,19 @@ const en: Copy = {
         body: "Every assistant shows what it wants to access and connects only when you approve.",
       },
       {
+        icon: "receipt",
+        title: "Spending, first",
+        body: "Attach a bank slip. Your assistant reads it, shows what it found, and saves only after you confirm.",
+      },
+      {
+        icon: "layers",
+        title: "No double entries",
+        body: "The same slip can’t be saved twice, and payments that look identical are flagged for you to confirm.",
+      },
+      {
         icon: "camera",
-        title: "Slip photos stay with you",
-        body: "Your assistant reads the image. Nemo only receives the amount, payee and date you confirmed.",
+        title: "Photos stay with you",
+        body: "Your assistant reads the image. Nemo only receives the fields you confirmed.",
       },
       {
         icon: "code",
@@ -179,7 +175,7 @@ const en: Copy = {
   modules: {
     eyebrow: "Modules",
     title: "A pantheon of modules",
-    sub: "Each area of your life is a module named after a Greek god. Start with spending; more are on the way.",
+    sub: "Each kind of memory is a module named after a Greek god. Spending is live; more are on the way.",
     available: "Available",
     soon: "Coming soon",
     items: [
@@ -189,6 +185,18 @@ const en: Copy = {
       { god: "Hephaestus", area: "Work data", body: "Notes and data from your work.", live: false },
     ],
   },
+  mission: {
+    eyebrow: "Mission",
+    title: "Get better at every kind of data",
+    sub: "Spending is where Nemo starts. Our mission is to make it a good memory for the other kinds of data you want your assistant to keep.",
+    items: [
+      { title: "Tasks (Atlas)", body: "Things you ask your assistant to remember to do." },
+      { title: "Routines (Horae)", body: "Daily and weekly habits and schedules." },
+      { title: "Work data (Hephaestus)", body: "Notes and data from your work." },
+      { title: "Better at what it keeps", body: "Smarter organisation of what is already stored, such as grouping spending by who you paid." },
+    ],
+    note: "These are goals, not release dates. A module is called available only when it works.",
+  },
   privacy: {
     eyebrow: "Privacy",
     title: "Honest about your data",
@@ -196,7 +204,7 @@ const en: Copy = {
     storesTitle: "What Nemo stores",
     stores: [
       "Your Google name, email and photo, to sign you in",
-      "The spending records you confirm",
+      "The memories you confirm, such as spending records",
       "Which assistants you have approved",
     ],
     notTitle: "What Nemo does not store",
@@ -213,11 +221,15 @@ const en: Copy = {
     items: [
       {
         q: "What is Nemo?",
-        a: "Nemo is the friendly name of Nemosyne, an open-source service that gives your AI assistant a memory it can read and write through MCP, starting with your spending.",
+        a: "Nemo is the friendly name of Nemosyne, an open-source memory for AI assistants. Your assistant reads and writes it through MCP. Spending is the first module.",
       },
       {
         q: "Why “Nemosyne”?",
         a: "It comes from Mnemosyne, the Greek goddess of memory. We shorten it to Nemo (เนโม่) so it is easy to say.",
+      },
+      {
+        q: "What can it remember today?",
+        a: "The spending records you confirm. Tasks, routines and work data are planned modules and are not available yet.",
       },
       {
         q: "Which assistants work with it?",
@@ -239,11 +251,11 @@ const en: Copy = {
   },
   cta: {
     title: "Give your assistant a memory.",
-    sub: "Sign in, paste one URL into your assistant, and snap your first slip.",
+    sub: "Sign in, paste one URL into your assistant, and let it start remembering.",
     guide: "Read the connection guide",
   },
   footer: {
-    blurb: "Memory for your AI assistant. Open source, built on Nemosyne.",
+    blurb: "A memory for your AI assistant. Open source, built on Nemosyne.",
     product: "Product",
     resources: "Resources",
     guide: "Connection guide",
@@ -259,25 +271,28 @@ const th: Copy = {
   meta: {
     title: "เนโม่ (Nemo): ความจำสำหรับผู้ช่วย AI ของคุณ",
     description:
-      "เนโม่ (Nemo ชื่อย่อของ Nemosyne) คือศูนย์รวมความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI ถ่ายสลิปธนาคาร บันทึกผ่าน MCP แล้วถามได้ว่าใช้จ่ายไปเท่าไร",
+      "เนโม่ (Nemo ชื่อย่อของ Nemosyne) คือความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI เชื่อมต่อครั้งเดียวผ่าน MCP ผู้ช่วยของคุณก็จดจำสิ่งสำคัญได้ เริ่มจากค่าใช้จ่ายเป็นโมดูลแรก",
   },
   nav: [
     { id: "features", label: "ฟีเจอร์" },
     { id: "how", label: "วิธีใช้งาน" },
     { id: "modules", label: "โมดูล" },
+    { id: "mission", label: "พันธกิจ" },
     { id: "privacy", label: "ความเป็นส่วนตัว" },
     { id: "faq", label: "คำถามที่พบบ่อย" },
   ],
   signIn: "เข้าสู่ระบบด้วย Google",
   openApp: "เปิดแดชบอร์ด",
   hero: {
-    eyebrow: "ความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI ของคุณ",
+    eyebrow: "ความจำแบบโอเพนซอร์สสำหรับ AI",
     title: ["ความจำของผู้ช่วย AI", "คุณเป็นเจ้าของเอง"],
-    sub: "เนโม่ (Nemo ชื่อย่อของ Nemosyne) เก็บค่าใช้จ่ายและข้อมูลอื่น ๆ ของคุณไว้ในที่เดียว ให้ผู้ช่วยที่รองรับ MCP ตอบจากข้อมูลจริงของคุณ ถ่ายสลิปธนาคาร สั่งว่า “บันทึกให้หน่อย” แล้วถามได้เลยว่าเดือนนี้ใช้จ่ายไปเท่าไร",
+    sub: "เนโม่ (Nemo ชื่อย่อของ Nemosyne) ให้ผู้ช่วยที่รองรับ MCP มีความจำที่อ่านและเขียนได้ คุณเป็นคนอนุมัติว่าผู้ช่วยเห็นอะไรได้บ้าง เริ่มจากค่าใช้จ่าย และจะมีข้อมูลประเภทอื่นตามมา",
     primary: "เริ่มใช้งาน",
     secondary: "ดูวิธีใช้งาน",
-    chips: ["ลิขสิทธิ์ MIT", "ล็อกอินด้วย Google", "โฮสต์เองด้วย Docker", "ไม่เก็บรูปสลิป"],
+    chips: ["ลิขสิทธิ์ MIT", "ล็อกอินด้วย Google", "โฮสต์เองด้วย Docker", "ความจำที่คุณเป็นเจ้าของ"],
     worksWith: "ใช้ได้กับ Claude และผู้ช่วยอื่นที่รองรับ MCP connector",
+    panelTitle: "ความจำ",
+    panelNote: "ผู้ช่วยทุกตัวที่คุณอนุมัติอ่านความจำเดียวกัน",
   },
   mock: {
     example: "ตัวอย่าง",
@@ -291,23 +306,16 @@ const th: Copy = {
     save: "บันทึก",
     edit: "แก้ไข",
     saved: "บันทึกในเนโม่แล้ว",
-    month: "เดือนนี้",
-    categories: [
-      { name: "อาหาร", value: "฿3,240.50", pct: 100 },
-      { name: "บิล", value: "฿2,600.00", pct: 80 },
-      { name: "เดินทาง", value: "฿1,120.00", pct: 35 },
-    ],
-    total: "฿6,960.50",
     slipAlt: "สลิปธนาคาร",
   },
   demo: {
-    eyebrow: "ดูตัวอย่างการใช้งาน",
-    title: "จากรูปถ่ายสู่คำตอบ",
-    sub: "ภาพประกอบบทสนทนากับผู้ช่วยที่เชื่อมต่อกับเนโม่",
+    eyebrow: "ตัวอย่าง: ค่าใช้จ่าย",
+    title: "จากรูปถ่ายสู่ความจำ",
+    sub: "ตัวอย่างจากโมดูลค่าใช้จ่าย: บทสนทนากับผู้ช่วยที่เชื่อมต่อกับเนโม่",
     points: [
       "แนบสลิปธนาคาร",
       "ตรวจจำนวนเงิน ผู้รับ และวันที่",
-      "ตอบตกลงแล้วบันทึกทันที",
+      "ตอบตกลงแล้วกลายเป็นความจำ",
       "ถามยอดรวมเมื่อไรก็ได้",
     ],
   },
@@ -321,34 +329,24 @@ const th: Copy = {
         body: "วาง URL ของเนโม่ในหน้าตั้งค่า connector ของผู้ช่วย ล็อกอินด้วย Google แล้วกดอนุญาต",
       },
       {
-        title: "ถ่ายแล้วยืนยัน",
-        body: "แนบรูปสลิป ผู้ช่วยจะอ่านและแสดงจำนวนเงิน ผู้รับ และวันที่ให้ตรวจ เมื่อคุณตอบตกลงจึงบันทึก",
+        title: "ให้ผู้ช่วยจำ",
+        body: "ผู้ช่วยบันทึกสิ่งที่คุณยืนยัน ตอนนี้คือรายการค่าใช้จ่าย เช่นสลิปธนาคารที่คุณตรวจแล้ว",
       },
       {
         title: "ถามได้เลย",
-        body: "ถามยอดรวมตามหมวดหมู่ เดือน หรือร้านค้า ด้วยภาษาธรรมดา ได้ทุกเมื่อ",
+        body: "ถามผู้ช่วยว่าจำอะไรไว้บ้างด้วยภาษาธรรมดา ตอนนี้ถามยอดรวมตามหมวดหมู่ เดือน หรือร้านค้าได้",
       },
     ],
   },
   features: {
     eyebrow: "ฟีเจอร์",
-    title: "ทุกอย่างที่ผู้ช่วยของคุณต้องจำ",
+    title: "ความจำที่ผู้ช่วยใช้ได้จริง",
     sub: "เครื่องมือเล็ก ๆ ที่ทำหน้าที่เดียวให้ดี",
     items: [
       {
-        icon: "receipt",
-        title: "จากสลิปเป็นรายการ",
-        body: "แนบสลิปธนาคาร ผู้ช่วยอ่านแล้วแสดงสิ่งที่เจอ และบันทึกต่อเมื่อคุณยืนยันเท่านั้น",
-      },
-      {
         icon: "chat",
-        title: "ถามด้วยภาษาธรรมดา",
-        body: "ขอยอดรวมตามหมวดหมู่ เดือน หรือร้านค้าได้ทุกเมื่อ และไม่เอาเงินต่างสกุลมารวมกัน",
-      },
-      {
-        icon: "layers",
-        title: "ไม่บันทึกซ้ำ",
-        body: "สลิปใบเดิมบันทึกซ้ำไม่ได้ และรายการที่หน้าตาเหมือนกันจะถูกเตือนให้คุณยืนยันก่อน",
+        title: "ความจำเดียว ผู้ช่วยหลายตัว",
+        body: "เชื่อมต่อครั้งเดียว ผู้ช่วยทุกตัวที่คุณอนุมัติอ่านและเขียนความจำเดียวกัน",
       },
       {
         icon: "shield",
@@ -356,9 +354,19 @@ const th: Copy = {
         body: "ผู้ช่วยทุกตัวจะแสดงสิ่งที่ต้องการเข้าถึง และเชื่อมต่อได้เมื่อคุณกดอนุมัติเท่านั้น",
       },
       {
+        icon: "receipt",
+        title: "เริ่มที่ค่าใช้จ่าย",
+        body: "แนบสลิปธนาคาร ผู้ช่วยอ่านแล้วแสดงสิ่งที่เจอ และบันทึกต่อเมื่อคุณยืนยันเท่านั้น",
+      },
+      {
+        icon: "layers",
+        title: "ไม่บันทึกซ้ำ",
+        body: "สลิปใบเดิมบันทึกซ้ำไม่ได้ และรายการที่หน้าตาเหมือนกันจะถูกเตือนให้คุณยืนยันก่อน",
+      },
+      {
         icon: "camera",
-        title: "รูปสลิปอยู่กับคุณ",
-        body: "ผู้ช่วยของคุณเป็นคนอ่านรูป เนโม่ได้รับเฉพาะจำนวนเงิน ผู้รับ และวันที่ที่คุณยืนยัน",
+        title: "รูปภาพอยู่กับคุณ",
+        body: "ผู้ช่วยของคุณเป็นคนอ่านรูป เนโม่ได้รับเฉพาะข้อมูลที่คุณยืนยัน",
       },
       {
         icon: "code",
@@ -370,7 +378,7 @@ const th: Copy = {
   modules: {
     eyebrow: "โมดูล",
     title: "กลุ่มโมดูลแห่งเทพเจ้า",
-    sub: "แต่ละด้านของชีวิตเป็นโมดูลที่ตั้งชื่อตามเทพเจ้ากรีก เริ่มที่ค่าใช้จ่าย และจะมีอีกหลายอย่างตามมา",
+    sub: "ความจำแต่ละประเภทเป็นโมดูลที่ตั้งชื่อตามเทพเจ้ากรีก ค่าใช้จ่ายใช้งานได้แล้ว และจะมีอีกหลายอย่างตามมา",
     available: "ใช้งานได้",
     soon: "เร็ว ๆ นี้",
     items: [
@@ -380,6 +388,18 @@ const th: Copy = {
       { god: "Hephaestus", area: "ข้อมูลงาน", body: "โน้ตและข้อมูลจากงานของคุณ", live: false },
     ],
   },
+  mission: {
+    eyebrow: "พันธกิจ",
+    title: "เก่งขึ้นกับข้อมูลทุกประเภท",
+    sub: "ค่าใช้จ่ายคือจุดเริ่มต้น พันธกิจของเนโม่คือทำให้เป็นความจำที่ดีสำหรับข้อมูลประเภทอื่นที่คุณอยากให้ผู้ช่วยจำ",
+    items: [
+      { title: "งาน (Atlas)", body: "สิ่งที่คุณให้ผู้ช่วยจำไว้ว่าต้องทำ" },
+      { title: "กิจวัตร (Horae)", body: "กิจวัตรและตารางรายวันรายสัปดาห์" },
+      { title: "ข้อมูลงาน (Hephaestus)", body: "โน้ตและข้อมูลจากงานของคุณ" },
+      { title: "เก่งขึ้นกับสิ่งที่เก็บ", body: "จัดระเบียบสิ่งที่เก็บไว้ให้ฉลาดขึ้น เช่น จัดกลุ่มค่าใช้จ่ายตามผู้ที่คุณจ่ายให้" },
+    ],
+    note: "เหล่านี้คือเป้าหมาย ไม่ใช่วันวางจำหน่าย เราจะเรียกโมดูลว่าใช้งานได้เมื่อมันใช้งานได้จริงเท่านั้น",
+  },
   privacy: {
     eyebrow: "ความเป็นส่วนตัว",
     title: "ตรงไปตรงมาเรื่องข้อมูลของคุณ",
@@ -387,7 +407,7 @@ const th: Copy = {
     storesTitle: "สิ่งที่เนโม่เก็บ",
     stores: [
       "ชื่อ อีเมล และรูปโปรไฟล์ Google เพื่อใช้ล็อกอิน",
-      "รายการค่าใช้จ่ายที่คุณยืนยัน",
+      "ความจำที่คุณยืนยัน เช่น รายการค่าใช้จ่าย",
       "รายชื่อผู้ช่วยที่คุณอนุมัติ",
     ],
     notTitle: "สิ่งที่เนโม่ไม่เก็บ",
@@ -404,11 +424,15 @@ const th: Copy = {
     items: [
       {
         q: "เนโม่คืออะไร",
-        a: "เนโม่คือชื่อเรียกง่าย ๆ ของ Nemosyne บริการโอเพนซอร์สที่ให้ผู้ช่วย AI ของคุณมีความจำที่อ่านและเขียนได้ผ่าน MCP เริ่มจากค่าใช้จ่ายของคุณ",
+        a: "เนโม่คือชื่อเรียกง่าย ๆ ของ Nemosyne ความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI ผู้ช่วยของคุณอ่านและเขียนผ่าน MCP โมดูลแรกคือค่าใช้จ่าย",
       },
       {
         q: "ทำไมถึงชื่อ Nemosyne",
         a: "มาจาก Mnemosyne เทพีแห่งความจำของกรีก เราย่อเป็น Nemo (เนโม่) ให้พูดง่ายจำง่าย",
+      },
+      {
+        q: "ตอนนี้จำอะไรได้บ้าง",
+        a: "รายการค่าใช้จ่ายที่คุณยืนยัน ส่วนงาน กิจวัตร และข้อมูลงานเป็นโมดูลที่วางแผนไว้ ยังใช้งานไม่ได้",
       },
       {
         q: "ใช้กับผู้ช่วยตัวไหนได้บ้าง",
@@ -430,7 +454,7 @@ const th: Copy = {
   },
   cta: {
     title: "ให้ผู้ช่วยของคุณมีความจำ",
-    sub: "ล็อกอิน วาง URL เดียวในผู้ช่วยของคุณ แล้วลองถ่ายสลิปใบแรก",
+    sub: "ล็อกอิน วาง URL เดียวในผู้ช่วยของคุณ แล้วให้เริ่มจำได้เลย",
     guide: "อ่านคู่มือการเชื่อมต่อ",
   },
   footer: {

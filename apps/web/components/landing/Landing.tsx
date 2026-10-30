@@ -3,8 +3,14 @@ import { AuthButton } from "@/components/AuthButton";
 import { AuthErrorRedirect } from "@/components/AuthErrorRedirect";
 import { Icon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
+import { HeroField } from "./HeroField";
+import { RevealController } from "./Reveal";
+import { ScrollProgress } from "./ScrollProgress";
 import { BRAND, REPO_URL } from "@/lib/brand";
 import { copy, type Lang } from "./copy";
+
+// Marks an element for the scroll reveal (see Reveal.tsx); `i` staggers siblings by 60 ms.
+const rv = (i = 0) => ({ "data-reveal": "", style: { "--d": `${i * 60}ms` } as React.CSSProperties });
 
 const home = (lang: Lang) => (lang === "th" ? "/th" : "/");
 
@@ -21,10 +27,19 @@ function LangSwitch({ lang, label }: { lang: Lang; label: string }) {
   );
 }
 
-function SectionHead({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
+// Zero-padded section index followed by the eyebrow text, per the design system ("01 / ...").
+function Eyebrow({ index, children }: { index: number; children: React.ReactNode }) {
   return (
-    <div className="section-head">
-      <p className="eyebrow">{eyebrow}</p>
+    <p className="eyebrow">
+      <span className="eyebrow-index">{String(index).padStart(2, "0")}</span> / {children}
+    </p>
+  );
+}
+
+function SectionHead({ index, eyebrow, title, sub }: { index: number; eyebrow: string; title: string; sub?: string }) {
+  return (
+    <div className="section-head" {...rv()}>
+      <Eyebrow index={index}>{eyebrow}</Eyebrow>
       <h2>{title}</h2>
       {sub && <p className="lead">{sub}</p>}
     </div>
@@ -36,12 +51,14 @@ export function Landing({ lang }: { lang: Lang }) {
 
   return (
     <div lang={c.htmlLang} className="landing">
+      <RevealController />
       <AuthErrorRedirect />
       <a className="skip" href="#main">
         Skip to content
       </a>
 
       <header className="site-header">
+        <ScrollProgress />
         <div className="container header-row">
           <Logo href={home(lang)} />
           <nav className="nav" aria-label="Primary">
@@ -61,9 +78,10 @@ export function Landing({ lang }: { lang: Lang }) {
       <main id="main">
         {/* Hero */}
         <section className="hero">
+          <HeroField />
           <div className="container hero-grid">
             <div className="hero-copy">
-              <p className="eyebrow pill">
+              <p className="eyebrow">
                 <Icon name="sparkle" size={16} /> {c.hero.eyebrow}
               </p>
               <h1>
@@ -90,8 +108,8 @@ export function Landing({ lang }: { lang: Lang }) {
               <img
                 className="hero-logo"
                 src="/brand/nemo-logo.png"
-                width={440}
-                height={440}
+                width={256}
+                height={256}
                 alt={`${BRAND.name} logo`}
               />
 
@@ -105,21 +123,19 @@ export function Landing({ lang }: { lang: Lang }) {
                 </div>
               </div>
 
-              <div className="mock mock-summary" role="img" aria-label={c.mock.example}>
-                <p className="mock-title">{c.mock.month}</p>
-                <p className="mock-total">{c.mock.total}</p>
-                <ul className="bars">
-                  {c.mock.categories.map((cat) => (
-                    <li key={cat.name}>
-                      <span className="bar-label">
-                        {cat.name} <em>{cat.value}</em>
+              <div className="mock memory-panel" role="img" aria-label={c.mock.example}>
+                <p className="mock-title">{c.hero.panelTitle}</p>
+                <ul className="memory-list">
+                  {c.modules.items.map((m) => (
+                    <li key={m.god} className={m.live ? "live" : undefined}>
+                      <span className="memory-name">
+                        {m.area} <em>{m.god}</em>
                       </span>
-                      <span className="bar-track">
-                        <span className="bar-fill" style={{ width: `${cat.pct}%` }} />
-                      </span>
+                      <span className={`badge${m.live ? " badge-ok" : ""}`}>{m.live ? c.modules.available : c.modules.soon}</span>
                     </li>
                   ))}
                 </ul>
+                <p className="memory-note">{c.hero.panelNote}</p>
               </div>
             </div>
           </div>
@@ -128,8 +144,8 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Demo */}
         <section id="demo" className="section">
           <div className="container demo-grid">
-            <div className="demo-copy">
-              <p className="eyebrow">{c.demo.eyebrow}</p>
+            <div className="demo-copy" {...rv()}>
+              <Eyebrow index={1}>{c.demo.eyebrow}</Eyebrow>
               <h2>{c.demo.title}</h2>
               <p className="lead">{c.demo.sub}</p>
               <ul className="ticks">
@@ -143,7 +159,7 @@ export function Landing({ lang }: { lang: Lang }) {
                 ))}
               </ul>
             </div>
-            <div className="mock mock-chat" role="img" aria-label={c.mock.example}>
+            <div className="mock mock-chat" role="img" aria-label={c.mock.example} {...rv(1)}>
               <div className="mock-bar">
                 <span className="dot" />
                 <strong>{c.mock.assistant}</strong>
@@ -190,10 +206,10 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* How it works */}
         <section id="how" className="section surface">
           <div className="container">
-            <SectionHead eyebrow={c.how.eyebrow} title={c.how.title} sub={c.how.sub} />
+            <SectionHead index={2} eyebrow={c.how.eyebrow} title={c.how.title} sub={c.how.sub} />
             <ol className="steps-grid">
               {c.how.steps.map((s, i) => (
-                <li key={s.title} className="card step">
+                <li key={s.title} className="card step" {...rv(i)}>
                   <span className="step-num" aria-hidden="true">
                     {i + 1}
                   </span>
@@ -208,10 +224,10 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Features */}
         <section id="features" className="section">
           <div className="container">
-            <SectionHead eyebrow={c.features.eyebrow} title={c.features.title} sub={c.features.sub} />
+            <SectionHead index={3} eyebrow={c.features.eyebrow} title={c.features.title} sub={c.features.sub} />
             <ul className="feature-grid">
-              {c.features.items.map((f) => (
-                <li key={f.title} className="card feature">
+              {c.features.items.map((f, i) => (
+                <li key={f.title} className="card feature" {...rv(i % 2)}>
                   <span className="icon-tile">
                     <Icon name={f.icon} />
                   </span>
@@ -226,10 +242,18 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Modules */}
         <section id="modules" className="section surface">
           <div className="container">
-            <SectionHead eyebrow={c.modules.eyebrow} title={c.modules.title} sub={c.modules.sub} />
+            <SectionHead index={4} eyebrow={c.modules.eyebrow} title={c.modules.title} sub={c.modules.sub} />
             <ul className="module-grid">
-              {c.modules.items.map((m) => (
-                <li key={m.god} className={`card module-card${m.live ? " live" : ""}`}>
+              {c.modules.items.map((m, i) => (
+                <li key={m.god} className={`card module-card${m.live ? " live" : ""}`} {...rv(i % 2)}>
+                  {m.live && (
+                    <>
+                      <span className="tick-corner tick-tl" aria-hidden="true" />
+                      <span className="tick-corner tick-tr" aria-hidden="true" />
+                      <span className="tick-corner tick-bl" aria-hidden="true" />
+                      <span className="tick-corner tick-br" aria-hidden="true" />
+                    </>
+                  )}
                   <span className={`badge${m.live ? " badge-ok" : ""}`}>
                     {m.live ? c.modules.available : c.modules.soon}
                   </span>
@@ -242,12 +266,28 @@ export function Landing({ lang }: { lang: Lang }) {
           </div>
         </section>
 
-        {/* Privacy */}
-        <section id="privacy" className="section">
+        {/* Mission */}
+        <section id="mission" className="section">
           <div className="container">
-            <SectionHead eyebrow={c.privacy.eyebrow} title={c.privacy.title} sub={c.privacy.sub} />
+            <SectionHead index={5} eyebrow={c.mission.eyebrow} title={c.mission.title} sub={c.mission.sub} />
+            <ol className="mission-list">
+              {c.mission.items.map((m, i) => (
+                <li key={m.title} {...rv(i)}>
+                  <h3>{m.title}</h3>
+                  <p>{m.body}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="muted mission-note">{c.mission.note}</p>
+          </div>
+        </section>
+
+        {/* Privacy */}
+        <section id="privacy" className="section surface">
+          <div className="container">
+            <SectionHead index={6} eyebrow={c.privacy.eyebrow} title={c.privacy.title} sub={c.privacy.sub} />
             <div className="privacy-grid">
-              <div className="card privacy-card">
+              <div className="card privacy-card" {...rv()}>
                 <h3>{c.privacy.storesTitle}</h3>
                 <ul className="ticks">
                   {c.privacy.stores.map((t) => (
@@ -260,7 +300,7 @@ export function Landing({ lang }: { lang: Lang }) {
                   ))}
                 </ul>
               </div>
-              <div className="card privacy-card">
+              <div className="card privacy-card" {...rv()}>
                 <h3>{c.privacy.notTitle}</h3>
                 <ul className="ticks">
                   {c.privacy.nots.map((t) => (
@@ -281,12 +321,12 @@ export function Landing({ lang }: { lang: Lang }) {
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="section surface">
+        <section id="faq" className="section">
           <div className="container narrow">
-            <SectionHead eyebrow={c.faq.eyebrow} title={c.faq.title} />
+            <SectionHead index={7} eyebrow={c.faq.eyebrow} title={c.faq.title} />
             <div className="faq">
-              {c.faq.items.map((f) => (
-                <details key={f.q}>
+              {c.faq.items.map((f, i) => (
+                <details key={f.q} {...rv(i % 3)}>
                   <summary>
                     <span>{f.q}</span>
                     <Icon name="chevron" size={20} />
@@ -301,7 +341,7 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Final call to action */}
         <section className="section cta-section">
           <div className="container">
-            <div className="cta-band">
+            <div className="cta-band" {...rv()}>
               <img src="/brand/nemo-mark.svg" width={56} height={56} alt="" />
               <h2>{c.cta.title}</h2>
               <p className="lead">{c.cta.sub}</p>
