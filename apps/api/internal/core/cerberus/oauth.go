@@ -157,35 +157,26 @@ func (o *OAuth) register(w http.ResponseWriter, r *http.Request) {
 		ResponseTypes           []string `json:"response_types"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		o.log.Info("oauth registration rejected", "reason", "body is not a JSON object")
 		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "request body must be a JSON object")
 		return
 	}
 	if n := len(req.RedirectURIs); n == 0 || n > 5 {
+		o.log.Info("oauth registration rejected", "reason", "redirect_uris count", "count", n)
 		oauthError(w, http.StatusBadRequest, "invalid_redirect_uri", "provide between 1 and 5 redirect_uris")
 		return
 	}
 	for _, u := range req.RedirectURIs {
 		if !validRedirectURI(u) {
+			o.log.Info("oauth registration rejected", "reason", "invalid redirect_uri", "redirect_uri", cleanText(u, 120))
 			oauthError(w, http.StatusBadRequest, "invalid_redirect_uri", "redirect_uris must be https, loopback http, or a custom app scheme without fragments")
 			return
 		}
 	}
-	if m := req.TokenEndpointAuthMethod; m != "" && m != "none" {
-		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "only public clients (token_endpoint_auth_method \"none\") are supported")
-		return
-	}
-	for _, g := range req.GrantTypes {
-		if g != "authorization_code" && g != "refresh_token" {
-			oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "unsupported grant_type "+cleanText(g, 40))
-			return
-		}
-	}
-	for _, rt := range req.ResponseTypes {
-		if rt != "code" {
-			oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "only response_type \"code\" is supported")
-			return
-		}
-	}
+	// RFC 7591 lets the server replace requested metadata with values it supports. We only
+	// support public clients using the authorization_code and refresh_token grants, so a request
+	// for another auth method or grant type is registered as that and the response says so.
+	// Redirect URIs are the one thing we never relax.
 
 	id, err := randString(16)
 	if err != nil {
@@ -202,6 +193,12 @@ func (o *OAuth) register(w http.ResponseWriter, r *http.Request) {
 		oauthError(w, http.StatusInternalServerError, "server_error", "temporary failure")
 		return
 	}
+	hosts := make([]string, 0, len(c.RedirectURIs))
+	for _, u := range c.RedirectURIs {
+		hosts = append(hosts, redirectLabel(u))
+	}
+	o.log.Info("oauth client registered", "client_id", c.ID, "client_name", c.Name, "redirects", strings.Join(hosts, " "),
+		"requested_auth_method", cleanText(req.TokenEndpointAuthMethod, 40))
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"client_id":                  c.ID,
 		"client_id_issued_at":        c.CreatedAt.Unix(),
