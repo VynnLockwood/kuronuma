@@ -25,10 +25,12 @@ type row struct {
 }
 
 type memStore struct {
-	mu    sync.Mutex
-	rows  []row
-	seq   int
-	names map[string][]string // per-user category list
+	mu      sync.Mutex
+	rows    []row
+	seq     int
+	names   map[string][]string    // per-user category list
+	rules   map[string][]PayeeRule // per-user payee rules
+	ruleSeq int
 }
 
 func (m *memStore) AddTransaction(_ context.Context, userID string, t NewTransaction) (Transaction, bool, error) {
@@ -379,10 +381,10 @@ func TestScopes(t *testing.T) {
 		}
 		return strings.Join(n, ",")
 	}
-	if got := names("reader"); got != "list_transactions,get_spending_summary" {
+	if got := names("reader"); got != "list_transactions,get_spending_summary,list_payee_rules" {
 		t.Fatalf("read-only token sees: %s", got)
 	}
-	if got := names("alice"); got != "add_transaction,list_transactions,get_spending_summary,delete_transaction" {
+	if got := names("alice"); got != "add_transaction,list_transactions,get_spending_summary,delete_transaction,set_payee_rule,list_payee_rules,delete_payee_rule" {
 		t.Fatalf("full token sees: %s", got)
 	}
 
@@ -404,6 +406,7 @@ func TestScopes(t *testing.T) {
 		want := map[string][2]bool{
 			"add_transaction": {false, false}, "list_transactions": {true, false},
 			"get_spending_summary": {true, false}, "delete_transaction": {false, true},
+			"set_payee_rule": {false, false}, "list_payee_rules": {true, false}, "delete_payee_rule": {false, true},
 		}[tool["name"].(string)]
 		if ann["readOnlyHint"] != want[0] || ann["destructiveHint"] != want[1] {
 			t.Errorf("%v annotations = %v, want readOnly=%v destructive=%v", tool["name"], ann, want[0], want[1])
