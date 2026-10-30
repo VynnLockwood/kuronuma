@@ -292,6 +292,70 @@ section[id] {
   pointer-events: none;
 }
 
+/* Cursor-reactive layer (HeroField.tsx): grid lit around the pointer, a snapping crosshair tick, wandering sprites. */
+.hero-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-field .field-light {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px);
+  background-size: var(--space-8) var(--space-8);
+  opacity: 0.32;
+  -webkit-mask-image: radial-gradient(circle 170px at var(--mx, -9999px) var(--my, -9999px), var(--ink) 0%, transparent 100%);
+  mask-image: radial-gradient(circle 170px at var(--mx, -9999px) var(--my, -9999px), var(--ink) 0%, transparent 100%);
+}
+
+.hero-field .field-tick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  opacity: var(--near, 0);
+  transform: translate(calc(var(--tx, -9999px) - 5px), calc(var(--ty, -9999px) - 5px));
+  transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+
+.field-tick::before,
+.field-tick::after {
+  content: "";
+  position: absolute;
+  background: var(--ink);
+}
+
+.field-tick::before {
+  left: 5px;
+  top: 0;
+  width: 1px;
+  height: 11px;
+}
+
+.field-tick::after {
+  top: 5px;
+  left: 0;
+  height: 1px;
+  width: 11px;
+}
+
+.hero-field .sprite {
+  position: absolute;
+  color: var(--ink-muted);
+  will-change: transform;
+}
+
+.sprite polygon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
 .hero-grid {
   position: relative;
   display: grid;
@@ -1328,6 +1392,28 @@ code,
   margin-top: 6px;
 }
 
+/* ---------- Scroll effects (Reveal.tsx, ScrollProgress.tsx; landing page only) ---------- */
+[data-reveal] {
+  transition: opacity 0.4s var(--ease) var(--d, 0ms), transform 0.4s var(--ease) var(--d, 0ms), border-color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.reveal-ready [data-reveal]:not([data-in]) {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.scroll-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  pointer-events: none;
+}
+
 /* ---------- Thai: Barlow and Geist have no Thai glyphs, so Prompt leads and nothing is uppercased or tracked ---------- */
 .landing[lang="th"] :is(h1, h2, h3, h4, .btn, .nav a, .badge, .eyebrow, .chips li, .tag, .mini, .status, .lang a, .faq summary, .mock-title, .mock-total, .facts dt, .example-label, .step-num) {
   font-family: var(--font-thai);
@@ -1420,6 +1506,9 @@ code,
   }
   .btn {
     text-align: center;
+  }
+  .hero-field .sprite:nth-of-type(n + 4) {
+    display: none;
   }
   .connect-card,
   .urlrow,

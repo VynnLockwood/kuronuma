@@ -9,7 +9,7 @@ const problems = [];
 
 // Track the current selector so gradients and 50% radii can be allowed in named rules only.
 let selector = "";
-const GRADIENT_OK = /\.hero::before|\.bx-hero__grid/;
+const GRADIENT_OK = /\.hero::before|^\.hero-field|\.bx-hero__grid/;
 const ROUND_OK = /dot|avatar/;
 const RADIUS_OK = /^(0|1px|2px|4px|var\(--radius-[a-z]+\)|inherit)$/;
 

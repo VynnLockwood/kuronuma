@@ -3,8 +3,14 @@ import { AuthButton } from "@/components/AuthButton";
 import { AuthErrorRedirect } from "@/components/AuthErrorRedirect";
 import { Icon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
+import { HeroField } from "./HeroField";
+import { RevealController } from "./Reveal";
+import { ScrollProgress } from "./ScrollProgress";
 import { BRAND, REPO_URL } from "@/lib/brand";
 import { copy, type Lang } from "./copy";
+
+// Marks an element for the scroll reveal (see Reveal.tsx); `i` staggers siblings by 60 ms.
+const rv = (i = 0) => ({ "data-reveal": "", style: { "--d": `${i * 60}ms` } as React.CSSProperties });
 
 const home = (lang: Lang) => (lang === "th" ? "/th" : "/");
 
@@ -32,7 +38,7 @@ function Eyebrow({ index, children }: { index: number; children: React.ReactNode
 
 function SectionHead({ index, eyebrow, title, sub }: { index: number; eyebrow: string; title: string; sub?: string }) {
   return (
-    <div className="section-head">
+    <div className="section-head" {...rv()}>
       <Eyebrow index={index}>{eyebrow}</Eyebrow>
       <h2>{title}</h2>
       {sub && <p className="lead">{sub}</p>}
@@ -45,12 +51,14 @@ export function Landing({ lang }: { lang: Lang }) {
 
   return (
     <div lang={c.htmlLang} className="landing">
+      <RevealController />
       <AuthErrorRedirect />
       <a className="skip" href="#main">
         Skip to content
       </a>
 
       <header className="site-header">
+        <ScrollProgress />
         <div className="container header-row">
           <Logo href={home(lang)} />
           <nav className="nav" aria-label="Primary">
@@ -70,6 +78,7 @@ export function Landing({ lang }: { lang: Lang }) {
       <main id="main">
         {/* Hero */}
         <section className="hero">
+          <HeroField />
           <div className="container hero-grid">
             <div className="hero-copy">
               <p className="eyebrow">
@@ -135,7 +144,7 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Demo */}
         <section id="demo" className="section">
           <div className="container demo-grid">
-            <div className="demo-copy">
+            <div className="demo-copy" {...rv()}>
               <Eyebrow index={1}>{c.demo.eyebrow}</Eyebrow>
               <h2>{c.demo.title}</h2>
               <p className="lead">{c.demo.sub}</p>
@@ -150,7 +159,7 @@ export function Landing({ lang }: { lang: Lang }) {
                 ))}
               </ul>
             </div>
-            <div className="mock mock-chat" role="img" aria-label={c.mock.example}>
+            <div className="mock mock-chat" role="img" aria-label={c.mock.example} {...rv(1)}>
               <div className="mock-bar">
                 <span className="dot" />
                 <strong>{c.mock.assistant}</strong>
@@ -200,7 +209,7 @@ export function Landing({ lang }: { lang: Lang }) {
             <SectionHead index={2} eyebrow={c.how.eyebrow} title={c.how.title} sub={c.how.sub} />
             <ol className="steps-grid">
               {c.how.steps.map((s, i) => (
-                <li key={s.title} className="card step">
+                <li key={s.title} className="card step" {...rv(i)}>
                   <span className="step-num" aria-hidden="true">
                     {i + 1}
                   </span>
@@ -217,8 +226,8 @@ export function Landing({ lang }: { lang: Lang }) {
           <div className="container">
             <SectionHead index={3} eyebrow={c.features.eyebrow} title={c.features.title} sub={c.features.sub} />
             <ul className="feature-grid">
-              {c.features.items.map((f) => (
-                <li key={f.title} className="card feature">
+              {c.features.items.map((f, i) => (
+                <li key={f.title} className="card feature" {...rv(i % 2)}>
                   <span className="icon-tile">
                     <Icon name={f.icon} />
                   </span>
@@ -235,8 +244,8 @@ export function Landing({ lang }: { lang: Lang }) {
           <div className="container">
             <SectionHead index={4} eyebrow={c.modules.eyebrow} title={c.modules.title} sub={c.modules.sub} />
             <ul className="module-grid">
-              {c.modules.items.map((m) => (
-                <li key={m.god} className={`card module-card${m.live ? " live" : ""}`}>
+              {c.modules.items.map((m, i) => (
+                <li key={m.god} className={`card module-card${m.live ? " live" : ""}`} {...rv(i % 2)}>
                   {m.live && (
                     <>
                       <span className="tick-corner tick-tl" aria-hidden="true" />
@@ -262,8 +271,8 @@ export function Landing({ lang }: { lang: Lang }) {
           <div className="container">
             <SectionHead index={5} eyebrow={c.mission.eyebrow} title={c.mission.title} sub={c.mission.sub} />
             <ol className="mission-list">
-              {c.mission.items.map((m) => (
-                <li key={m.title}>
+              {c.mission.items.map((m, i) => (
+                <li key={m.title} {...rv(i)}>
                   <h3>{m.title}</h3>
                   <p>{m.body}</p>
                 </li>
@@ -278,7 +287,7 @@ export function Landing({ lang }: { lang: Lang }) {
           <div className="container">
             <SectionHead index={6} eyebrow={c.privacy.eyebrow} title={c.privacy.title} sub={c.privacy.sub} />
             <div className="privacy-grid">
-              <div className="card privacy-card">
+              <div className="card privacy-card" {...rv()}>
                 <h3>{c.privacy.storesTitle}</h3>
                 <ul className="ticks">
                   {c.privacy.stores.map((t) => (
@@ -291,7 +300,7 @@ export function Landing({ lang }: { lang: Lang }) {
                   ))}
                 </ul>
               </div>
-              <div className="card privacy-card">
+              <div className="card privacy-card" {...rv()}>
                 <h3>{c.privacy.notTitle}</h3>
                 <ul className="ticks">
                   {c.privacy.nots.map((t) => (
@@ -316,8 +325,8 @@ export function Landing({ lang }: { lang: Lang }) {
           <div className="container narrow">
             <SectionHead index={7} eyebrow={c.faq.eyebrow} title={c.faq.title} />
             <div className="faq">
-              {c.faq.items.map((f) => (
-                <details key={f.q}>
+              {c.faq.items.map((f, i) => (
+                <details key={f.q} {...rv(i % 3)}>
                   <summary>
                     <span>{f.q}</span>
                     <Icon name="chevron" size={20} />
@@ -332,7 +341,7 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Final call to action */}
         <section className="section cta-section">
           <div className="container">
-            <div className="cta-band">
+            <div className="cta-band" {...rv()}>
               <img src="/brand/nemo-mark.svg" width={56} height={56} alt="" />
               <h2>{c.cta.title}</h2>
               <p className="lead">{c.cta.sub}</p>
