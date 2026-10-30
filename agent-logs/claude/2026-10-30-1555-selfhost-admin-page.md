@@ -31,7 +31,7 @@ Owner asked to move to the single-owner self-host scope and replace the web fron
 - `Referrer-Policy: same-origin` instead of `no-referrer`: with `no-referrer` Chrome sends `Origin: null` on the form post and the guard locks the owner out (found in the browser run). Spec updated.
 - Guard takes a body cap (`newGuard(addr, maxBody)`) and parses the multipart form fully in memory so no upload touches disk.
 - `apps/web` assumed to stay for hosted mode, untouched.
-- Commit author is the sandbox's git identity; no AI trailers, per AGENTS.md. Owner may want to reset authorship.
+- Commits were first made with the sandbox git identity, then re-authored as the repo owner (`VynnLockwood` noreply identity) at the owner's request, with the owner's approval to force-push this branch (AGENTS.md rule 2). Content, messages and dates unchanged. No AI trailers, per AGENTS.md.
 - Deferred minors from review: blank page on 403/413 after a restart; extra file copies in memory; row-by-row inserts; `frame-ancestors 'none'` in the CSP.
 
 ## Next steps
