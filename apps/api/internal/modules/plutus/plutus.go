@@ -340,6 +340,7 @@ func (m *Module) checkCategory(ctx context.Context, userID, category string) err
 		list += "."
 	}
 	return hermes.Errorf("Category %q is not in the user's list. %s Ask the user whether to create it (create_category) or to choose one of these. "+
+		"If create_category is not available to you, tell the user they can reconnect Nemosyne to manage categories. "+
 		"If you cannot ask, omit the category to file it under uncategorized.", category, list)
 }
 

@@ -47,7 +47,7 @@ func TestCategoryMustBeInTheList(t *testing.T) {
 	if !isErr {
 		t.Fatal("an unknown category must be refused")
 	}
-	for _, want := range []string{`"travel"`, "food", "create_category", "omit", "uncategorized"} {
+	for _, want := range []string{`"travel"`, "food", "create_category", "reconnect", "omit", "uncategorized"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("refusal message lacks %q: %s", want, text)
 		}
