@@ -63,7 +63,8 @@ Google is the only identity provider for now. Users never create a Nemosyne pass
 
 - Done: Google sign-in and sessions (Cerberus), Postgres migrations, web shell (Olympus), Docker Compose with nginx.
 - Next: Hermes (MCP endpoint and OAuth server for assistants), then Plutus (spending) and slip intake.
-- Known gap: `go.sum` is not yet committed (generate it with `go mod tidy`); the Postgres store and Google provider have not been compiled against their dependencies yet.
+- Live: hosted with working Google sign-in.
+- Known gap: `go.sum` is not yet committed, so builds resolve dependency versions at build time. The Dockerfile uses locked versions as soon as `go.sum` exists, and CI fails until it is committed.
 
 ## Open decisions
 
