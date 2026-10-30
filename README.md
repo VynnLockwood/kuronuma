@@ -8,10 +8,10 @@ Nemosyne is an open-source personal data hub exposed to AI assistants over [MCP]
 
 ## Getting started
 
-Prerequisites: Docker, and Go 1.24+ once to generate `go.sum`.
+Prerequisites: Docker, and Go 1.26+ once to generate `go.sum`.
 
 ```bash
-# 1. Generate go.sum (needs network access to the Go module proxy) and commit it
+# 1. Generate go.sum with Go 1.26 and commit it (CI fails until it is committed)
 cd apps/api && go mod tidy && cd ../..
 
 # 2. Configure
@@ -34,6 +34,10 @@ docker compose -f deploy/docker-compose.yml --env-file .env up --build
 4. Put the client ID and secret in `.env`. The secret stays server-side and is never sent to the browser.
 
 Until a client is configured the app runs with sign-in disabled.
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every PR: Go vet and race tests, a check that `go.mod`/`go.sum` are committed and tidy, the web typecheck and build, Docker image builds, and `docker compose config` and `nginx -t`. Dependabot proposes weekly dependency updates.
 
 ### Develop without Docker
 
