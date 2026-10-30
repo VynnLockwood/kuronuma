@@ -324,14 +324,16 @@ section[id] {
 .hero h1 {
   text-wrap: balance;
   margin-top: var(--space-5);
-  font-size: clamp(2.75rem, 7vw, 5.5rem);
-  line-height: 0.98;
+  font-size: clamp(2.5rem, 5.4vw, 4.5rem);
+  line-height: 1;
   letter-spacing: 0.02em;
 }
 
 .accent {
   color: var(--ink);
-  border-bottom: 2px solid var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.12em;
 }
 
 .lead {
@@ -390,9 +392,9 @@ section[id] {
 /* Hero visual: the emblem (256 px at most) with flat product mockups beside it. */
 .hero-visual {
   position: relative;
-  min-height: 480px;
+  min-height: 600px;
   display: grid;
-  place-items: center;
+  place-items: start center;
 }
 
 .hero-logo {
@@ -400,6 +402,7 @@ section[id] {
   z-index: 1;
   width: min(256px, 70%);
   height: auto;
+  margin-top: 112px;
 }
 
 .mock {
@@ -1306,6 +1309,7 @@ code,
   }
   .hero-logo {
     width: min(256px, 70%);
+    margin-top: 0;
   }
   .float-toast,
   .mock-summary {
