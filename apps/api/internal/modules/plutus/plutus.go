@@ -249,6 +249,49 @@ func respond(fields map[string]any) (string, error) {
 	return string(b), err
 }
 
+// buildTransaction applies the rules every new record must meet, whether it comes from the
+// add_transaction tool or from a backup import: amount range, currency code, merchant,
+// plausible date, and cleaned free text. Errors are written for the person reading them.
+func (m *Module) buildTransaction(minor int64, currency, merchant, occurredOn, category, note, reference string) (NewTransaction, error) {
+	if minor <= 0 {
+		return NewTransaction{}, hermes.Errorf("amount must be greater than 0.")
+	}
+	if minor > maxMinor {
+		return NewTransaction{}, hermes.Errorf("amount is too large.")
+	}
+	currency = strings.ToUpper(strings.TrimSpace(currency))
+	if !reCurrency.MatchString(currency) {
+		return NewTransaction{}, hermes.Errorf("currency must be a 3-letter ISO 4217 code such as THB.")
+	}
+	merchant = hermes.Untrusted(merchant, 100)
+	if merchant == "" {
+		return NewTransaction{}, hermes.Errorf("merchant is required.")
+	}
+	date, err := parseDate("occurred_on", occurredOn)
+	if err != nil {
+		return NewTransaction{}, err
+	}
+	if date.After(m.today().AddDate(0, 0, 1)) {
+		return NewTransaction{}, hermes.Errorf("occurred_on is in the future. Check the date with the user.")
+	}
+	if date.Before(time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC)) {
+		return NewTransaction{}, hermes.Errorf("occurred_on is implausibly old. Check the date with the user.")
+	}
+	category = normCategory(category)
+	if category == "" {
+		category = "uncategorized"
+	}
+	return NewTransaction{
+		AmountMinor: minor,
+		Currency:    currency,
+		Merchant:    merchant,
+		Category:    category,
+		OccurredOn:  date,
+		Note:        hermes.Untrusted(note, 300),
+		Reference:   hermes.Untrusted(reference, 100),
+	}, nil
+}
+
 func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) (string, error) {
 	var a struct {
 		Amount         amount `json:"amount"`
@@ -267,37 +310,9 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	if err != nil {
 		return "", hermes.Errorf("%s.", capitalize(err.Error()))
 	}
-	currency := strings.ToUpper(strings.TrimSpace(a.Currency))
-	if !reCurrency.MatchString(currency) {
-		return "", hermes.Errorf("currency must be a 3-letter ISO 4217 code such as THB.")
-	}
-	merchant := hermes.Untrusted(a.Merchant, 100)
-	if merchant == "" {
-		return "", hermes.Errorf("merchant is required.")
-	}
-	date, err := parseDate("occurred_on", a.OccurredOn)
+	n, err := m.buildTransaction(minor, a.Currency, a.Merchant, a.OccurredOn, a.Category, a.Note, a.Reference)
 	if err != nil {
 		return "", err
-	}
-	today := m.today()
-	if date.After(today.AddDate(0, 0, 1)) {
-		return "", hermes.Errorf("occurred_on is in the future. Check the date with the user.")
-	}
-	if date.Before(time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC)) {
-		return "", hermes.Errorf("occurred_on is implausibly old. Check the date with the user.")
-	}
-	category := normCategory(a.Category)
-	if category == "" {
-		category = "uncategorized"
-	}
-	n := NewTransaction{
-		AmountMinor: minor,
-		Currency:    currency,
-		Merchant:    merchant,
-		Category:    category,
-		OccurredOn:  date,
-		Note:        hermes.Untrusted(a.Note, 300),
-		Reference:   hermes.Untrusted(a.Reference, 100),
 	}
 
 	if n.Reference == "" && !a.AllowDuplicate {
