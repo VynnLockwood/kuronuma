@@ -48,7 +48,7 @@ func (m *Module) Register(s *hermes.Server) {
 	s.AddTool(hermes.Tool{
 		Name:  "list_memories",
 		Title: "Find memories",
-		Description: "List and search the user's tasks, to-dos and notes. Open items come first, ordered by due date (undated last), then priority, then newest. " +
+		Description: "List and search the user's tasks, to-dos and notes. Open items come first, ordered by due date (undated last), then priority, then newest; done and archived items are included after them unless you filter with status (use status open for only what is still to do). " +
 			"query matches every word (up to 5) as part of the title, details or a tag, ignoring case. due_before and due_after are inclusive, and items without a due date never match them.",
 		Scope:    ScopeRead,
 		ReadOnly: true,
@@ -67,7 +67,7 @@ func (m *Module) Register(s *hermes.Server) {
 	s.AddTool(hermes.Tool{
 		Name:  "update_memory",
 		Title: "Change a memory",
-		Description: "Change one of the user's items by id (from list_memories). Set status to done to complete it, open to reopen it, archived to put it away. " +
+		Description: "Change one of the user's items by id (from list_memories). Set status to done to complete it, open to reopen it, archived to set it aside (archived items still appear in list_memories after the open ones). " +
 			"Only the fields you send change. due_on set to an empty string clears the date; tags replaces all tags. Confirm with the user first.",
 		Scope: ScopeWrite,
 		InputSchema: hermes.Schema(map[string]any{
@@ -86,7 +86,7 @@ func (m *Module) Register(s *hermes.Server) {
 		Name:  "delete_memory",
 		Title: "Delete a memory",
 		Description: "Permanently delete one item by id. Only do this when the user asks, and confirm which item first (use list_memories to find the id). " +
-			"To keep an item but hide it, set its status to archived with update_memory instead.",
+			"To keep an item but set it aside, set its status to archived with update_memory instead (archived items still appear in list_memories after the open ones).",
 		Scope:       ScopeWrite,
 		Destructive: true,
 		InputSchema: hermes.Schema(map[string]any{"id": hermes.Prop("string", "The item id from list_memories.")}, "id"),

@@ -612,3 +612,45 @@ func TestConcurrentUse(t *testing.T) {
 		t.Errorf("the contended item must still be deletable: %v", data)
 	}
 }
+
+func TestToolTextIsTruthfulAboutArchiving(t *testing.T) {
+	e := newEnv(t)
+	req := httptest.NewRequest(http.MethodPost, "/mcp", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/list"}`))
+	req.Header.Set("Authorization", "Bearer alice")
+	rec := httptest.NewRecorder()
+	e.srv.ServeHTTP(rec, req)
+	var res map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &res); err != nil {
+		t.Fatal(err)
+	}
+	desc := map[string]string{}
+	for _, x := range res["result"].(map[string]any)["tools"].([]any) {
+		tool := x.(map[string]any)
+		desc[tool["name"].(string)] = tool["description"].(string)
+	}
+	if strings.Contains(strings.ToLower(desc["delete_memory"]), "hide") {
+		t.Errorf("delete_memory says archiving hides an item, but archived items are still listed: %s", desc["delete_memory"])
+	}
+	if !strings.Contains(desc["list_memories"], "archived") {
+		t.Errorf("list_memories must say that done and archived items are included: %s", desc["list_memories"])
+	}
+	for _, tool := range []string{"update_memory", "delete_memory"} {
+		if !strings.Contains(desc[tool], "still appear in list_memories") {
+			t.Errorf("%s must say that archived items still appear in list_memories: %s", tool, desc[tool])
+		}
+	}
+	if !strings.Contains(desc["list_memories"], "status") || !strings.Contains(desc["list_memories"], "open") {
+		t.Errorf("list_memories must say how to get only what is still to do: %s", desc["list_memories"])
+	}
+
+	// The behaviour the text must describe: archived items are listed (after open ones) unless filtered out.
+	e.add(map[string]any{"title": "Open one"})
+	id := e.add(map[string]any{"title": "Set aside"})["id"]
+	e.must("alice", "update_memory", map[string]any{"id": id, "status": "archived"})
+	if got := join(e.titles("alice", map[string]any{})); got != "Open one | Set aside" {
+		t.Errorf("an unfiltered list shows archived items after the open ones: %q", got)
+	}
+	if got := join(e.titles("alice", map[string]any{"status": "open"})); got != "Open one" {
+		t.Errorf("status open shows only what is still to do: %q", got)
+	}
+}
