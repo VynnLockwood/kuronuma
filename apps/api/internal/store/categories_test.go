@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -152,5 +153,43 @@ func TestPostgresCategories(t *testing.T) {
 	// Bob was never touched.
 	if c := list(bob)["food"]; !c.Listed || c.Uses["spending"] != 1 {
 		t.Fatalf("bob's category changed: %+v", c)
+	}
+
+	// A rename racing new spending must not lose or corrupt records. The design accepts that a record
+	// saved at the same moment can keep the old name; it must then show as unlisted, never disappear.
+	carol := newUser()
+	if _, err := db.CreateCategory(ctx, carol, "old1"); err != nil {
+		t.Fatal(err)
+	}
+	spend(carol, "old1", 3)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		if _, err := db.RenameCategory(ctx, carol, "old1", "new1"); err != nil {
+			t.Errorf("rename during spending: %v", err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 20; i++ {
+			if _, err := db.pool.Exec(ctx, `
+				INSERT INTO transactions (user_id, amount_minor, currency, merchant, category, occurred_on)
+				VALUES ($1::uuid, 100, 'THB', 'shop', 'old1', '2026-10-01')`, carol); err != nil {
+				t.Errorf("insert during rename: %v", err)
+				return
+			}
+		}
+	}()
+	wg.Wait()
+	if n := inCategory(carol, "old1") + inCategory(carol, "new1"); n != 23 {
+		t.Fatalf("after the race there are %d records under old1 or new1, want 23: records were lost", n)
+	}
+	got = list(carol)
+	if !got["new1"].Listed {
+		t.Fatalf("new1 is not listed after the rename: %+v", got["new1"])
+	}
+	if c := got["old1"]; c.Uses["spending"] > 0 && c.Listed {
+		t.Fatalf("old1 still holds records but claims to be listed: %+v", c)
 	}
 }
