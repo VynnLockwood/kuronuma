@@ -17,6 +17,11 @@ import { copy, type Lang } from "./copy";
 // Marks an element for the scroll reveal (see Reveal.tsx); `i` staggers siblings by 60 ms.
 const rv = (i = 0) => ({ "data-reveal": "", style: { "--d": `${i * 60}ms` } as React.CSSProperties });
 
+// Motif animation timing: a negative delay starts each one mid-cycle, so they never move in step.
+const mo = (delay: number, dur?: number) => ({ "--delay": `${delay}s`, ...(dur ? { "--dur": `${dur}s` } : {}) }) as React.CSSProperties;
+// Hero entrance order (see .hero-in in globals.css).
+const hi = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
 const home = (lang: Lang) => (lang === "th" ? "/th" : "/");
 
 const stepIcons: IconName[] = ["plug", "layers", "chat"];
@@ -90,23 +95,30 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Hero */}
         <section className="relative overflow-x-clip px-6 pt-20 text-center md:pt-24">
           <div aria-hidden="true" data-motif-layer className="pointer-events-none absolute inset-x-0 top-0 h-20 md:h-24">
-            <Sparkle size={36} className="absolute top-5 left-[7%]" />
-            <Star size={30} className="absolute top-7 right-[9%] md:size-9" />
+            <Sparkle size={36} className="motif-twinkle absolute top-5 left-[7%]" style={mo(-0.6)} />
+            <Star size={30} className="motif-twinkle absolute top-7 right-[9%] md:size-9" style={mo(-2.1, 4.4)} />
           </div>
-          <p className="mb-3 inline-flex items-center gap-1.5 text-[17px] font-semibold text-link">
+          <p className="hero-in mb-3 inline-flex items-center gap-1.5 text-[17px] font-semibold text-link" style={hi(0)}>
             <Icon name="sparkle" size={16} /> {c.hero.eyebrow}
           </p>
           <h1 className="mx-auto max-w-4xl text-[44px] leading-[1.05] font-bold tracking-[-0.035em] text-balance sm:text-6xl md:text-[80px]">
-            {c.hero.title[0]} <span className="text-subtle">{c.hero.title[1]}</span>
+            <span className="hero-in block" style={hi(1)}>
+              {c.hero.title[0]}
+            </span>{" "}
+            <span className="hero-in block text-subtle" style={hi(2)}>
+              {c.hero.title[1]}
+            </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-normal text-muted-foreground md:text-[21px]">{c.hero.sub}</p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
+          <p className="hero-in mx-auto mt-6 max-w-2xl text-lg leading-normal text-muted-foreground md:text-[21px]" style={hi(3)}>
+            {c.hero.sub}
+          </p>
+          <div className="hero-in mt-8 flex flex-wrap items-center justify-center gap-6" style={hi(4)}>
             <AuthButton signIn={c.hero.primary} openApp={c.openApp} className={buttonVariants({ size: "lg" })} />
             <a href="#how" className={buttonVariants({ variant: "link", className: "text-[17px]" })}>
               {c.hero.secondary} ›
             </a>
           </div>
-          <ul aria-label="Highlights" className="mx-auto mt-7 flex max-w-3xl flex-wrap justify-center gap-2">
+          <ul aria-label="Highlights" style={hi(5)} className="hero-in mx-auto mt-7 flex max-w-3xl flex-wrap justify-center gap-2">
             {c.hero.chips.map((chip) => (
               <li key={chip} className="rounded-full bg-muted px-3.5 py-1.5 text-[13px] text-ink-2">
                 {chip}
@@ -118,8 +130,8 @@ export function Landing({ lang }: { lang: Lang }) {
           {/* Product shot: an example chat and the memory panel */}
           <div className="relative mx-auto mt-16 max-w-[1120px] overflow-hidden rounded-t-[32px] bg-muted px-4 pt-10 sm:px-6 md:pt-14">
             <div aria-hidden="true" data-motif-layer className="pointer-events-none absolute inset-x-0 top-0 h-10 md:h-14">
-              <Petal size={32} className="absolute top-1 left-4 md:top-2 md:left-8 md:size-11" />
-              <Sprout size={32} className="absolute top-1 right-4 md:top-2 md:right-8 md:size-11" />
+              <Petal size={32} className="motif-float absolute top-1 left-4 md:top-2 md:left-8 md:size-11" style={mo(-1.3)} />
+              <Sprout size={32} className="motif-float absolute top-1 right-4 md:top-2 md:right-8 md:size-11" style={mo(-4.2, 8.5)} />
             </div>
             <div className="mx-auto grid max-w-[880px] items-end gap-5 text-left md:grid-cols-2">
               <div role="img" aria-label={c.mock.example} className="rounded-t-3xl bg-background p-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
@@ -198,7 +210,7 @@ export function Landing({ lang }: { lang: Lang }) {
           <ol className="mt-12 grid gap-5 md:grid-cols-3">
             {c.how.steps.map((s, i) => (
               <li key={s.title} {...rv(i)}>
-                <Card className="flex h-full min-h-[220px] flex-col gap-3 rounded-[28px] p-9">
+                <Card cute className="flex h-full min-h-[220px] flex-col gap-3 rounded-[28px] p-9">
                   <span className="inline-flex size-11 items-center justify-center rounded-full bg-muted" aria-hidden="true">
                     <Icon name={stepIcons[i] ?? "check"} size={22} />
                   </span>
@@ -216,7 +228,7 @@ export function Landing({ lang }: { lang: Lang }) {
           <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {c.features.items.map((f, i) => (
               <li key={f.title} {...rv(i % 3)}>
-                <Card className="h-full min-h-[200px] rounded-[28px] bg-muted p-9">
+                <Card cute className="h-full min-h-[200px] rounded-[28px] bg-muted p-9">
                   <Icon name={f.icon} size={28} />
                   <CardTitle className="mt-5 mb-2">{f.title}</CardTitle>
                   <CardDescription>{f.body}</CardDescription>
@@ -232,7 +244,7 @@ export function Landing({ lang }: { lang: Lang }) {
           <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {c.modules.items.map((m, i) => (
               <li key={m.god} {...rv(i)}>
-                <Card className="flex h-full min-h-[220px] flex-col rounded-[28px]">
+                <Card cute className="flex h-full min-h-[220px] flex-col rounded-[28px]">
                   <Badge variant={m.live ? "success" : "muted"}>{m.live ? c.modules.available : c.modules.soon}</Badge>
                   <h3 className={cn("mt-auto pt-12 text-[28px] font-bold tracking-[-0.02em]", !m.live && "text-muted-foreground")}>{m.god}</h3>
                   <p className={cn("text-[15px] font-semibold", !m.live && "text-muted-foreground")}>{m.area}</p>
@@ -312,9 +324,9 @@ export function Landing({ lang }: { lang: Lang }) {
         <section className="px-6 pb-24 md:pb-30">
           <div className="mx-auto max-w-[1120px] rounded-[32px] bg-muted px-6 py-22 text-center" {...rv()}>
             <div className="flex items-center justify-center gap-6">
-              <Letter size={40} />
+              <Letter size={40} className="motif-float" style={mo(-2.8, 6.5)} />
               <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="size-20" />
-              <Sparkle size={34} />
+              <Sparkle size={34} className="motif-twinkle" style={mo(-1.7, 3.1)} />
             </div>
             <h2 className="mt-6 text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.cta.title}</h2>
             <p className="mx-auto mt-4 max-w-xl text-[19px] text-muted-foreground">{c.cta.sub}</p>
@@ -329,7 +341,7 @@ export function Landing({ lang }: { lang: Lang }) {
       </main>
 
       <footer className="relative bg-muted px-6 pt-10 pb-6 text-xs text-muted-foreground">
-        <Cloud size={56} className="absolute top-0 right-6 -translate-y-1/2 opacity-90" />
+        <Cloud size={56} className="motif-float absolute top-0 right-6 -translate-y-1/2 opacity-90" style={mo(-3.4, 9)} />
         <div className="mx-auto max-w-[1120px]">
           <div className="grid gap-8 border-b border-border pb-7 sm:grid-cols-2 lg:grid-cols-4">
             <div>

@@ -91,9 +91,9 @@ export function Star(props: MotifProps) {
 export function MotifDivider() {
   return (
     <div aria-hidden="true" className="flex items-center justify-center gap-4 py-2">
-      <Sparkle size={18} />
-      <Sprout size={18} />
-      <Sparkle size={18} />
+      <Sparkle size={18} className="motif-twinkle" style={{ "--delay": "-0.4s" } as CSSProperties} />
+      <Sprout size={18} className="motif-float" style={{ "--delay": "-2.2s" } as CSSProperties} />
+      <Sparkle size={18} className="motif-twinkle" style={{ "--delay": "-1.6s" } as CSSProperties} />
     </div>
   );
 }
