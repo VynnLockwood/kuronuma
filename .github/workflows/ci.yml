@@ -77,5 +77,5 @@ jobs:
           docker run --rm \
             --add-host api:127.0.0.1 --add-host web:127.0.0.1 \
             -v "$PWD/deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
-            -v "$PWD/deploy/nginx/proxy.conf:/etc/nginx/nemosyne-proxy.conf:ro" \
+            -v "$PWD/deploy/nginx/proxy.conf:/etc/nginx/kuronuma-proxy.conf:ro" \
             nginx:1.30-alpine nginx -t

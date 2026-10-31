@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// The session cookie was renamed from nem_session to kuro_session. There is deliberately no fallback to the old
+// The session cookie was renamed from nem_session to kuro_session [keep-nemosyne]. There is deliberately no fallback to the old
 // name: people sign in again once, and nothing keeps honouring the old cookie.
 func TestOldSessionCookieNameIsNotAccepted(t *testing.T) {
 	h := newOH(t)
@@ -33,7 +33,7 @@ func TestNewClientsGetTheKuroPrefix(t *testing.T) {
 	}
 }
 
-// Clients registered before the rename keep their nem_c_ ids in the database and must keep working.
+// Clients registered before the rename keep their nem_c_ ids in the database and must keep working. [keep-nemosyne]
 func TestLegacyClientIDsStillWork(t *testing.T) {
 	h := newOH(t)
 	const legacy = "nem_c_legacy" // [keep-nemosyne]

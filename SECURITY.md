@@ -1,6 +1,6 @@
 # Security policy
 
-Nemosyne stores personal financial data, so security reports are welcome and taken seriously.
+Kuronuma stores personal financial data, so security reports are welcome and taken seriously.
 
 ## Reporting a vulnerability
 
@@ -15,7 +15,7 @@ In scope: the code in this repository as shipped: the Go API (sign-in, OAuth ser
 Out of scope:
 
 - A self-hosted instance that is misconfigured (for example, left open to any Google account on purpose).
-- Third-party services such as Google sign-in or the assistants that connect to Nemo.
+- Third-party services such as Google sign-in or the assistants that connect to Kuronuma.
 - Social engineering, physical access, or a compromised user device.
 - Denial of service by sheer traffic volume.
 
@@ -27,6 +27,6 @@ Test only against your own instance or your own account. Do not read, change, or
 
 Only the latest commit on `main`. There are no versioned releases yet.
 
-## If you run Nemo yourself
+## If you run Kuronuma yourself
 
 See the Security section of the [README](README.md): restrict who can sign in with `ALLOWED_EMAILS`, use strong secrets, terminate TLS in front of nginx, keep Postgres unpublished, and keep your images up to date.

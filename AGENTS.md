@@ -4,7 +4,7 @@ Instructions for every AI agent (and human) working in this repo. Read all of it
 
 ## What this project is
 
-Nemosyne is an open-source personal data hub exposed to AI assistants over MCP. Stack: Go API (`apps/api`), Next.js web (`apps/web`), Postgres, nginx, Docker Compose. Components are named after Greek gods: Cerberus (auth and OAuth server), Hermes (MCP endpoint), Plutus (spending), Olympus (web), Gaia (Postgres), Propylaea (nginx), Hades (field encryption, planned). See `README.md` and `docs/design.md`.
+Kuronuma is an open-source personal data hub exposed to AI assistants over MCP. Stack: Go API (`apps/api`), Next.js web (`apps/web`), Postgres, nginx, Docker Compose. Components are named after Greek gods: Cerberus (auth and OAuth server), Hermes (MCP endpoint), Plutus (spending), Olympus (web), Gaia (Postgres), Propylaea (nginx), Hades (field encryption, planned). See `README.md` and `docs/design.md`.
 
 **The project is live: `main` is deployed.** Treat every change as production-affecting.
 
