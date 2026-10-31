@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -411,7 +410,7 @@ func (o *OAuth) authorizeGET(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/api/auth/google/login?next="+url.QueryEscape(r.URL.RequestURI()), http.StatusFound)
 		return
 	}
-	o.renderConsent(w, user, req)
+	o.renderConsent(w, r, user, req)
 }
 
 func (o *OAuth) authorizePOST(w http.ResponseWriter, r *http.Request) {
@@ -444,6 +443,21 @@ func (o *OAuth) authorizePOST(w http.ResponseWriter, r *http.Request) {
 	case "deny":
 		o.redirect(w, r, req, map[string]string{"error": "access_denied", "error_description": "The user denied the request"})
 	case "approve":
+		// The access level only narrows what was asked for. The granted scopes come from the request that was
+		// checked above (the CSRF token covers it), never from a list in this form.
+		granted, access := req.Scopes, r.PostForm.Get("access")
+		switch access {
+		case "", "full":
+			access = "full"
+		case "read":
+			if granted = readOnlyScopes(req.Scopes); len(granted) == 0 {
+				o.errorPage(w, http.StatusBadRequest, "Read-only access is not possible for this request. Go back to your assistant and start the connection again.")
+				return
+			}
+		default:
+			o.errorPage(w, http.StatusBadRequest, "Unknown access level.")
+			return
+		}
 		code, err := randString(32)
 		if err != nil {
 			o.errorPage(w, http.StatusInternalServerError, "Temporary failure. Please try again.")
@@ -459,7 +473,7 @@ func (o *OAuth) authorizePOST(w http.ResponseWriter, r *http.Request) {
 			UserID:        user.ID,
 			RedirectURI:   req.RedirectURI,
 			CodeChallenge: req.Challenge,
-			Scopes:        req.Scopes,
+			Scopes:        granted,
 			Resource:      resource,
 			ExpiresAt:     o.opt.Now().Add(5 * time.Minute),
 		})
@@ -468,7 +482,7 @@ func (o *OAuth) authorizePOST(w http.ResponseWriter, r *http.Request) {
 			o.errorPage(w, http.StatusInternalServerError, "Temporary failure. Please try again.")
 			return
 		}
-		o.log.Info("oauth consent approved", "client_id", req.ClientID, "scopes", strings.Join(req.Scopes, " "))
+		o.log.Info("oauth consent approved", "client_id", req.ClientID, "access", access, "scopes", strings.Join(granted, " "))
 		o.redirect(w, r, req, map[string]string{"code": code})
 	default:
 		o.errorPage(w, http.StatusBadRequest, "Unknown decision.")
@@ -521,83 +535,9 @@ func buildRedirect(base string, params map[string]string) string {
 
 // ---- consent and error pages ----
 
-var consentTmpl = template.Must(template.New("consent").Parse(`<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Connect to Nemosyne</title>
-<style>
-body{margin:0;background:#f7f4ee;color:#1d1b16;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:30rem;margin:3rem auto;padding:0 1.25rem}
-h1{font:600 1.6rem Georgia,serif;margin:0 0 .25rem}
-.card{background:#fff;border:1px solid #e4ded0;border-radius:.75rem;padding:1.25rem;margin:1rem 0}
-.muted{color:#6b665b;font-size:.9rem}
-.warn{background:#fdf1e3;color:#7a4310;border-radius:.5rem;padding:.6rem .9rem;font-size:.9rem}
-ul{padding-left:1.2rem;margin:.5rem 0}
-.row{display:flex;gap:.75rem;margin-top:1rem}
-button{font:inherit;border-radius:.5rem;padding:.6rem 1rem;border:1px solid #2f4a8a;cursor:pointer}
-.approve{background:#2f4a8a;color:#fff}.deny{background:transparent;color:#2f4a8a}
-code{background:#f1ede3;padding:.1rem .3rem;border-radius:.25rem;word-break:break-all}
-</style></head><body><main>
-<h1>Nemosyne</h1>
-<p class="muted">Signed in as {{.Email}}</p>
-<div class="card">
-<p><strong>{{.ClientName}}</strong> wants to connect to your Nemosyne account.</p>
-<p class="muted">It will be able to:</p>
-<ul>{{range .Scopes}}<li>{{.Description}}</li>{{end}}</ul>
-<p class="muted">After you decide, you will be sent to <code>{{.Redirect}}</code>.</p>
-<p class="warn">Only approve if you started this connection yourself. The app name is chosen by the app, not verified by us.</p>
-<form method="post" action="/api/oauth/authorize">
-<input type="hidden" name="response_type" value="code">
-<input type="hidden" name="client_id" value="{{.ClientID}}">
-<input type="hidden" name="redirect_uri" value="{{.RedirectURI}}">
-<input type="hidden" name="code_challenge" value="{{.Challenge}}">
-<input type="hidden" name="code_challenge_method" value="S256">
-<input type="hidden" name="state" value="{{.State}}">
-<input type="hidden" name="scope" value="{{.Scope}}">
-<input type="hidden" name="resource" value="{{.Resource}}">
-<input type="hidden" name="csrf" value="{{.CSRF}}">
-<div class="row">
-<button class="approve" type="submit" name="decision" value="approve">Approve</button>
-<button class="deny" type="submit" name="decision" value="deny">Deny</button>
-</div></form></div></main></body></html>`))
-
-var errorTmpl = template.Must(template.New("error").Parse(`<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nemosyne</title>
-<style>body{margin:0;background:#f7f4ee;color:#1d1b16;font:16px/1.5 system-ui,sans-serif}
-main{max-width:30rem;margin:3rem auto;padding:0 1.25rem}h1{font:600 1.6rem Georgia,serif}</style></head>
-<body><main><h1>Nemosyne</h1><p>{{.}}</p></main></body></html>`))
-
 func securePageHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'")
-}
-
-func (o *OAuth) renderConsent(w http.ResponseWriter, user User, req authzReq) {
-	var scopes []Scope
-	for _, name := range req.Scopes {
-		for _, s := range o.opt.Scopes {
-			if s.Name == name {
-				scopes = append(scopes, s)
-			}
-		}
-	}
-	securePageHeaders(w)
-	err := consentTmpl.Execute(w, map[string]any{
-		"Email":       user.Email,
-		"ClientName":  req.Client.Name,
-		"Scopes":      scopes,
-		"Redirect":    redirectLabel(req.RedirectURI),
-		"ClientID":    req.ClientID,
-		"RedirectURI": req.RedirectURI,
-		"Challenge":   req.Challenge,
-		"State":       req.State,
-		"Scope":       strings.Join(req.Scopes, " "),
-		"Resource":    req.Resource,
-		"CSRF":        o.csrf(user.ID, req),
-	})
-	if err != nil {
-		o.log.Error("render consent failed", "err", err)
-	}
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'")
 }
 
 func (o *OAuth) errorPage(w http.ResponseWriter, status int, msg string) {

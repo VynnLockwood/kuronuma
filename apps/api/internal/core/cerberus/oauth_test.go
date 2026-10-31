@@ -141,13 +141,17 @@ type oh struct {
 func newOH(t *testing.T) *oh { return newOHLog(t, quietLog()) }
 
 func newOHLog(t *testing.T, log *slog.Logger) *oh {
+	return newOHScopes(t, log, []Scope{{Name: "plutus:read", Description: "Read your spending"}, {Name: "plutus:write", Description: "Add and delete spending"}})
+}
+
+func newOHScopes(t *testing.T, log *slog.Logger, scopes []Scope) *oh {
 	t.Helper()
 	hs := newHarness(t)
 	st := newMemOAuthStore()
 	o := NewOAuth(hs.h, st, OAuthOptions{
 		PublicURL: testOrigin,
 		Secret:    testSecret,
-		Scopes:    []Scope{{Name: "plutus:read", Description: "Read your spending"}, {Name: "plutus:write", Description: "Add and delete spending"}},
+		Scopes:    scopes,
 		Now:       func() time.Time { return hs.now },
 	}, log)
 	o.Register(hs.mux)
@@ -396,12 +400,12 @@ func TestOAuthFullFlow(t *testing.T) {
 
 	// 2. Signed in: consent page lists only the requested scope.
 	csrf, page := h.consent(vals)
-	for _, want := range []string{"Test App", "Read your spending", "http://localhost:7777", "nolan@example.com"} {
+	for _, want := range []string{"Test App", "See your spending records and totals", "http://localhost:7777", "nolan@example.com"} {
 		if !strings.Contains(strings.ToLower(page), strings.ToLower(want)) {
 			t.Errorf("consent page missing %q", want)
 		}
 	}
-	if strings.Contains(page, "Add and delete spending") {
+	if strings.Contains(page, "Add and delete spending records") {
 		t.Error("consent page lists a scope that was not requested")
 	}
 
