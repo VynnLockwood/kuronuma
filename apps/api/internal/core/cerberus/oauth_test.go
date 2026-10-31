@@ -138,7 +138,9 @@ type oh struct {
 	session *http.Cookie
 }
 
-func newOH(t *testing.T) *oh {
+func newOH(t *testing.T) *oh { return newOHLog(t, quietLog()) }
+
+func newOHLog(t *testing.T, log *slog.Logger) *oh {
 	t.Helper()
 	hs := newHarness(t)
 	st := newMemOAuthStore()
@@ -147,7 +149,7 @@ func newOH(t *testing.T) *oh {
 		Secret:    testSecret,
 		Scopes:    []Scope{{Name: "plutus:read", Description: "Read your spending"}, {Name: "plutus:write", Description: "Add and delete spending"}},
 		Now:       func() time.Time { return hs.now },
-	}, quietLog())
+	}, log)
 	o.Register(hs.mux)
 
 	flow, state, _, _ := hs.startLogin("/")
@@ -356,12 +358,12 @@ func TestRegisterRedirectValidation(t *testing.T) {
 func TestRegisterMetadataValidation(t *testing.T) {
 	h := newOH(t)
 	cases := map[string]string{
-		"not json":      `nope`,
-		"no redirects":  `{"client_name":"x"}`,
-		"too many":      `{"redirect_uris":["https://a.example/1","https://a.example/2","https://a.example/3","https://a.example/4","https://a.example/5","https://a.example/6"]}`,
-		"secret client": `{"redirect_uris":["https://a.example/cb"],"token_endpoint_auth_method":"client_secret_basic"}`,
-		"bad grant":     `{"redirect_uris":["https://a.example/cb"],"grant_types":["password"]}`,
-		"bad response":  `{"redirect_uris":["https://a.example/cb"],"response_types":["token"]}`,
+		"not json":     `nope`,
+		"no redirects": `{"client_name":"x"}`,
+		"too many":     `{"redirect_uris":["https://a.example/1","https://a.example/2","https://a.example/3","https://a.example/4","https://a.example/5","https://a.example/6","https://a.example/7","https://a.example/8","https://a.example/9","https://a.example/10","https://a.example/11"]}`,
+		"key-based":    `{"redirect_uris":["https://a.example/cb"],"token_endpoint_auth_method":"private_key_jwt"}`,
+		"bad grant":    `{"redirect_uris":["https://a.example/cb"],"grant_types":["password"]}`,
+		"bad response": `{"redirect_uris":["https://a.example/cb"],"response_types":["token"]}`,
 	}
 	for name, body := range cases {
 		if rec := h.send("POST", "/api/oauth/register", "application/json", body, nil, nil); rec.Code != http.StatusBadRequest {

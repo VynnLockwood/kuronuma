@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -145,44 +146,108 @@ func (o *OAuth) serverMetadata(w http.ResponseWriter, _ *http.Request) {
 
 // ---- dynamic client registration (RFC 7591) ----
 
+// maxRedirectURIs is how many redirect URIs one registration may list. Gemini's connector registers six (Google
+// documents six app-specific callbacks), so five was too few.
+const maxRedirectURIs = 10
+
+// acceptedAuthMethods are the token_endpoint_auth_method values a registration may ask for. Every client is
+// registered as "none"; the secret methods are accepted so server-side clients can register at all.
+var acceptedAuthMethods = []string{"none", "client_secret_post", "client_secret_basic"}
+
+// registerRequest is the RFC 7591 client metadata this server reads; other fields are ignored.
+type registerRequest struct {
+	RedirectURIs            []string `json:"redirect_uris"`
+	ClientName              string   `json:"client_name"`
+	TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
+	GrantTypes              []string `json:"grant_types"`
+	ResponseTypes           []string `json:"response_types"`
+}
+
+// rejectRegistration answers a refused registration with 400 and says why in the server log, so an incompatible
+// client can be diagnosed. Only coarse facts are logged: the error code and reason, the requested login method,
+// grant and response types, how many redirect URIs, and their origins (scheme and host: never paths or query
+// strings, which can hold secrets). The client name is not logged. req is nil when the body could not be read.
+func (o *OAuth) rejectRegistration(w http.ResponseWriter, req *registerRequest, code, desc string) {
+	attrs := []any{"code", code, "reason", desc}
+	if req != nil {
+		attrs = append(attrs,
+			"auth_method", cleanText(req.TokenEndpointAuthMethod, 40),
+			"grant_types", cleanList(req.GrantTypes),
+			"response_types", cleanList(req.ResponseTypes),
+			"redirect_count", len(req.RedirectURIs),
+			"redirect_origins", redirectOrigins(req.RedirectURIs))
+	}
+	o.log.Warn("oauth client registration rejected", attrs...)
+	oauthError(w, http.StatusBadRequest, code, desc)
+}
+
+// cleanList cleans at most the first ten values of a client-supplied list for logging.
+func cleanList(in []string) []string {
+	out := make([]string, 0, min(len(in), 10))
+	for i, v := range in {
+		if i == 10 {
+			break
+		}
+		out = append(out, cleanText(v, 40))
+	}
+	return out
+}
+
+// redirectOrigins reduces redirect URIs to scheme and host (custom app schemes to "scheme://") for logging.
+func redirectOrigins(uris []string) []string {
+	out := make([]string, 0, min(len(uris), 10))
+	for i, s := range uris {
+		if i == 10 {
+			break
+		}
+		u, err := url.Parse(s)
+		switch {
+		case err != nil || u.Scheme == "":
+			out = append(out, "(unparseable)")
+		case u.Host == "":
+			out = append(out, cleanText(u.Scheme, 40)+"://")
+		default:
+			out = append(out, cleanText(u.Scheme+"://"+u.Host, 100))
+		}
+	}
+	return out
+}
+
 func (o *OAuth) register(w http.ResponseWriter, r *http.Request) {
 	setCORS(w)
 	noStore(w)
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
-	var req struct {
-		RedirectURIs            []string `json:"redirect_uris"`
-		ClientName              string   `json:"client_name"`
-		TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
-		GrantTypes              []string `json:"grant_types"`
-		ResponseTypes           []string `json:"response_types"`
-	}
+	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "request body must be a JSON object")
+		o.rejectRegistration(w, nil, "invalid_client_metadata", "request body must be a JSON object")
 		return
 	}
-	if n := len(req.RedirectURIs); n == 0 || n > 5 {
-		oauthError(w, http.StatusBadRequest, "invalid_redirect_uri", "provide between 1 and 5 redirect_uris")
+	if n := len(req.RedirectURIs); n == 0 || n > maxRedirectURIs {
+		o.rejectRegistration(w, &req, "invalid_redirect_uri", fmt.Sprintf("provide between 1 and %d redirect_uris", maxRedirectURIs))
 		return
 	}
 	for _, u := range req.RedirectURIs {
 		if !validRedirectURI(u) {
-			oauthError(w, http.StatusBadRequest, "invalid_redirect_uri", "redirect_uris must be https, loopback http, or a custom app scheme without fragments")
+			o.rejectRegistration(w, &req, "invalid_redirect_uri", "redirect_uris must be https, loopback http, or a custom app scheme without fragments")
 			return
 		}
 	}
-	if m := req.TokenEndpointAuthMethod; m != "" && m != "none" {
-		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "only public clients (token_endpoint_auth_method \"none\") are supported")
+	// Server-side clients such as Gemini ask for a client secret. RFC 7591 section 3.2.1 lets the server answer with
+	// the values it actually uses, so they are registered as public clients (no secret is issued, PKCE protects the
+	// code) and the response says "none". Key-based methods cannot be served and are refused.
+	if m := req.TokenEndpointAuthMethod; m != "" && !slices.Contains(acceptedAuthMethods, m) {
+		o.rejectRegistration(w, &req, "invalid_client_metadata", "supported token_endpoint_auth_method values are none, client_secret_post and client_secret_basic; clients are registered as public clients and no secret is issued")
 		return
 	}
 	for _, g := range req.GrantTypes {
 		if g != "authorization_code" && g != "refresh_token" {
-			oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "unsupported grant_type "+cleanText(g, 40))
+			o.rejectRegistration(w, &req, "invalid_client_metadata", "unsupported grant_type "+cleanText(g, 40))
 			return
 		}
 	}
 	for _, rt := range req.ResponseTypes {
 		if rt != "code" {
-			oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "only response_type \"code\" is supported")
+			o.rejectRegistration(w, &req, "invalid_client_metadata", "only response_type \"code\" is supported")
 			return
 		}
 	}
@@ -293,7 +358,7 @@ func (o *OAuth) parseAuthz(ctx context.Context, v url.Values) (authzReq, *authzE
 	}
 	scopes, ok := o.parseScopes(req.ScopeRaw)
 	if !ok {
-		return req, &authzErr{"invalid_scope", "unknown scope requested", true}
+		return req, &authzErr{"invalid_scope", "unknown scope requested: " + cleanText(strings.Join(o.unknownScopes(req.ScopeRaw), " "), 100), true}
 	}
 	req.Scopes = scopes
 	if req.Resource != "" && req.Resource != o.Resource() {
@@ -303,6 +368,18 @@ func (o *OAuth) parseAuthz(ctx context.Context, v url.Values) (authzReq, *authzE
 }
 
 // parseScopes validates a space-separated scope list. An empty list means every supported scope.
+// unknownScopes lists the requested scopes this server does not offer.
+func (o *OAuth) unknownScopes(raw string) []string {
+	supported := o.scopeNames()
+	var out []string
+	for _, s := range strings.Fields(raw) {
+		if !slices.Contains(supported, s) && !slices.Contains(out, s) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 func (o *OAuth) parseScopes(raw string) ([]string, bool) {
 	supported := o.scopeNames()
 	fields := strings.Fields(raw)
@@ -410,6 +487,10 @@ func (o *OAuth) csrf(userID string, req authzReq) string {
 }
 
 func (o *OAuth) fail(w http.ResponseWriter, r *http.Request, req authzReq, e *authzErr) {
+	// Say why in the log so an incompatible client can be diagnosed. The state, PKCE challenge and full redirect URI
+	// are never logged; the redirect is reduced to its origin.
+	o.log.Warn("oauth authorize rejected", "code", e.code, "reason", e.desc, "client_id", cleanText(req.ClientID, 60),
+		"redirect_origin", redirectOrigins([]string{req.RedirectURI})[0], "redirected", e.redirect)
 	if !e.redirect {
 		o.errorPage(w, http.StatusBadRequest, e.desc)
 		return
@@ -547,7 +628,12 @@ func (o *OAuth) token(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	f := r.PostForm
-	client, err := o.store.GetClient(r.Context(), f.Get("client_id"))
+	clientID, ok := tokenClientID(r, f)
+	if !ok {
+		oauthError(w, http.StatusUnauthorized, "invalid_client", "malformed client authentication")
+		return
+	}
+	client, err := o.store.GetClient(r.Context(), clientID)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			oauthError(w, http.StatusUnauthorized, "invalid_client", "unknown client_id")
@@ -565,6 +651,35 @@ func (o *OAuth) token(w http.ResponseWriter, r *http.Request) {
 	default:
 		oauthError(w, http.StatusBadRequest, "unsupported_grant_type", "use authorization_code or refresh_token")
 	}
+}
+
+// tokenClientID is the client a token request names: the client_id form field, or the user name of an HTTP Basic
+// Authorization header (client_secret_basic). The password is ignored on purpose: no secret is ever issued, so a
+// client is identified by its id and held to PKCE and the binding of each code and refresh token to that client.
+// When both the header and the form name a client they must agree. ok is false for a header that cannot be read.
+func tokenClientID(r *http.Request, f url.Values) (id string, ok bool) {
+	id = f.Get("client_id")
+	scheme, cred, found := strings.Cut(r.Header.Get("Authorization"), " ")
+	if !found || !strings.EqualFold(scheme, "Basic") {
+		return id, true
+	}
+	raw, err := base64.StdEncoding.DecodeString(strings.TrimSpace(cred))
+	if err != nil {
+		return "", false
+	}
+	user, _, hasColon := strings.Cut(string(raw), ":")
+	if !hasColon {
+		return "", false
+	}
+	// RFC 6749 section 2.3.1: the user name is form-urlencoded before it is base64 encoded.
+	user, err = url.QueryUnescape(user)
+	if err != nil || user == "" {
+		return "", false
+	}
+	if id != "" && id != user {
+		return "", false
+	}
+	return user, true
 }
 
 func (o *OAuth) grantCode(w http.ResponseWriter, r *http.Request, client OAuthClient, f url.Values) {
