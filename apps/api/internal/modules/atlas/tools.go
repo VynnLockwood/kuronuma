@@ -40,7 +40,7 @@ func (m *Module) Register(s *hermes.Server) {
 			"body":     hermes.Prop("string", "Details (max 4000 characters). Optional."),
 			"due_on":   hermes.Prop("string", "Due date YYYY-MM-DD. Optional."),
 			"priority": hermes.Prop("string", "low, normal (default) or high."),
-			"category": hermes.Prop("string", "A name from the user's category list (list_categories shows it); unknown names are refused. Optional, defaults to uncategorized."),
+			"category": hermes.Prop("string", "The category. Use a name from list_categories when one fits; otherwise pass a short lowercase name (at most 40 characters) and it is created for the user, and the result says category_created. Optional, defaults to uncategorized."),
 			"tags":     strArray("Up to 10 short lowercase tags. Optional."),
 		}, "kind", "title"),
 		Handler: m.add,
@@ -77,7 +77,7 @@ func (m *Module) Register(s *hermes.Server) {
 			"status":   hermes.Prop("string", "open, done or archived."),
 			"priority": hermes.Prop("string", "low, normal or high."),
 			"due_on":   hermes.Prop("string", "New due date YYYY-MM-DD, or an empty string to clear it."),
-			"category": hermes.Prop("string", "A name from the user's category list."),
+			"category": hermes.Prop("string", "A category. Use a name from list_categories when one fits; otherwise a short lowercase name creates it. An empty string resets to uncategorized."),
 			"tags":     strArray("Replacement tags (an empty list clears them)."),
 		}, "id"),
 		Handler: m.update,
@@ -161,20 +161,27 @@ func parseDue(field, s string) (time.Time, error) {
 	return t, nil
 }
 
-// category normalises a category name (empty means uncategorized) and checks it against the user's list.
-func (m *Module) category(ctx context.Context, userID, raw string) (string, error) {
-	category := themis.NormalizeName(raw)
+// category normalises a category name (empty means uncategorized) and makes sure it is in the user's list,
+// creating it when the user does not have it yet; created says whether it did.
+func (m *Module) category(ctx context.Context, userID, raw string) (category string, created bool, err error) {
+	category = themis.NormalizeName(raw)
 	if category == "" || category == themis.Uncategorized {
-		return themis.Uncategorized, nil
+		return themis.Uncategorized, false, nil
 	}
-	names, err := m.store.CategoryNames(ctx, userID)
+	created, err = themis.Ensure(ctx, m.store, userID, category)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	if err := themis.Check(category, names); err != nil {
-		return "", err
+	return category, created, nil
+}
+
+// saved is the response for a successful add or update; category_created appears only when the call made a new category.
+func saved(status string, mem Memory, categoryCreated bool) (string, error) {
+	out := map[string]any{"status": status, "memory": toOut(mem)}
+	if categoryCreated {
+		out["category_created"] = true
 	}
-	return category, nil
+	return hermes.Respond(out)
 }
 
 func cleanEnum(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
@@ -219,7 +226,7 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 		}
 		due = &d
 	}
-	category, err := m.category(ctx, c.UserID, a.Category)
+	category, categoryCreated, err := m.category(ctx, c.UserID, a.Category)
 	if err != nil {
 		return "", err
 	}
@@ -230,7 +237,7 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	if err != nil {
 		return "", err
 	}
-	return hermes.Respond(map[string]any{"status": "saved", "memory": toOut(mem)})
+	return saved("saved", mem, categoryCreated)
 }
 
 func (m *Module) list(ctx context.Context, c hermes.Caller, raw json.RawMessage) (string, error) {
@@ -359,12 +366,13 @@ func (m *Module) update(ctx context.Context, c hermes.Caller, raw json.RawMessag
 			u.DueOn = &d
 		}
 	}
+	categoryCreated := false
 	if a.Category != nil {
-		cat, err := m.category(ctx, c.UserID, *a.Category)
+		cat, created, err := m.category(ctx, c.UserID, *a.Category)
 		if err != nil {
 			return "", err
 		}
-		u.Category = &cat
+		u.Category, categoryCreated = &cat, created
 	}
 	mem, found, err := m.store.UpdateMemory(ctx, c.UserID, strings.ToLower(a.ID), u)
 	if err != nil {
@@ -373,7 +381,7 @@ func (m *Module) update(ctx context.Context, c hermes.Caller, raw json.RawMessag
 	if !found {
 		return hermes.Respond(map[string]any{"status": "not_found"})
 	}
-	return hermes.Respond(map[string]any{"status": "updated", "memory": toOut(mem)})
+	return saved("updated", mem, categoryCreated)
 }
 
 func (m *Module) delete(ctx context.Context, c hermes.Caller, raw json.RawMessage) (string, error) {

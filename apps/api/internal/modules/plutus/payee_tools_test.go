@@ -108,8 +108,9 @@ func TestExplicitCategoryBeatsRule(t *testing.T) {
 	if catOf(data) != "uncategorized" || data["category_source"] != "given" {
 		t.Errorf("an explicit uncategorized also wins: %v", data)
 	}
-	if _, text, isErr := e.call("alice", "add_transaction", withRef(3, map[string]any{"merchant": "Grab", "category": "nope"})); !isErr || !strings.Contains(text, "create_category") {
-		t.Errorf("an explicit unknown category is still refused: %v %s", isErr, text)
+	data = e.addTx(3, "alice", map[string]any{"merchant": "Grab", "category": "nope"})
+	if catOf(data) != "nope" || data["category_source"] != "given" || data["category_created"] != true {
+		t.Errorf("an explicit new category beats the rule and is created: %v", data)
 	}
 }
 

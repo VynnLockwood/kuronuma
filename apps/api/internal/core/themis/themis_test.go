@@ -3,6 +3,7 @@ package themis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -458,5 +459,85 @@ func TestCheck(t *testing.T) {
 	te, _ = Check("x", []string{"fo​od\x07"}).(hermes.ToolError)
 	if strings.ContainsAny(te.Msg, "​\x07") || !strings.Contains(te.Msg, "food") {
 		t.Errorf("names must be cleaned in the message: %q", te.Msg)
+	}
+}
+
+// ---- Ensure: a category the user does not have yet is created, up to a cap ----
+
+type ensureStore struct {
+	names     []string
+	created   []string
+	existed   bool // CreateCategory reports the name was already listed (a concurrent save beat us)
+	createErr error
+}
+
+func (s *ensureStore) CategoryNames(context.Context, string) ([]string, error) { return s.names, nil }
+
+func (s *ensureStore) CreateCategory(_ context.Context, _, name string) (bool, error) {
+	s.created = append(s.created, name)
+	if s.createErr != nil {
+		return false, s.createErr
+	}
+	return !s.existed, nil
+}
+
+func TestEnsure(t *testing.T) {
+	ctx := context.Background()
+	many := func(n int) []string {
+		out := make([]string, n)
+		for i := range out {
+			out[i] = fmt.Sprintf("cat%03d", i)
+		}
+		return out
+	}
+	boom := fmt.Errorf("database down")
+	cases := []struct {
+		name        string
+		store       *ensureStore
+		category    string
+		wantCreated bool
+		wantCall    bool   // CreateCategory should have been called
+		wantErr     string // substring of a ToolError; "" for none
+		wantFailure error  // a non-ToolError that must pass through
+	}{
+		{name: "uncategorized needs nothing", store: &ensureStore{}, category: Uncategorized},
+		{name: "listed name is left alone", store: &ensureStore{names: []string{"food"}}, category: "food"},
+		{name: "new name is created", store: &ensureStore{names: []string{"food"}}, category: "travel", wantCreated: true, wantCall: true},
+		{name: "first category ever", store: &ensureStore{}, category: "work", wantCreated: true, wantCall: true},
+		{name: "lost race is not reported as created", store: &ensureStore{existed: true}, category: "work", wantCall: true},
+		{name: "99 listed leaves room for one", store: &ensureStore{names: many(99)}, category: "new", wantCreated: true, wantCall: true},
+		{name: "at the cap a new name is refused", store: &ensureStore{names: many(MaxCategories)}, category: "new", wantErr: "merge_categories"},
+		{name: "at the cap a listed name still works", store: &ensureStore{names: many(MaxCategories)}, category: "cat007"},
+		{name: "store failure passes through", store: &ensureStore{createErr: boom}, category: "work", wantCall: true, wantFailure: boom},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			created, err := Ensure(ctx, c.store, "alice", c.category)
+			switch {
+			case c.wantFailure != nil:
+				var te hermes.ToolError
+				if !errors.Is(err, c.wantFailure) || errors.As(err, &te) {
+					t.Fatalf("want the store failure untouched, got %v", err)
+				}
+			case c.wantErr != "":
+				var te hermes.ToolError
+				if !errors.As(err, &te) {
+					t.Fatalf("want a ToolError, got %v", err)
+				}
+				for _, want := range []string{c.wantErr, fmt.Sprint(MaxCategories), `"` + c.category + `"`} {
+					if !strings.Contains(err.Error(), want) {
+						t.Errorf("message lacks %q: %v", want, err)
+					}
+				}
+			case err != nil:
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if created != c.wantCreated {
+				t.Errorf("created = %v, want %v", created, c.wantCreated)
+			}
+			if called := len(c.store.created) > 0; called != c.wantCall {
+				t.Errorf("CreateCategory called = %v, want %v (%v)", called, c.wantCall, c.store.created)
+			}
+		})
 	}
 }

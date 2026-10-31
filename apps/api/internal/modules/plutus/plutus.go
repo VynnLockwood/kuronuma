@@ -76,6 +76,8 @@ type Store interface {
 	DeleteTransaction(ctx context.Context, userID, id string) (bool, error)
 	// CategoryNames returns the names in the user's category list, sorted. themis.Uncategorized is built in and not included.
 	CategoryNames(ctx context.Context, userID string) ([]string, error)
+	// CreateCategory adds name to the user's list; created is false when it was already there.
+	CreateCategory(ctx context.Context, userID, name string) (created bool, err error)
 	// PayeeRules returns all of the user's payee rules.
 	PayeeRules(ctx context.Context, userID string) ([]PayeeRule, error)
 	// SetPayeeRule creates the rule or updates the user's rule with the same PayeeNorm; created is true only for a new one.
@@ -121,7 +123,7 @@ func (m *Module) Register(s *hermes.Server) {
 			"currency":        hermes.Prop("string", "ISO 4217 code, for example THB or USD."),
 			"merchant":        hermes.Prop("string", "Who was paid (max 100 characters)."),
 			"occurred_on":     hermes.Prop("string", "Date of the payment, YYYY-MM-DD."),
-			"category":        hermes.Prop("string", "A name from the user's category list (list_categories shows it); unknown names are refused. Optional: omit it to let the user's payee rules choose, else it is uncategorized. Passing uncategorized explicitly switches payee rules off for this save."),
+			"category":        hermes.Prop("string", "The category. Use a name from list_categories when one fits; otherwise pass a short lowercase name (at most 40 characters) and it is created for the user, and the result says category_created. Optional: omit it to let the user's payee rules choose, else it is uncategorized. Passing uncategorized explicitly switches payee rules off for this save."),
 			"note":            hermes.Prop("string", "Optional note (max 300 characters)."),
 			"reference":       hermes.Prop("string", "Bank slip reference or transaction number. Optional but recommended."),
 			"allow_duplicate": hermes.Prop("boolean", "Set true only if the user confirms this is a separate payment identical to an existing one."),
@@ -267,11 +269,13 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	if date.Before(time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC)) {
 		return "", hermes.Errorf("occurred_on is implausibly old. Check the date with the user.")
 	}
-	// Category: what the caller gave wins (and must be in the user's list); with none given the user's
-	// payee rule for this merchant decides; otherwise uncategorized.
+	// Category: what the caller gave wins (a name the user does not have yet is created); with none given the
+	// user's payee rule for this merchant decides; otherwise uncategorized.
 	category, source, matched := themis.NormalizeName(a.Category), "given", ""
+	categoryCreated := false
 	if category != "" {
-		if err := m.checkCategory(ctx, c.UserID, category); err != nil {
+		var err error
+		if categoryCreated, err = themis.Ensure(ctx, m.store, c.UserID, category); err != nil {
 			return "", err
 		}
 	} else {
@@ -326,6 +330,9 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 		})
 	}
 	saved := map[string]any{"status": "saved", "transaction": toOut(tx), "category_source": source}
+	if categoryCreated {
+		saved["category_created"] = true
+	}
 	if matched != "" {
 		saved["matched_payee"] = hermes.Untrusted(matched, maxPayeeLen)
 	}

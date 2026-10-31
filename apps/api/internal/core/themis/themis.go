@@ -28,6 +28,11 @@ const maxMergeSources = 10
 // maxCategoriesInMessage caps how many of the user's categories a refusal lists.
 const maxCategoriesInMessage = 50
 
+// MaxCategories is how many categories one user can have. Saving with a new name creates a category on the
+// spot, so this stops a stream of one-off or misspelled names from growing the list without bound; at the cap
+// the assistant is told to merge categories instead.
+const MaxCategories = 100
+
 // ErrExists and ErrNotFound are returned by a Store; the module turns them into messages for the assistant.
 var (
 	ErrExists   = errors.New("themis: category already exists")
@@ -63,10 +68,44 @@ type Store interface {
 // control characters removed, at most 40 characters.
 func NormalizeName(s string) string { return strings.ToLower(hermes.Untrusted(s, 40)) }
 
+// CategoryStore is what Ensure needs from a module's store (the Postgres store provides both methods).
+type CategoryStore interface {
+	// CategoryNames returns the names in the user's category list. Uncategorized is built in and not included.
+	CategoryNames(ctx context.Context, userID string) ([]string, error)
+	// CreateCategory adds name; created is false when it was already listed.
+	CreateCategory(ctx context.Context, userID, name string) (created bool, err error)
+}
+
+// Ensure makes sure category (already normalised, never empty) is in the user's list, creating it when it is
+// not, and reports whether it did. Uncategorized is built in. The user is capped at MaxCategories: past that a
+// new name is refused with a message telling the assistant to pick an existing category or merge some. Spending
+// and Atlas both call this when a record is saved, so a category the user has never used before simply starts.
+func Ensure(ctx context.Context, s CategoryStore, userID, category string) (created bool, err error) {
+	if category == Uncategorized {
+		return false, nil
+	}
+	names, err := s.CategoryNames(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+	for _, n := range names {
+		if n == category {
+			return false, nil
+		}
+	}
+	if len(names) >= MaxCategories {
+		return false, hermes.Errorf("Category %q was not created: the user already has %d categories, the most Nemosyne keeps. "+
+			"Use one of their existing categories (list_categories shows them), or ask the user whether to combine some with merge_categories.",
+			category, len(names))
+	}
+	return s.CreateCategory(ctx, userID, category)
+}
+
 // Check refuses a category that is not in the user's list (names). Uncategorized is always valid. The
 // error is written for the assistant: it names the category, lists the user's categories (capped), and says
 // how to recover: ask the user, tell them they can reconnect (an assistant without categories:write cannot
-// create one), or omit the category. Every module that stores a category calls this.
+// create one), or omit the category. Saving a record uses Ensure instead, which creates the category; Check is
+// for places that must not create one, such as a payee rule.
 func Check(category string, names []string) error {
 	if category == Uncategorized {
 		return nil
@@ -108,7 +147,8 @@ func (m *Module) Register(s *hermes.Server) {
 	s.AddTool(hermes.Tool{
 		Name:  "list_categories",
 		Title: "List categories",
-		Description: "List the user's categories and how many records use each. Use these names when saving spending. " +
+		Description: "List the user's categories and how many records use each. Categories are shared by spending and by tasks, to-dos and notes: " +
+			"use one of these names when it fits. Saving with a name that is not here creates it automatically. " +
 			"A category marked unlisted is in use but not in the list; offer to merge it into a listed one.",
 		Scope:       ScopeRead,
 		ReadOnly:    true,
@@ -118,7 +158,8 @@ func (m *Module) Register(s *hermes.Server) {
 	s.AddTool(hermes.Tool{
 		Name:  "create_category",
 		Title: "Create a category",
-		Description: "Add a category to the user's list. Ask the user before creating one; never invent categories. " +
+		Description: "Add a category to the user's list ahead of time. You rarely need this: saving spending, a task, a to-do or a note " +
+			"with a new category name creates it automatically. Prefer an existing category when one fits. " +
 			"Names are lowercase, at most 40 characters.",
 		Scope:       ScopeWrite,
 		InputSchema: hermes.Schema(map[string]any{"name": hermes.Prop("string", "Category name, for example food or อาหาร.")}, "name"),
