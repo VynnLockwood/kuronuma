@@ -27,6 +27,14 @@ updates:
     commit-message:
       prefix: "chore(deps)"
 
+  # Compose pins the Postgres and nginx images; this opens PRs when newer tags exist.
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

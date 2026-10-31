@@ -107,6 +107,12 @@ Snap a bank slip, attach it in your assistant's chat, confirm the extracted amou
 | **Hephaestus** | Work data module |
 | **Moirai** | Background jobs and scheduling (later) |
 
+## Security
+
+- Found a vulnerability? Please report it privately, not in a public issue. See [SECURITY.md](SECURITY.md).
+- Running your own Nemo: set `ALLOWED_EMAILS` unless you want any verified Google account to be able to sign in, choose a strong `POSTGRES_PASSWORD` and `SESSION_SECRET`, terminate TLS in front of nginx, and keep `.env` out of git.
+- Behind a CDN or load balancer every visitor shares that proxy's address, so configure `real_ip_header` and `set_real_ip_from` in `deploy/nginx/nginx.conf` first, or the per-IP rate limits will apply to everyone together.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
