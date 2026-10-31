@@ -7,6 +7,7 @@ import "@fontsource-variable/inter/index.css";
 import "@fontsource-variable/geist-mono/index.css";
 import "./globals.css";
 import { copy } from "@/components/landing/copy";
+import { LetterField } from "@/components/LetterField";
 import { SITE_URL } from "@/lib/brand";
 
 const { title, description } = copy.en.meta;
@@ -33,7 +34,10 @@ export const viewport: Viewport = { themeColor: "#fffafb" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LetterField />
+        {children}
+      </body>
     </html>
   );
 }
