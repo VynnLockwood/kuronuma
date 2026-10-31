@@ -1,0 +1,3 @@
+# The maintainer owns everything. AGENTS.md lists the areas that need the owner's explicit approval first
+# (auth and OAuth, migrations, deploy files, CI, dependencies, licence and security policy).
+* @VynnLockwood
