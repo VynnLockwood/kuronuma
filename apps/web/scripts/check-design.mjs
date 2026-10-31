@@ -58,7 +58,7 @@ const pairs = [
   ["ink-2", ["background", "muted"], 4.5],
   ["link", ["background", "muted"], 4.5],
   ["link-hover", ["background", "muted"], 4.5],
-  ["primary-foreground", ["primary"], 4.5],
+  ["primary-foreground", ["primary", "link-hover"], 4.5],
   ["success", ["success-muted"], 4.5],
   ["info", ["info-muted"], 4.5],
   ["destructive", ["destructive-muted"], 4.5],

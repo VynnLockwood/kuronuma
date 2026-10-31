@@ -121,13 +121,15 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
-  /* Thai is never tracked tighter: negative letter-spacing breaks its vowels and tone marks. */
-  :lang(th) h1,
-  :lang(th) h2,
-  :lang(th) h3 {
-    letter-spacing: 0;
-    line-height: 1.25;
-  }
+}
+
+/* Thai is never tracked tighter: negative letter-spacing breaks its vowels and tone marks. This sits outside the
+   base layer on purpose: unlayered rules beat Tailwind's utilities, so heading classes cannot undo it. */
+:lang(th) h1,
+:lang(th) h2,
+:lang(th) h3 {
+  letter-spacing: 0;
+  line-height: 1.25;
 }
 
 /* Scroll reveal (Reveal.tsx). Content is hidden only after JS adds .reveal-ready, and never under reduced motion. */
@@ -214,7 +216,7 @@
   inset-block: 0;
   inset-inline-start: 0;
   width: 28%;
-  background: rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.2);
   opacity: 0;
   pointer-events: none;
   transform: translateX(-120%) skewX(-20deg);
