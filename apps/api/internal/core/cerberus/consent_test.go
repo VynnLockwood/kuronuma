@@ -1,10 +1,12 @@
 package cerberus
 
 import (
+	"math"
 	"net/http"
 	"net/url"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -219,4 +221,82 @@ func TestErrorPageIsBranded(t *testing.T) {
 	mustContain(t, body, "KURONUMA", "unknown client_id", "/brand/kuronuma-logo.png")
 	mustNotContain(t, body, "NEMO", "Nemo") // [keep-nemosyne]
 	mustNotContain(t, body, "<b>")
+}
+
+// The pages are decorated with two small inline SVG motifs (consent) and one (error). They are hidden from
+// assistive technology, and the page still runs no script, under an unchanged security policy.
+func TestConsentPageHasMotifsAndNoScripts(t *testing.T) {
+	h := newOHScopes(t, quietLog(), allScopes)
+	cid := h.registerClient("Google", testRedirect)
+	res, page := h.consentPage(authzValues(cid, testRedirect, "st", ""), nil, nil)
+
+	if n := strings.Count(page, "<svg"); n != 2 {
+		t.Errorf("consent page has %d <svg> elements, want 2", n)
+	}
+	if n := strings.Count(page, `<svg aria-hidden="true"`); n != 2 {
+		t.Errorf("%d of the svg elements are aria-hidden, want 2", n)
+	}
+	mustContain(t, page, `focusable="false"`)
+	mustNotContain(t, page, "<script", "onclick", "onload", "javascript:")
+	if got, want := res.Header.Get("Content-Security-Policy"), "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'"; got != want {
+		t.Errorf("CSP = %q, want %q", got, want)
+	}
+}
+
+func TestErrorPageHasAMotif(t *testing.T) {
+	h := newOH(t)
+	rec := h.send("GET", "/api/oauth/authorize?client_id=kuro_c_nope&redirect_uri=http://x.example/", "", "", nil, nil)
+	body := rec.Body.String()
+	if n := strings.Count(body, "<svg"); n != 1 {
+		t.Errorf("error page has %d <svg> elements, want 1", n)
+	}
+	mustContain(t, body, `<svg aria-hidden="true"`)
+	mustNotContain(t, body, "<script")
+}
+
+func luminance(hex string) float64 {
+	v, err := strconv.ParseUint(strings.TrimPrefix(hex, "#"), 16, 32)
+	if err != nil || len(hex) != 7 {
+		panic("bad colour " + hex)
+	}
+	ch := func(x uint64) float64 {
+		c := float64(x) / 255
+		if c <= 0.03928 {
+			return c / 12.92
+		}
+		return math.Pow((c+0.055)/1.055, 2.4)
+	}
+	return 0.2126*ch(v>>16&255) + 0.7152*ch(v>>8&255) + 0.0722*ch(v&255)
+}
+
+func contrast(a, b string) float64 {
+	la, lb := luminance(a), luminance(b)
+	if la < lb {
+		la, lb = lb, la
+	}
+	return (la + 0.05) / (lb + 0.05)
+}
+
+func TestPageColoursAreAccessible(t *testing.T) {
+	for _, c := range []struct{ got, want string }{
+		{colBackground, "#fffafb"}, {colInk, "#2a2024"}, {colMuted, "#7a5c68"}, {colPrimary, "#c23b69"},
+		{colLink, "#b03361"}, {colBorder, "#efd3dd"}, {colSurface, "#fdf0f4"},
+	} {
+		if c.got != c.want {
+			t.Errorf("colour constant %q, want %q", c.got, c.want)
+		}
+	}
+	for _, text := range []string{colInk, colMuted, colLink} {
+		for _, bg := range []string{colBackground, colSurface} {
+			if c := contrast(text, bg); c < 4.5 {
+				t.Errorf("%s on %s has contrast %.2f, want at least 4.5", text, bg, c)
+			}
+		}
+	}
+	if c := contrast("#ffffff", colPrimary); c < 4.5 {
+		t.Errorf("white on %s has contrast %.2f, want at least 4.5", colPrimary, c)
+	}
+	// The page is built from the constants, not from a second copy of the values.
+	mustContain(t, pageStyle, colBackground, colInk, colMuted, colPrimary, colLink, colBorder, colSurface)
+	mustNotContain(t, pageStyle, "gradient")
 }
