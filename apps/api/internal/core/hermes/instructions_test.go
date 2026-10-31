@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// The text a connected assistant reads first. It must not leave the impression that Nemosyne is only for money,
+// The text a connected assistant reads first. It must not leave the impression that Kuronuma is only for money,
 // must say how categories work, and must keep the safety rules.
 func TestDefaultInstructions(t *testing.T) {
 	for _, want := range []string{
@@ -28,6 +28,14 @@ func TestDefaultInstructions(t *testing.T) {
 	}
 	if !strings.Contains(DefaultInstructions, "still confirm the record") {
 		t.Error("instructions must say the record itself is still confirmed")
+	}
+	if !strings.HasPrefix(DefaultInstructions, "Kuronuma is the user's memory") {
+		t.Error("instructions must introduce Kuronuma")
+	}
+	for _, old := range []string{"Nemosyne", "Nemo"} { // [keep-nemosyne]
+		if strings.Contains(DefaultInstructions, old) {
+			t.Errorf("instructions still say %s", old)
+		}
 	}
 	if strings.Contains(DefaultInstructions, "do not need to ask first") {
 		t.Error("ambiguous wording: it reads as skipping confirmation of the record")

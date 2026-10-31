@@ -34,7 +34,7 @@ func TestLoadDefaults(t *testing.T) {
 
 func TestLoadHTTPSAllowListAndGoogle(t *testing.T) {
 	m := valid()
-	m["PUBLIC_URL"] = "https://nemosyne.example.com"
+	m["PUBLIC_URL"] = "https://kuronuma.example.com"
 	m["GOOGLE_CLIENT_ID"], m["GOOGLE_CLIENT_SECRET"] = "id", "secret"
 	m["ALLOWED_EMAILS"] = " A@x.com, ,b@x.com "
 	cfg, err := Load(env(m))

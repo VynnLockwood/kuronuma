@@ -20,7 +20,7 @@ type Identity struct {
 	Picture       string
 }
 
-// User is a Nemosyne account.
+// User is a Kuronuma account.
 type User struct {
 	ID      string `json:"id"`
 	Email   string `json:"email"`

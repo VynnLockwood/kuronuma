@@ -1,6 +1,6 @@
 // Package hermes is the MCP gateway: it speaks the Model Context Protocol over
 // Streamable HTTP (stateless JSON responses) so a user's AI assistant can call
-// Nemosyne's tools. It depends only on the standard library.
+// Kuronuma's tools. It depends only on the standard library.
 //
 // Scope: tools only. Server-initiated streams (GET /mcp) are not offered.
 package hermes

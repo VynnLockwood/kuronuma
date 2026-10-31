@@ -1,4 +1,4 @@
-// Command nemosyne-api is the Go backend for Nemosyne.
+// Command kuronuma-api is the Go backend for Kuronuma.
 package main
 
 import (
@@ -103,8 +103,8 @@ func run(log *slog.Logger) error {
 		},
 	}, log)
 	mcp := hermes.New(hermes.Options{
-		Name:                "nemosyne",
-		Title:               "Nemosyne",
+		Name:                "kuronuma",
+		Title:               "Kuronuma",
 		Version:             version,
 		Instructions:        hermes.DefaultInstructions,
 		ResourceMetadataURL: oauth.MetadataURL(),

@@ -12,7 +12,7 @@ import (
 	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
-// testMCPAuth mirrors the adapter in cmd/nemosyne-api: Hermes verifies tokens that Cerberus issued.
+// testMCPAuth mirrors the adapter in cmd/kuronuma-api: Hermes verifies tokens that Cerberus issued.
 type testMCPAuth struct{ o *OAuth }
 
 func (a testMCPAuth) Authenticate(ctx context.Context, bearer string) (hermes.Caller, error) {
@@ -30,7 +30,7 @@ func (a testMCPAuth) Authenticate(ctx context.Context, bearer string) (hermes.Ca
 // 401 -> discovery -> register -> sign-in + consent -> token -> tool call -> refresh.
 func TestAssistantConnectsEndToEnd(t *testing.T) {
 	h := newOH(t)
-	mcp := hermes.New(hermes.Options{Name: "nemosyne", ResourceMetadataURL: h.o.MetadataURL()}, testMCPAuth{h.o}, quietLog())
+	mcp := hermes.New(hermes.Options{Name: "kuronuma", ResourceMetadataURL: h.o.MetadataURL()}, testMCPAuth{h.o}, quietLog())
 	mcp.AddTool(hermes.Tool{
 		Name: "whoami", Scope: "plutus:read", ReadOnly: true, InputSchema: map[string]any{"type": "object"},
 		Handler: func(_ context.Context, c hermes.Caller, _ json.RawMessage) (string, error) {

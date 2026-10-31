@@ -1,4 +1,4 @@
-// Package config loads and validates Nemosyne API settings from the environment.
+// Package config loads and validates Kuronuma API settings from the environment.
 package config
 
 import (
@@ -13,7 +13,7 @@ import (
 type Config struct {
 	Addr               string
 	DatabaseURL        string
-	PublicURL          string // external base URL, no trailing slash, e.g. https://nemosyne.example.com
+	PublicURL          string // external base URL, no trailing slash, e.g. https://kuronuma.example.com
 	SessionSecret      []byte
 	SessionTTL         time.Duration
 	GoogleClientID     string
