@@ -342,7 +342,7 @@ export function Landing({ lang }: { lang: Lang }) {
         <section className="section cta-section">
           <div className="container">
             <div className="cta-band" {...rv()}>
-              <img src="/brand/nemo-mark.svg" width={56} height={56} alt="" />
+              <img src="/brand/nemo-logo.png" width={96} height={96} alt="" />
               <h2>{c.cta.title}</h2>
               <p className="lead">{c.cta.sub}</p>
               <div className="hero-cta center">
