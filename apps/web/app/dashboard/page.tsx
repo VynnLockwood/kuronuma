@@ -51,7 +51,7 @@ export default function Dashboard() {
 
         {session?.status === "signed-out" && (
           <section className="card auth-card">
-            <img src="/brand/nemo-mark.svg" width={64} height={64} alt="" />
+            <img src="/brand/nemo-logo.png" width={96} height={96} alt="" />
             <h1>Sign in to Nemo</h1>
             <p className="muted">Use your Google account to connect your assistant to your own data.</p>
             {authError && (
