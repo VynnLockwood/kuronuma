@@ -15,7 +15,7 @@ function AccordionItem({
 }: React.ComponentProps<"details"> & { question: React.ReactNode }) {
   return (
     <details data-slot="accordion-item" className={cn("group border-b border-border", className)} {...props}>
-      <summary className="flex cursor-pointer items-center justify-between gap-4 py-5.5 text-[19px] font-semibold outline-none focus-visible:ring-4 focus-visible:ring-ring/25">
+      <summary className="flex cursor-pointer items-center justify-between gap-4 py-5.5 text-[19px] font-semibold">
         <span>{question}</span>
         <span className="chevron text-muted-foreground transition-transform duration-300">
           <Icon name="chevron" size={20} />

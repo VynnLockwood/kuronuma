@@ -18,7 +18,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "h-10 flex-1 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-4 focus-visible:ring-ring/25 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.1)]",
+        "h-10 flex-1 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.1)]",
         className,
       )}
       {...props}
@@ -27,7 +27,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
 }
 
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
-  return <TabsPrimitive.Content data-slot="tabs-content" className={cn("outline-none", className)} {...props} />;
+  return <TabsPrimitive.Content data-slot="tabs-content" className={cn("tab-fade", className)} {...props} />;
 }
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };

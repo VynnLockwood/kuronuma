@@ -38,6 +38,41 @@ function walk(dir) {
 walk(join(root, "app"));
 walk(join(root, "components"));
 
+// 3. Blush palette: pinned values and WCAG contrast. The tokens are the `--name: #hex;` lines of :root.
+const rootBlock = readFileSync(join(root, "app", "globals.css"), "utf8").match(/:root\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+const tokens = Object.fromEntries([...rootBlock.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)].map((m) => [m[1], m[2].toLowerCase()]));
+const luminance = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a, b) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+for (const [name, value] of Object.entries({ background: "#fffafb", primary: "#c23b69" })) {
+  if (tokens[name] !== value) problems.push(`app/globals.css: --${name} must be ${value} (Blush), found ${tokens[name] ?? "nothing"}`);
+}
+const pairs = [
+  ["foreground", ["background", "muted", "card"], 7],
+  ["muted-foreground", ["background", "muted"], 4.5],
+  ["ink-2", ["background", "muted"], 4.5],
+  ["link", ["background", "muted"], 4.5],
+  ["link-hover", ["background", "muted"], 4.5],
+  ["primary-foreground", ["primary", "link-hover"], 4.5],
+  ["success", ["success-muted"], 4.5],
+  ["info", ["info-muted"], 4.5],
+  ["destructive", ["destructive-muted"], 4.5],
+  ["subtle", ["background", "muted"], 3], // large text only
+  ["ring", ["background"], 3],
+  ["primary", ["background"], 3],
+];
+for (const [fg, backs, min] of pairs) {
+  for (const bg of backs) {
+    if (!tokens[fg] || !tokens[bg]) problems.push(`contrast: token --${fg} or --${bg} is missing`);
+    else if (contrast(tokens[fg], tokens[bg]) < min) problems.push(`contrast: --${fg} on --${bg} is ${contrast(tokens[fg], tokens[bg]).toFixed(2)}, needs ${min}`);
+  }
+}
+
 if (problems.length) {
   console.error(problems.join("\n"));
   console.error(`\n${problems.length} design-system violation(s)`);

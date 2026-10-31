@@ -1,41 +1,58 @@
 @import "tailwindcss";
 
 /*
- * Kuronuma theme: shadcn/ui tokens, white and soft grey, in the spirit of a product store page.
+ * Kuronuma theme, Blush: shadcn/ui tokens on a pink-tinted white with a rose action colour. Every text and
+ * background pair is checked for contrast by npm run check:design.
  * Colours are defined here only (npm run check:design enforces it); components use the Tailwind utilities below.
  */
 :root {
   color-scheme: light;
 
-  --background: #ffffff;
-  --foreground: #1d1d1f;
+  --background: #fffafb;
+  --foreground: #2a2024;
   --card: #ffffff;
-  --card-foreground: #1d1d1f;
+  --card-foreground: #2a2024;
   --popover: #ffffff;
-  --popover-foreground: #1d1d1f;
-  --primary: #0071e3;
+  --popover-foreground: #2a2024;
+  --primary: #c23b69;
   --primary-foreground: #ffffff;
-  --secondary: #f5f5f7;
-  --secondary-foreground: #1d1d1f;
-  --muted: #f5f5f7;
-  --muted-foreground: #6e6e73;
-  --accent: #f5f5f7;
-  --accent-foreground: #1d1d1f;
+  --secondary: #fdf0f4;
+  --secondary-foreground: #2a2024;
+  --muted: #fdf0f4;
+  --muted-foreground: #7a5c68;
+  --accent: #fdf0f4;
+  --accent-foreground: #2a2024;
   --destructive: #b42318;
   --destructive-muted: #fff4f2;
   --success: #1a7f37;
   --success-muted: #e8f5ec;
-  --info: #0058b0;
-  --info-muted: #e8f1fc;
-  --border: #d2d2d7;
-  --hairline: #e8e8ed;
-  --input: #d2d2d7;
-  --ring: #0071e3;
-  --link: #0066cc;
-  --link-hover: #004f9e;
-  --subtle: #86868b;
-  --ink-2: #424245;
+  --info: #5646c4;
+  --info-muted: #efeaff;
+  --border: #efd3dd;
+  --hairline: #f6e3ea;
+  --input: #efd3dd;
+  --ring: #c23b69;
+  --link: #b03361;
+  --link-hover: #8f274d;
+  --subtle: #a08592;
+  --ink-2: #5c4650;
   --live: #34c759;
+
+  /* Motif colours: a fill and a line colour per motif family (components/motifs). */
+  --motif-gold: #ffd66b;
+  --motif-gold-line: #c99a1d;
+  --motif-leaf: #9ad8ae;
+  --motif-leaf-line: #4f9a6a;
+  --motif-rose: #fbd3e0;
+  --motif-rose-line: #d98aa6;
+  --motif-lilac: #e5defa;
+  --motif-lilac-line: #8d7fd6;
+
+  /* Motion */
+  --dur-quick: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 600ms;
+  --ease-soft: cubic-bezier(0.2, 0, 0, 1);
 
   --radius: 1.25rem;
 }
@@ -104,25 +121,123 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
-  /* Thai is never tracked tighter: negative letter-spacing breaks its vowels and tone marks. */
-  :lang(th) h1,
-  :lang(th) h2,
-  :lang(th) h3 {
-    letter-spacing: 0;
-    line-height: 1.25;
-  }
+}
+
+/* Thai is never tracked tighter: negative letter-spacing breaks its vowels and tone marks. This sits outside the
+   base layer on purpose: unlayered rules beat Tailwind's utilities, so heading classes cannot undo it. */
+:lang(th) h1,
+:lang(th) h2,
+:lang(th) h3 {
+  letter-spacing: 0;
+  line-height: 1.25;
 }
 
 /* Scroll reveal (Reveal.tsx). Content is hidden only after JS adds .reveal-ready, and never under reduced motion. */
 [data-reveal] {
   transition:
-    opacity 700ms cubic-bezier(0.2, 0, 0, 1),
-    transform 700ms cubic-bezier(0.2, 0, 0, 1);
+    opacity 640ms var(--ease-soft),
+    transform 640ms var(--ease-soft);
   transition-delay: var(--d, 0ms);
 }
 .reveal-ready [data-reveal]:not([data-in]) {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(16px);
+}
+
+/* Gentle motion. Every animation here is decoration; the reduced-motion block at the end switches all of it off. */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82) rotate(8deg);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes shimmer {
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(520%) skewX(-20deg);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.motif-twinkle {
+  animation: twinkle var(--dur, 3.6s) ease-in-out var(--delay, 0s) infinite;
+}
+.motif-float {
+  animation: float var(--dur, 7s) ease-in-out var(--delay, 0s) infinite;
+}
+/* Hero entrance: each part rises in 80 ms after the one before (--i = position). */
+.hero-in {
+  animation: rise-in var(--dur-slow) var(--ease-soft) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+/* A flat, skewed band sweeps across the button on hover (no gradient). */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 28%;
+  background: rgb(255 255 255 / 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-120%) skewX(-20deg);
+}
+@media (hover: hover) {
+  .btn-shimmer:hover::after {
+    opacity: 1;
+    animation: shimmer 700ms var(--ease-soft) 1;
+  }
+}
+.tab-fade[data-state="active"] {
+  animation: fade-in var(--dur-base) var(--ease-soft) both;
+}
+
+/* Pages cross-fade when you move between them (browsers without support just navigate). */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
 }
 
 /* FAQ accordion: hide the native disclosure marker and turn the chevron when open. */
@@ -135,10 +250,35 @@ details > summary::-webkit-details-marker {
 details[open] > summary .chevron {
   transform: rotate(180deg);
 }
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size var(--dur-base) var(--ease-soft),
+      content-visibility var(--dur-base) allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .motif-twinkle,
+  .motif-float,
+  .hero-in,
+  .btn-shimmer::after,
+  .tab-fade[data-state="active"] {
+    animation: none !important;
+  }
+  @view-transition {
+    navigation: none;
   }
   *,
   *::before,

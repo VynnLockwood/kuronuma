@@ -211,35 +211,58 @@ func (o *OAuth) renderConsent(w http.ResponseWriter, r *http.Request, user User,
 	}
 }
 
+// Colours of the consent and error pages (the Blush theme of the website). The ink, muted and link colours reach
+// at least 4.5:1 on both the page and card backgrounds, and white on the primary colour does too; a test checks it.
+const (
+	colBackground = "#fffafb"
+	colInk        = "#2a2024"
+	colMuted      = "#7a5c68"
+	colPrimary    = "#c23b69"
+	colLink       = "#b03361"
+	colBorder     = "#efd3dd"
+	colSurface    = "#fdf0f4"
+)
+
+// Two small original motifs, drawn inline because the page's security policy allows no scripts and loads
+// nothing but our own images. They are decoration: hidden from assistive technology and never focusable.
+const (
+	motifSparkle = `<svg aria-hidden="true" focusable="false" width="30" height="30" viewBox="0 0 48 48"><path d="M24 4 C25.5 16 32 22.5 44 24 C32 25.5 25.5 32 24 44 C22.5 32 16 25.5 4 24 C16 22.5 22.5 16 24 4Z" fill="#ffd66b" stroke="#c99a1d" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`
+	motifSprout  = `<svg aria-hidden="true" focusable="false" width="30" height="30" viewBox="0 0 48 48"><path d="M24 44 V22" fill="none" stroke="#4f9a6a" stroke-width="3" stroke-linecap="round"/><path d="M24 26 C12 26 8 16 10 10 C20 10 25 16 24 26Z" fill="#9ad8ae" stroke="#4f9a6a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M24 22 C24 14 30 8 40 8 C41 18 35 24 24 22Z" fill="#9ad8ae" stroke="#4f9a6a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`
+)
+
 // pageStyle is shared by the consent and error pages. The page's security policy allows no scripts or fonts, so it
-// is plain inline CSS with the system fonts.
+// is plain inline CSS with the system fonts. Flat colours only, no gradients.
 const pageStyle = `*{box-sizing:border-box}
-body{margin:0;background:#fff;color:#111;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",Sarabun,sans-serif}
+body{margin:0;background:` + colBackground + `;color:` + colInk + `;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",Sarabun,sans-serif}
 main{max-width:32rem;margin:0 auto;padding:1.25rem 1.25rem 3rem}
 header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.5rem 0 1rem}
-.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:#111}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:` + colInk + `}
 .brand img{width:44px;height:44px;display:block}
 .brand span{font-weight:600;letter-spacing:.2em;font-size:1rem}
-.lang{font-size:.85rem;color:#444;border:1px solid #bbb;border-radius:.25rem;padding:.2rem .6rem;text-decoration:none}
-.card{border:1px solid #d4d4d4;border-radius:.5rem;padding:1.25rem;background:#fafafa}
+a{color:` + colLink + `}
+.lang{font-size:.85rem;color:` + colLink + `;border:1px solid ` + colBorder + `;border-radius:999px;padding:.25rem .8rem;text-decoration:none;background:#fff}
+.card{position:relative;border:1px solid ` + colBorder + `;border-radius:1.5rem;padding:1.5rem;background:` + colSurface + `}
+.deco{position:absolute;top:1rem;right:1.1rem;display:flex;gap:.3rem;align-items:flex-start;pointer-events:none}
+.deco svg{display:block;flex:none}
+.card h1,.card>p:first-of-type{padding-right:4.5rem}
 h1{font-size:1.35rem;line-height:1.3;margin:0 0 .35rem;font-weight:600}
 p{margin:.4rem 0}
-.muted{color:#555;font-size:.9rem}
-.check{background:#fff7e6;border:1px solid #ecd49a;border-radius:.4rem;padding:.7rem .9rem;margin:1rem 0;font-size:.92rem}
+.muted{color:` + colMuted + `;font-size:.9rem}
+.check{background:#fff7e6;border:1px solid #ecd49a;border-radius:1rem;padding:.7rem .9rem;margin:1rem 0;font-size:.92rem}
 .check strong{display:block;margin-bottom:.25rem}
-h2{font-size:.85rem;font-weight:600;color:#555;margin:1.1rem 0 .4rem}
-.area{border:1px solid #d4d4d4;border-radius:.4rem;background:#fff;padding:.55rem .8rem;margin:.4rem 0}
+h2{font-size:.85rem;font-weight:600;color:` + colMuted + `;margin:1.1rem 0 .4rem}
+.area{border:1px solid ` + colBorder + `;border-radius:1rem;background:#fff;padding:.55rem .8rem;margin:.4rem 0}
 .area b{display:block;font-size:.95rem}
-.area ul{margin:.2rem 0 0;padding-left:1.1rem;color:#444;font-size:.9rem}
+.area ul{margin:.2rem 0 0;padding-left:1.1rem;color:` + colInk + `;font-size:.9rem}
 label.opt{display:flex;gap:.6rem;align-items:flex-start;margin:.4rem 0;cursor:pointer}
-label.opt input{margin-top:.4rem}
-label.opt small{display:block;color:#555}
+label.opt input{margin-top:.4rem;accent-color:` + colPrimary + `}
+label.opt small{display:block;color:` + colMuted + `}
 .row{display:flex;gap:.75rem;margin-top:1.25rem}
-button{font:inherit;border-radius:.4rem;padding:.65rem 1.4rem;border:1px solid #111;cursor:pointer;min-height:2.75rem}
-button:focus-visible,.lang:focus-visible,a:focus-visible{outline:3px solid #2f6fed;outline-offset:2px}
-.approve{background:#111;color:#fff}.deny{background:#fff;color:#111}
-.fine{margin-top:1rem;color:#666;font-size:.8rem}
-code{background:#eee;padding:.05rem .3rem;border-radius:.2rem;word-break:break-all}
+button{font:inherit;border-radius:999px;padding:.65rem 1.5rem;border:1px solid ` + colPrimary + `;cursor:pointer;min-height:2.75rem}
+button:focus-visible,.lang:focus-visible,a:focus-visible{outline:3px solid ` + colPrimary + `;outline-offset:2px}
+.approve{background:` + colPrimary + `;color:#fff}.deny{background:#fff;color:` + colInk + `;border-color:` + colMuted + `}
+.fine{margin-top:1rem;color:` + colMuted + `;font-size:.8rem}
+code{background:` + colBorder + `;padding:.05rem .3rem;border-radius:.3rem;word-break:break-all}
 @media(max-width:30rem){.row button{flex:1}}`
 
 var consentTmpl = template.Must(template.New("consent").Parse(`<!doctype html>
@@ -247,7 +270,7 @@ var consentTmpl = template.Must(template.New("consent").Parse(`<!doctype html>
 <title>{{.T.PageTitle}}</title>
 <style>` + pageStyle + `</style></head><body><main>
 <header><a class="brand" href="/"><img src="/brand/kuronuma-logo.png" width="44" height="44" alt=""><span>KURONUMA</span></a><a class="lang" href="{{.SwitchURL}}">{{.T.SwitchLabel}}</a></header>
-<div class="card">
+<div class="card"><div class="deco">` + motifSprout + motifSparkle + `</div>
 <h1>{{.Title}}</h1>
 <p class="muted">{{.T.SignedInAs}} {{.EmailOff}}{{.Email}}{{.EmailOn}}</p>
 <p class="muted">{{.After}}</p>
@@ -283,4 +306,4 @@ var errorTmpl = template.Must(template.New("error").Parse(`<!doctype html>
 <title>Kuronuma</title>
 <style>` + pageStyle + `</style></head><body><main>
 <header><a class="brand" href="/"><img src="/brand/kuronuma-logo.png" width="44" height="44" alt=""><span>KURONUMA</span></a></header>
-<div class="card"><p>{{.}}</p></div></main></body></html>`))
+<div class="card"><div class="deco">` + motifSparkle + `</div><p>{{.}}</p></div></main></body></html>`))
