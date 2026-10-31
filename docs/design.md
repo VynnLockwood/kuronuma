@@ -103,6 +103,16 @@ Tools: `list_categories` (`categories:read`), `create_category` and `rename_cate
 - Existing connectors keep the scopes they were granted; the user re-authorizes to see the new tools. `add_transaction` still works with `plutus:write` alone.
 - Next: payee rules (Plutus) and flexible memory items (Atlas) build on this list. See `docs/superpowers/specs/2026-10-31-memory-and-categories-design.md`.
 
+## Atlas (tasks, to-dos and notes)
+
+One flexible memory type for anything the user asks the assistant to remember. Each item has a kind (`task` for work items, `todo` for personal checklist items, `note` for facts, decisions and preferences), a status (`open`, `done`, `archived`), a priority, an optional due date, a category from the shared list (see Themis) and up to 10 tags. Completing an item sets `completed_at`; reopening clears it.
+
+Tools: `list_memories` (`atlas:read`), `add_memory` and `update_memory` (`atlas:write`), `delete_memory` (`atlas:write`, destructive). `list_memories` takes filters (kind, status, category, tag, inclusive `due_before` and `due_after`, limit up to 200) and a text query: up to 5 words, each of which must appear as a substring of the title, details or a tag, ignoring case. Search is substring matching rather than Postgres full-text search because full-text search does not split Thai words; `%`, `_` and `\` in a query match themselves. Order: open items first, then due date (undated last), priority, newest.
+
+- Migration 00006. New scopes `atlas:read` and `atlas:write`; existing connectors must be re-authorized to see the tools.
+- No duplicate detection: the tool descriptions tell the assistant to list before adding.
+- Not built yet: a web screen for browsing memories, reminders, recurring items (Horae). The landing and dashboard copy still say "Coming soon" until the copy change.
+
 ## Build status
 
 - Live: hosted with working Google sign-in; dependencies locked (`go.sum`); CI, Dependabot, PR/issue templates and agent rules (`AGENTS.md`) in place.

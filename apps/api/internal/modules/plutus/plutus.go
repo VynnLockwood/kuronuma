@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -333,12 +332,8 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	return hermes.Respond(saved)
 }
 
-// maxCategoriesInMessage caps how many of the user's categories a refusal lists.
-const maxCategoriesInMessage = 50
-
-// checkCategory refuses a category that is not in the user's list. uncategorized is always valid. The error
-// tells the assistant how to recover: ask the user, or omit the category (an assistant without
-// categories:write cannot create one).
+// checkCategory refuses a category that is not in the user's list (see themis.Check). uncategorized is always
+// valid and needs no lookup.
 func (m *Module) checkCategory(ctx context.Context, userID, category string) error {
 	if category == themis.Uncategorized {
 		return nil
@@ -347,30 +342,7 @@ func (m *Module) checkCategory(ctx context.Context, userID, category string) err
 	if err != nil {
 		return err
 	}
-	for _, n := range names {
-		if n == category {
-			return nil
-		}
-	}
-	list := "They have no categories yet."
-	if len(names) > 0 {
-		shown := names
-		if len(shown) > maxCategoriesInMessage {
-			shown = shown[:maxCategoriesInMessage]
-		}
-		clean := make([]string, len(shown))
-		for i, n := range shown {
-			clean[i] = hermes.Untrusted(n, 40)
-		}
-		list = "Their categories: " + strings.Join(clean, ", ")
-		if more := len(names) - len(shown); more > 0 {
-			list += fmt.Sprintf(" and %d more", more)
-		}
-		list += "."
-	}
-	return hermes.Errorf("Category %q is not in the user's list. %s Ask the user whether to create it (create_category) or to choose one of these. "+
-		"If create_category is not available to you, tell the user they can reconnect Nemosyne to manage categories. "+
-		"If you cannot ask, omit the category to file it under uncategorized.", category, list)
+	return themis.Check(category, names)
 }
 
 func (m *Module) list(ctx context.Context, c hermes.Caller, raw json.RawMessage) (string, error) {

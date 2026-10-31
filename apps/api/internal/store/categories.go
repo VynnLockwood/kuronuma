@@ -18,6 +18,7 @@ var _ themis.Store = (*Postgres)(nil)
 var categoryRefs = []struct{ table, label string }{
 	{"transactions", "spending"},
 	{"payee_rules", "payee_rules"},
+	{"memories", "memory"},
 }
 
 // ListCategories returns the user's listed names plus every in-use name that is missing from the list.
@@ -26,7 +27,11 @@ func (p *Postgres) ListCategories(ctx context.Context, userID string) ([]themis.
 	get := func(name string) *themis.Category {
 		c, ok := byName[name]
 		if !ok {
-			c = &themis.Category{Name: name, Uses: map[string]int{}}
+			uses := make(map[string]int, len(categoryRefs))
+			for _, ref := range categoryRefs {
+				uses[ref.label] = 0 // every module is present, zero when unused
+			}
+			c = &themis.Category{Name: name, Uses: uses}
 			byName[name] = c
 		}
 		return c
