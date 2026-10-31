@@ -1,8 +1,7 @@
-// Nemo is the friendly name; Nemosyne stays the technical/project name (repo, MCP server, env vars).
 export const BRAND = {
-  name: "Nemo",
-  thai: "เนโม่",
-  full: "Nemosyne",
+  name: "Kuronuma",
+  thai: "คุโรนุมะ",
+  full: "Kuronuma",
 } as const;
 
 // Public links. The source link only renders when NEXT_PUBLIC_REPO_URL is set at build time

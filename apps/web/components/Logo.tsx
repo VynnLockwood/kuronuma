@@ -8,9 +8,9 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
     <Link
       href={href}
       aria-label={`${BRAND.name} home`}
-      className={cn("flex items-center gap-2 text-[17px] font-semibold tracking-[-0.01em] text-foreground", className)}
+      className={cn("flex shrink-0 items-center gap-2 text-[17px] font-semibold tracking-[-0.01em] text-foreground", className)}
     >
-      <img src="/brand/nemo-logo.png" width={28} height={28} alt="" className="size-7" />
+      <img src="/brand/kuronuma-logo.png" width={28} height={28} alt="" className="size-7" />
       <span>{BRAND.name}</span>
     </Link>
   );

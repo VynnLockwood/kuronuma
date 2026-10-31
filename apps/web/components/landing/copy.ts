@@ -66,9 +66,9 @@ export type Copy = {
 const en: Copy = {
   htmlLang: "en",
   meta: {
-    title: "Nemo (เนโม่): a memory for your AI assistant",
+    title: "Kuronuma (คุโรนุมะ): a memory for your AI assistant",
     description:
-      "Nemo, short for Nemosyne, is an open-source memory for AI assistants. Connect once through MCP and your assistant can remember what matters. Spending is the first module.",
+      "Kuronuma is an open-source memory for AI assistants. Connect once through MCP and your assistant can remember what matters. Spending is the first module.",
   },
   nav: [
     { id: "features", label: "Features" },
@@ -83,7 +83,7 @@ const en: Copy = {
   hero: {
     eyebrow: "Open-source memory for AI",
     title: ["Your assistant’s memory,", "owned by you."],
-    sub: "Nemo (short for Nemosyne) gives any assistant that supports MCP a memory it can read and write. You approve what it can see. It remembers your spending, tasks, to-dos and notes, and more kinds of data are on the way.",
+    sub: "Kuronuma gives any assistant that supports MCP a memory it can read and write. You approve what it can see. It remembers your spending, tasks, to-dos and notes, and more kinds of data are on the way.",
     primary: "Get started",
     secondary: "See how it works",
     chips: ["MIT licensed", "Google sign-in", "Self-host with Docker", "Memory you own"],
@@ -94,7 +94,7 @@ const en: Copy = {
   mock: {
     example: "Example",
     assistant: "Assistant",
-    connected: "Nemo connected",
+    connected: "Kuronuma connected",
     youSaid: "Save this slip, please.",
     assistantSaid: "I read this slip. Is it right?",
     amount: "Amount",
@@ -102,13 +102,13 @@ const en: Copy = {
     date: "Date",
     save: "Save",
     edit: "Edit",
-    saved: "Saved to Nemo",
+    saved: "Saved to Kuronuma",
     slipAlt: "A bank slip",
   },
   demo: {
     eyebrow: "Example: Spending",
     title: "From a photo to a memory",
-    sub: "One example from the Spending module: a chat with an assistant connected to Nemo.",
+    sub: "One example from the Spending module: a chat with an assistant connected to Kuronuma.",
     points: [
       "Attach a bank slip",
       "Check the amount, payee and date",
@@ -119,11 +119,11 @@ const en: Copy = {
   how: {
     eyebrow: "How it works",
     title: "Three steps. No spreadsheets.",
-    sub: "Nemo plugs into the assistant you already use.",
+    sub: "Kuronuma plugs into the assistant you already use.",
     steps: [
       {
         title: "Connect",
-        body: "Paste your Nemo URL into your assistant’s connector settings. Sign in with Google and approve.",
+        body: "Paste your Kuronuma URL into your assistant’s connector settings. Sign in with Google and approve.",
       },
       {
         title: "Let it remember",
@@ -163,19 +163,19 @@ const en: Copy = {
       {
         icon: "camera",
         title: "Photos stay with you",
-        body: "Your assistant reads the image. Nemo only receives the fields you confirmed.",
+        body: "Your assistant reads the image. Kuronuma only receives the fields you confirmed.",
       },
       {
         icon: "code",
         title: "Open and self-hostable",
-        body: "MIT licensed. Run it yourself with Docker Compose, or use a Nemo that someone hosts for you.",
+        body: "MIT licensed. Run it yourself with Docker Compose, or use a Kuronuma that someone hosts for you.",
       },
     ],
   },
   modules: {
     eyebrow: "Modules",
-    title: "A pantheon of modules",
-    sub: "Each kind of memory is a module named after a Greek god. Spending and tasks are live; more are on the way.",
+    title: "Modules",
+    sub: "Each kind of memory is a small module. Spending and tasks are live; more are on the way.",
     available: "Available",
     soon: "Coming soon",
     items: [
@@ -188,7 +188,7 @@ const en: Copy = {
   mission: {
     eyebrow: "Mission",
     title: "Get better at every kind of data",
-    sub: "Spending and tasks are where Nemo starts. Our mission is to make it a good memory for the other kinds of data you want your assistant to keep.",
+    sub: "Spending and tasks are where Kuronuma starts. Our mission is to make it a good memory for the other kinds of data you want your assistant to keep.",
     items: [
       { title: "Routines (Horae)", body: "Daily and weekly habits and schedules." },
       { title: "Work data (Hephaestus)", body: "Notes and data from your work." },
@@ -199,32 +199,32 @@ const en: Copy = {
   privacy: {
     eyebrow: "Privacy",
     title: "Honest about your data",
-    sub: "Here is exactly what Nemo keeps, and what it never sees.",
-    storesTitle: "What Nemo stores",
+    sub: "Here is exactly what Kuronuma keeps, and what it never sees.",
+    storesTitle: "What Kuronuma stores",
     stores: [
       "Your Google name, email and photo, to sign you in",
       "The memories you confirm, such as spending records",
       "Which assistants you have approved",
     ],
-    notTitle: "What Nemo does not store",
+    notTitle: "What Kuronuma does not store",
     nots: [
       "Your slip photos",
       "Your Google password",
-      "Your chats with your assistant. Only tool calls reach Nemo",
+      "Your chats with your assistant. Only tool calls reach Kuronuma",
     ],
-    note: "On a hosted Nemo, whoever runs it can technically access stored records, so choose a host you trust. For full control, self-host: your data stays on your own machine.",
+    note: "On a hosted Kuronuma, whoever runs it can technically access stored records, so choose a host you trust. For full control, self-host: your data stays on your own machine.",
   },
   faq: {
     eyebrow: "FAQ",
     title: "Questions, answered",
     items: [
       {
-        q: "What is Nemo?",
-        a: "Nemo is the friendly name of Nemosyne, an open-source memory for AI assistants. Your assistant reads and writes it through MCP. Spending is the first module.",
+        q: "What is Kuronuma?",
+        a: "Kuronuma is an open-source memory for AI assistants. Your assistant reads and writes it through MCP. Spending is the first module.",
       },
       {
-        q: "Why “Nemosyne”?",
-        a: "It comes from Mnemosyne, the Greek goddess of memory. We shorten it to Nemo (เนโม่) so it is easy to say.",
+        q: "Why “Kuronuma”?",
+        a: "It’s a name we like: quiet, gentle and good at listening, which is what a memory should be. In Japanese it also means “black marsh”, a still place where things settle.",
       },
       {
         q: "What can it remember today?",
@@ -240,11 +240,11 @@ const en: Copy = {
       },
       {
         q: "Where is my data stored?",
-        a: "In a Postgres database run by whoever hosts your Nemo. If you self-host, it stays on your own machine.",
+        a: "In a Postgres database run by whoever hosts your Kuronuma. If you self-host, it stays on your own machine.",
       },
       {
         q: "Can I host it myself?",
-        a: "Yes. Nemo is MIT licensed and ships with a Docker Compose setup.",
+        a: "Yes. Kuronuma is MIT licensed and ships with a Docker Compose setup.",
       },
     ],
   },
@@ -254,13 +254,13 @@ const en: Copy = {
     guide: "Read the connection guide",
   },
   footer: {
-    blurb: "A memory for your AI assistant. Open source, built on Nemosyne.",
+    blurb: "A memory for your AI assistant. Open source.",
     product: "Product",
     resources: "Resources",
     guide: "Connection guide",
     source: "Source code",
     license: "MIT License",
-    built: "Nemo is the friendly name of Nemosyne.",
+    built: "Kuronuma is open source (MIT).",
   },
   switchLabel: "Language",
 };
@@ -268,9 +268,9 @@ const en: Copy = {
 const th: Copy = {
   htmlLang: "th",
   meta: {
-    title: "เนโม่ (Nemo): ความจำสำหรับผู้ช่วย AI ของคุณ",
+    title: "คุโรนุมะ (Kuronuma): ความจำสำหรับผู้ช่วย AI ของคุณ",
     description:
-      "เนโม่ (Nemo ชื่อย่อของ Nemosyne) คือความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI เชื่อมต่อครั้งเดียวผ่าน MCP ผู้ช่วยของคุณก็จดจำสิ่งสำคัญได้ เริ่มจากค่าใช้จ่ายเป็นโมดูลแรก",
+      "คุโรนุมะคือความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI เชื่อมต่อครั้งเดียวผ่าน MCP ผู้ช่วยของคุณก็จดจำสิ่งสำคัญได้ เริ่มจากค่าใช้จ่ายเป็นโมดูลแรก",
   },
   nav: [
     { id: "features", label: "ฟีเจอร์" },
@@ -285,7 +285,7 @@ const th: Copy = {
   hero: {
     eyebrow: "ความจำแบบโอเพนซอร์สสำหรับ AI",
     title: ["ความจำของผู้ช่วย AI", "คุณเป็นเจ้าของเอง"],
-    sub: "เนโม่ (Nemo ชื่อย่อของ Nemosyne) ให้ผู้ช่วยที่รองรับ MCP มีความจำที่อ่านและเขียนได้ คุณเป็นคนอนุมัติว่าผู้ช่วยเห็นอะไรได้บ้าง จำค่าใช้จ่าย งาน สิ่งที่ต้องทำ และโน้ตของคุณได้ และจะมีข้อมูลประเภทอื่นตามมา",
+    sub: "คุโรนุมะให้ผู้ช่วยที่รองรับ MCP มีความจำที่อ่านและเขียนได้ คุณเป็นคนอนุมัติว่าผู้ช่วยเห็นอะไรได้บ้าง จำค่าใช้จ่าย งาน สิ่งที่ต้องทำ และโน้ตของคุณได้ และจะมีข้อมูลประเภทอื่นตามมา",
     primary: "เริ่มใช้งาน",
     secondary: "ดูวิธีใช้งาน",
     chips: ["ลิขสิทธิ์ MIT", "ล็อกอินด้วย Google", "โฮสต์เองด้วย Docker", "ความจำที่คุณเป็นเจ้าของ"],
@@ -296,7 +296,7 @@ const th: Copy = {
   mock: {
     example: "ตัวอย่าง",
     assistant: "ผู้ช่วย",
-    connected: "เชื่อมต่อเนโม่แล้ว",
+    connected: "เชื่อมต่อคุโรนุมะแล้ว",
     youSaid: "บันทึกสลิปนี้ให้หน่อย",
     assistantSaid: "อ่านสลิปได้แล้ว ข้อมูลถูกต้องไหม",
     amount: "จำนวนเงิน",
@@ -304,13 +304,13 @@ const th: Copy = {
     date: "วันที่",
     save: "บันทึก",
     edit: "แก้ไข",
-    saved: "บันทึกในเนโม่แล้ว",
+    saved: "บันทึกในคุโรนุมะแล้ว",
     slipAlt: "สลิปธนาคาร",
   },
   demo: {
     eyebrow: "ตัวอย่าง: ค่าใช้จ่าย",
     title: "จากรูปถ่ายสู่ความจำ",
-    sub: "ตัวอย่างจากโมดูลค่าใช้จ่าย: บทสนทนากับผู้ช่วยที่เชื่อมต่อกับเนโม่",
+    sub: "ตัวอย่างจากโมดูลค่าใช้จ่าย: บทสนทนากับผู้ช่วยที่เชื่อมต่อกับคุโรนุมะ",
     points: [
       "แนบสลิปธนาคาร",
       "ตรวจจำนวนเงิน ผู้รับ และวันที่",
@@ -321,11 +321,11 @@ const th: Copy = {
   how: {
     eyebrow: "วิธีใช้งาน",
     title: "3 ขั้นตอน ไม่ต้องจดสเปรดชีต",
-    sub: "เนโม่เชื่อมกับผู้ช่วยที่คุณใช้อยู่แล้ว",
+    sub: "คุโรนุมะเชื่อมกับผู้ช่วยที่คุณใช้อยู่แล้ว",
     steps: [
       {
         title: "เชื่อมต่อ",
-        body: "วาง URL ของเนโม่ในหน้าตั้งค่า connector ของผู้ช่วย ล็อกอินด้วย Google แล้วกดอนุญาต",
+        body: "วาง URL ของคุโรนุมะในหน้าตั้งค่า connector ของผู้ช่วย ล็อกอินด้วย Google แล้วกดอนุญาต",
       },
       {
         title: "ให้ผู้ช่วยจำ",
@@ -365,19 +365,19 @@ const th: Copy = {
       {
         icon: "camera",
         title: "รูปภาพอยู่กับคุณ",
-        body: "ผู้ช่วยของคุณเป็นคนอ่านรูป เนโม่ได้รับเฉพาะข้อมูลที่คุณยืนยัน",
+        body: "ผู้ช่วยของคุณเป็นคนอ่านรูป คุโรนุมะได้รับเฉพาะข้อมูลที่คุณยืนยัน",
       },
       {
         icon: "code",
         title: "เปิดและโฮสต์เองได้",
-        body: "ลิขสิทธิ์ MIT รันเองด้วย Docker Compose ได้ หรือใช้เนโม่ที่มีคนโฮสต์ให้",
+        body: "ลิขสิทธิ์ MIT รันเองด้วย Docker Compose ได้ หรือใช้คุโรนุมะที่มีคนโฮสต์ให้",
       },
     ],
   },
   modules: {
     eyebrow: "โมดูล",
-    title: "กลุ่มโมดูลแห่งเทพเจ้า",
-    sub: "ความจำแต่ละประเภทเป็นโมดูลที่ตั้งชื่อตามเทพเจ้ากรีก ค่าใช้จ่ายและงานใช้งานได้แล้ว และจะมีอีกหลายอย่างตามมา",
+    title: "โมดูล",
+    sub: "ความจำแต่ละประเภทเป็นโมดูลเล็ก ๆ ค่าใช้จ่ายและงานใช้งานได้แล้ว และจะมีอีกหลายอย่างตามมา",
     available: "ใช้งานได้",
     soon: "เร็ว ๆ นี้",
     items: [
@@ -390,7 +390,7 @@ const th: Copy = {
   mission: {
     eyebrow: "พันธกิจ",
     title: "เก่งขึ้นกับข้อมูลทุกประเภท",
-    sub: "ค่าใช้จ่ายและงานคือจุดเริ่มต้น พันธกิจของเนโม่คือทำให้เป็นความจำที่ดีสำหรับข้อมูลประเภทอื่นที่คุณอยากให้ผู้ช่วยจำ",
+    sub: "ค่าใช้จ่ายและงานคือจุดเริ่มต้น พันธกิจของคุโรนุมะคือทำให้เป็นความจำที่ดีสำหรับข้อมูลประเภทอื่นที่คุณอยากให้ผู้ช่วยจำ",
     items: [
       { title: "กิจวัตร (Horae)", body: "กิจวัตรและตารางรายวันรายสัปดาห์" },
       { title: "ข้อมูลงาน (Hephaestus)", body: "โน้ตและข้อมูลจากงานของคุณ" },
@@ -401,32 +401,32 @@ const th: Copy = {
   privacy: {
     eyebrow: "ความเป็นส่วนตัว",
     title: "ตรงไปตรงมาเรื่องข้อมูลของคุณ",
-    sub: "นี่คือสิ่งที่เนโม่เก็บไว้ และสิ่งที่ไม่เคยเห็น",
-    storesTitle: "สิ่งที่เนโม่เก็บ",
+    sub: "นี่คือสิ่งที่คุโรนุมะเก็บไว้ และสิ่งที่ไม่เคยเห็น",
+    storesTitle: "สิ่งที่คุโรนุมะเก็บ",
     stores: [
       "ชื่อ อีเมล และรูปโปรไฟล์ Google เพื่อใช้ล็อกอิน",
       "ความจำที่คุณยืนยัน เช่น รายการค่าใช้จ่าย",
       "รายชื่อผู้ช่วยที่คุณอนุมัติ",
     ],
-    notTitle: "สิ่งที่เนโม่ไม่เก็บ",
+    notTitle: "สิ่งที่คุโรนุมะไม่เก็บ",
     nots: [
       "รูปสลิปของคุณ",
       "รหัสผ่าน Google ของคุณ",
-      "บทสนทนากับผู้ช่วย เนโม่ได้รับเฉพาะคำสั่งเรียกเครื่องมือ",
+      "บทสนทนากับผู้ช่วย คุโรนุมะได้รับเฉพาะคำสั่งเรียกเครื่องมือ",
     ],
-    note: "ถ้าใช้เนโม่ที่คนอื่นโฮสต์ ผู้ดูแลระบบเข้าถึงข้อมูลที่เก็บไว้ได้ในทางเทคนิค จึงควรเลือกผู้ที่ไว้ใจได้ ต้องการควบคุมเต็มที่ให้โฮสต์เอง ข้อมูลจะอยู่ในเครื่องของคุณ",
+    note: "ถ้าใช้คุโรนุมะที่คนอื่นโฮสต์ ผู้ดูแลระบบเข้าถึงข้อมูลที่เก็บไว้ได้ในทางเทคนิค จึงควรเลือกผู้ที่ไว้ใจได้ ต้องการควบคุมเต็มที่ให้โฮสต์เอง ข้อมูลจะอยู่ในเครื่องของคุณ",
   },
   faq: {
     eyebrow: "คำถามที่พบบ่อย",
     title: "คำถามที่ถามกันบ่อย",
     items: [
       {
-        q: "เนโม่คืออะไร",
-        a: "เนโม่คือชื่อเรียกง่าย ๆ ของ Nemosyne ความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI ผู้ช่วยของคุณอ่านและเขียนผ่าน MCP โมดูลแรกคือค่าใช้จ่าย",
+        q: "คุโรนุมะคืออะไร",
+        a: "คุโรนุมะคือความจำแบบโอเพนซอร์สสำหรับผู้ช่วย AI ผู้ช่วยของคุณอ่านและเขียนผ่าน MCP โมดูลแรกคือค่าใช้จ่าย",
       },
       {
-        q: "ทำไมถึงชื่อ Nemosyne",
-        a: "มาจาก Mnemosyne เทพีแห่งความจำของกรีก เราย่อเป็น Nemo (เนโม่) ให้พูดง่ายจำง่าย",
+        q: "ทำไมถึงชื่อคุโรนุมะ",
+        a: "เป็นชื่อที่เราชอบ เงียบ อ่อนโยน และเป็นผู้ฟังที่ดี เหมือนที่ความจำควรเป็น ในภาษาญี่ปุ่นแปลว่า “หนองน้ำสีดำ” ที่นิ่งสงบและทุกสิ่งตกตะกอนอยู่",
       },
       {
         q: "ตอนนี้จำอะไรได้บ้าง",
@@ -442,11 +442,11 @@ const th: Copy = {
       },
       {
         q: "ข้อมูลเก็บไว้ที่ไหน",
-        a: "ในฐานข้อมูล Postgres ของผู้ที่โฮสต์เนโม่ ถ้าโฮสต์เอง ข้อมูลจะอยู่ในเครื่องของคุณ",
+        a: "ในฐานข้อมูล Postgres ของผู้ที่โฮสต์คุโรนุมะ ถ้าโฮสต์เอง ข้อมูลจะอยู่ในเครื่องของคุณ",
       },
       {
         q: "โฮสต์เองได้ไหม",
-        a: "ได้ เนโม่ใช้ลิขสิทธิ์ MIT และมี Docker Compose ให้พร้อมใช้",
+        a: "ได้ คุโรนุมะใช้ลิขสิทธิ์ MIT และมี Docker Compose ให้พร้อมใช้",
       },
     ],
   },
@@ -456,13 +456,13 @@ const th: Copy = {
     guide: "อ่านคู่มือการเชื่อมต่อ",
   },
   footer: {
-    blurb: "ความจำสำหรับผู้ช่วย AI ของคุณ โอเพนซอร์ส สร้างบน Nemosyne",
+    blurb: "ความจำสำหรับผู้ช่วย AI ของคุณ โอเพนซอร์ส",
     product: "ผลิตภัณฑ์",
     resources: "แหล่งข้อมูล",
     guide: "คู่มือการเชื่อมต่อ",
     source: "ซอร์สโค้ด",
     license: "ลิขสิทธิ์ MIT",
-    built: "เนโม่คือชื่อเรียกง่าย ๆ ของ Nemosyne",
+    built: "คุโรนุมะเป็นโอเพนซอร์ส (MIT)",
   },
   switchLabel: "ภาษา",
 };

@@ -12,7 +12,7 @@ export function SiteHeader({
 }) {
   return (
     <header className="sticky top-0 z-50 border-b border-hairline bg-background/80 backdrop-blur-xl backdrop-saturate-150">
-      <div className="mx-auto flex h-13 max-w-[1120px] items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex h-13 max-w-[1120px] items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6">
         <Logo href={home} />
         {nav}
         <div className="flex items-center gap-3">{children}</div>

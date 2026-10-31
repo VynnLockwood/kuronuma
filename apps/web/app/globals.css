@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Nemo theme: shadcn/ui tokens, white and soft grey, in the spirit of a product store page.
+ * Kuronuma theme: shadcn/ui tokens, white and soft grey, in the spirit of a product store page.
  * Colours are defined here only (npm run check:design enforces it); components use the Tailwind utilities below.
  */
 :root {

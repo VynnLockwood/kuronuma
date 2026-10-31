@@ -11,11 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const claudeSteps = [
   "Open Settings, then Connectors, then add a custom connector.",
   "Paste the URL above and save.",
-  "Choose Connect. Sign in with Google, review what Nemo asks to access, then approve.",
+  "Choose Connect. Sign in with Google, review what Kuronuma asks to access, then approve.",
 ];
 
 const tryIt: { icon: IconName; say: string; body: string }[] = [
-  { icon: "camera", say: "“Save this to Nemo.”", body: "Attach a bank slip photo. Confirm the amount, payee and date it shows you." },
+  { icon: "camera", say: "“Save this to Kuronuma.”", body: "Attach a bank slip photo. Confirm the amount, payee and date it shows you." },
   { icon: "receipt", say: "“How much did I spend on food this month?”", body: "Totals by category, month or merchant." },
   {
     icon: "check",
@@ -63,7 +63,7 @@ export default function Connect() {
         <section className="px-6">
           <div className="mx-auto max-w-[760px] rounded-[28px] bg-muted p-6 sm:p-9">
             <label htmlFor="mcp-url" className="mb-3 block text-sm font-semibold">
-              Your Nemo MCP URL
+              Your Kuronuma MCP URL
             </label>
             <div className="flex flex-wrap gap-2.5">
               <Input
@@ -79,11 +79,11 @@ export default function Connect() {
               </Button>
             </div>
             <p className="mt-3.5 text-sm leading-normal text-muted-foreground">
-              Remote assistants need a public HTTPS address. If you run Nemo on your own computer, only apps on that computer can reach it.
+              Remote assistants need a public HTTPS address. If you run Kuronuma on your own computer, only apps on that computer can reach it.
             </p>
           </div>
           <p className="mx-auto mt-4 max-w-[760px] text-center text-sm text-muted-foreground">
-            Connected before? Remove Nemo from your assistant’s connectors and add it again to see new tools such as tasks and categories.
+            Connected before? Remove Kuronuma from your assistant’s connectors and add it again to see new tools such as tasks and categories.
           </p>
         </section>
 
@@ -110,10 +110,10 @@ export default function Connect() {
               <TabsContent value="code">
                 <h2 className="mb-5 text-2xl font-bold tracking-[-0.02em]">Claude Code</h2>
                 <pre className="rounded-2xl bg-foreground p-5 font-mono text-sm leading-normal break-all whitespace-pre-wrap text-background">
-                  {`claude mcp add --transport http nemosyne ${mcpUrl || "<your-url>/mcp"}`}
+                  {`claude mcp add --transport http kuronuma ${mcpUrl || "<your-url>/mcp"}`}
                 </pre>
                 <p className="mt-5 text-[17px] leading-snug">
-                  Then run <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[15px]">/mcp</code> inside Claude Code and choose nemosyne to sign in.
+                  Then run <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[15px]">/mcp</code> inside Claude Code and choose kuronuma to sign in.
                 </p>
               </TabsContent>
               <TabsContent value="other">

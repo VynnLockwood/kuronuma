@@ -20,7 +20,7 @@ const modules: { god: string; area: string; note: string; live: boolean; icon: I
   { god: "Hephaestus", area: "Work data", note: "Notes and data from your work", live: false, icon: "code" },
 ];
 
-const prompts = ["“Save this slip to Nemo.”", "“How much did I spend on food this month?”", "“Add a to-do for Friday: send the report.”"];
+const prompts = ["“Save this slip to Kuronuma.”", "“How much did I spend on food this month?”", "“Add a to-do for Friday: send the report.”"];
 
 function Avatar({ user, size = 28 }: { user: User; size?: number }) {
   if (user.picture) {
@@ -43,8 +43,8 @@ function SignInCard({ error }: { error: string | null }) {
   return (
     <div className="flex min-h-[calc(100vh-53px)] items-center justify-center bg-muted px-6 py-16">
       <section className="w-full max-w-[440px] rounded-[28px] bg-background px-10 py-12 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_60px_rgba(0,0,0,0.06)]">
-        <img src="/brand/nemo-logo.png" width={80} height={80} alt="" className="mx-auto size-20" />
-        <h1 className="mt-6 mb-2 text-[32px] font-bold tracking-[-0.025em]">Sign in to Nemo</h1>
+        <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="mx-auto size-20" />
+        <h1 className="mt-6 mb-2 text-[32px] font-bold tracking-[-0.025em]">Sign in to Kuronuma</h1>
         <p className="text-base leading-normal text-muted-foreground">Use your Google account to connect your assistant to your own data.</p>
         {error && (
           <Alert variant="destructive" className="mt-6">
@@ -58,7 +58,7 @@ function SignInCard({ error }: { error: string | null }) {
         <a href={signInUrl("/dashboard")} className={buttonVariants({ variant: "dark", size: "lg", className: "mt-8 h-13 w-full" })}>
           <Icon name="google" size={18} /> Continue with Google
         </a>
-        <p className="mt-5 text-xs leading-normal text-muted-foreground">Nemo stores your Google name, email and photo to sign you in. Never your password.</p>
+        <p className="mt-5 text-xs leading-normal text-muted-foreground">Kuronuma stores your Google name, email and photo to sign you in. Never your password.</p>
         <div className="mt-7 border-t border-hairline pt-5">
           <Link href="/" className="text-sm text-link hover:underline">
             ‹ Back to home
@@ -91,9 +91,9 @@ function Unreachable({ onRetry }: { onRetry: () => void }) {
         <span className="inline-flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <Icon name="unplug" size={28} />
         </span>
-        <h1 className="mt-5 mb-2 text-2xl font-bold tracking-[-0.02em]">Can’t reach Nemo</h1>
+        <h1 className="mt-5 mb-2 text-2xl font-bold tracking-[-0.02em]">Can’t reach Kuronuma</h1>
         <p role="alert" className="text-[15px] leading-normal text-muted-foreground">
-          Nemo isn’t responding right now. Please try again in a moment.
+          Kuronuma isn’t responding right now. Please try again in a moment.
         </p>
         <Button className="mt-6" onClick={onRetry}>
           Try again
@@ -158,14 +158,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <section className="mt-10 grid items-center gap-8 rounded-[32px] bg-muted p-8 md:grid-cols-2 md:p-12">
+            <section className="mt-10 grid grid-cols-[minmax(0,1fr)] items-center gap-8 rounded-[32px] bg-muted p-8 md:grid-cols-2 md:p-12">
               <div>
                 <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-background text-primary">
                   <Icon name="plug" size={26} />
                 </span>
                 <h2 className="mt-5 mb-2 text-[32px] font-bold tracking-[-0.025em]">Connect your assistant.</h2>
                 <p className="text-[17px] leading-normal text-muted-foreground">
-                  Add Nemo to Claude or any assistant that supports MCP connectors. It takes one URL.
+                  Add Kuronuma to Claude or any assistant that supports MCP connectors. It takes one URL.
                 </p>
               </div>
               <div className="flex flex-col items-start gap-4">
