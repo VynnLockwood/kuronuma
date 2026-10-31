@@ -21,12 +21,12 @@ type consentText struct {
 
 var consentCopy = map[string]consentText{
 	"en": {
-		PageTitle:   "Connect to Nemo",
-		TitleFmt:    "Connect %s to your Nemo?",
+		PageTitle:   "Connect to Kuronuma",
+		TitleFmt:    "Connect %s to your Kuronuma?",
 		SignedInAs:  "Signed in as",
 		AfterFmt:    "After you decide, you’ll go back to %s.",
 		CheckTitle:  "Check before you approve",
-		CheckYes:    "Approve if you just added Nemo as a connector in Gemini, Claude or ChatGPT.",
+		CheckYes:    "Approve if you just added Kuronuma as a connector in Gemini, Claude or ChatGPT.",
 		CheckNo:     "Deny if you didn’t start this, or someone sent you the link.",
 		CanDo:       "It will be able to",
 		AccessTitle: "Access level",
@@ -36,17 +36,17 @@ var consentCopy = map[string]consentText{
 		ReadSub:     "It can look, but can’t add, change or delete. A safe way to try it.",
 		Approve:     "Approve",
 		Deny:        "Deny",
-		Fine:        "The app’s name is chosen by the app and isn’t verified by Nemo.",
+		Fine:        "The app’s name is chosen by the app and isn’t verified by Kuronuma.",
 		SwitchLabel: "ไทย",
 		Switch:      "th",
 	},
 	"th": {
-		PageTitle:   "เชื่อมต่อกับ Nemo",
-		TitleFmt:    "เชื่อมต่อ %s กับ Nemo ของคุณไหม?",
+		PageTitle:   "เชื่อมต่อกับคุโรนุมะ",
+		TitleFmt:    "เชื่อมต่อ %s กับคุโรนุมะของคุณไหม?",
 		SignedInAs:  "เข้าสู่ระบบเป็น",
 		AfterFmt:    "หลังตัดสินใจ คุณจะถูกพากลับไปที่ %s",
 		CheckTitle:  "ตรวจสอบก่อนอนุมัติ",
-		CheckYes:    "อนุมัติถ้าคุณเพิ่งเพิ่ม Nemo เป็นตัวเชื่อมต่อใน Gemini, Claude หรือ ChatGPT",
+		CheckYes:    "อนุมัติถ้าคุณเพิ่งเพิ่มคุโรนุมะเป็นตัวเชื่อมต่อใน Gemini, Claude หรือ ChatGPT",
 		CheckNo:     "ปฏิเสธถ้าคุณไม่ได้เป็นคนเริ่ม หรือมีคนส่งลิงก์นี้มาให้",
 		CanDo:       "สิ่งที่แอปนี้จะทำได้",
 		AccessTitle: "ระดับการเข้าถึง",
@@ -56,7 +56,7 @@ var consentCopy = map[string]consentText{
 		ReadSub:     "ดูได้ แต่เพิ่ม แก้ไข หรือลบไม่ได้ เหมาะกับการลองใช้ก่อน",
 		Approve:     "อนุมัติ",
 		Deny:        "ปฏิเสธ",
-		Fine:        "ชื่อแอปเป็นชื่อที่แอปตั้งเอง Nemo ไม่ได้ตรวจสอบ",
+		Fine:        "ชื่อแอปเป็นชื่อที่แอปตั้งเอง คุโรนุมะไม่ได้ตรวจสอบ",
 		SwitchLabel: "EN",
 		Switch:      "en",
 	},
@@ -246,7 +246,7 @@ var consentTmpl = template.Must(template.New("consent").Parse(`<!doctype html>
 <html lang="{{.Lang}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{.T.PageTitle}}</title>
 <style>` + pageStyle + `</style></head><body><main>
-<header><a class="brand" href="/"><img src="/brand/nemo-logo.png" width="44" height="44" alt=""><span>NEMO</span></a><a class="lang" href="{{.SwitchURL}}">{{.T.SwitchLabel}}</a></header>
+<header><a class="brand" href="/"><img src="/brand/kuronuma-logo.png" width="44" height="44" alt=""><span>KURONUMA</span></a><a class="lang" href="{{.SwitchURL}}">{{.T.SwitchLabel}}</a></header>
 <div class="card">
 <h1>{{.Title}}</h1>
 <p class="muted">{{.T.SignedInAs}} {{.EmailOff}}{{.Email}}{{.EmailOn}}</p>
@@ -280,7 +280,7 @@ var consentTmpl = template.Must(template.New("consent").Parse(`<!doctype html>
 
 var errorTmpl = template.Must(template.New("error").Parse(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nemo</title>
+<title>Kuronuma</title>
 <style>` + pageStyle + `</style></head><body><main>
-<header><a class="brand" href="/"><img src="/brand/nemo-logo.png" width="44" height="44" alt=""><span>NEMO</span></a></header>
+<header><a class="brand" href="/"><img src="/brand/kuronuma-logo.png" width="44" height="44" alt=""><span>KURONUMA</span></a></header>
 <div class="card"><p>{{.}}</p></div></main></body></html>`))

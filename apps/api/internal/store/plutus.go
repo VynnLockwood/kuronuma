@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/plutus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/plutus"
 )
 
 var _ plutus.Store = (*Postgres)(nil)

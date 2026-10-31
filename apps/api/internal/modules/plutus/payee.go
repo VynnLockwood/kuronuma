@@ -5,7 +5,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
 // Limits for payee rules.
@@ -16,7 +16,7 @@ const (
 	maxPayeeRules       = 500
 )
 
-// PayeeRule teaches Nemo what a payee is: new spending whose merchant contains PayeeNorm is filed under
+// PayeeRule teaches Kuronuma what a payee is: new spending whose merchant contains PayeeNorm is filed under
 // Category when the assistant gives none. Payee is what the user said; PayeeNorm is what is matched on.
 type PayeeRule struct {
 	ID          string

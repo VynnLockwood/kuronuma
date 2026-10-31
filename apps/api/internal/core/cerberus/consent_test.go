@@ -61,18 +61,19 @@ func TestConsentPageExplainsTheChoice(t *testing.T) {
 
 	mustContain(t, page,
 		`<html lang="en">`,
-		"Connect Google to your Nemo?",
+		"Connect Google to your Kuronuma?",
 		"Check before you approve",
-		"Approve if you just added Nemo as a connector in Gemini, Claude or ChatGPT.",
+		"Approve if you just added Kuronuma as a connector in Gemini, Claude or ChatGPT.",
 		"Deny if you didn’t start this, or someone sent you the link.", // typographic apostrophe: a plain one is HTML-escaped
 		"Spending", "See your spending records and totals", "Add and delete spending records, and create categories as it saves",
 		"Categories", "See your category list", "Create, rename and merge categories",
 		"Tasks, to-dos and notes", "See your tasks, to-dos and notes", "Add, change and delete tasks, to-dos and notes, and create categories as it saves",
 		`name="access" value="full" checked`, `name="access" value="read"`, "Read and change", "Read only",
-		`<img src="/brand/nemo-logo.png"`,
+		`<img src="/brand/kuronuma-logo.png"`,
+		`<title>Connect to Kuronuma</title>`, `<span>KURONUMA</span>`,
 		"http://localhost:7777", // where the user lands afterwards
 	)
-	mustNotContain(t, page, "Only approve if you started this connection yourself")
+	mustNotContain(t, page, "Only approve if you started this connection yourself", "Nemo", "NEMO") // [keep-nemosyne]
 
 	// Cloudflare rewrites e-mail addresses in HTML into a link that needs a script this page cannot run (its
 	// security policy forbids scripts); the markers keep the address as plain text.
@@ -105,18 +106,18 @@ func TestConsentPageInThai(t *testing.T) {
 
 	_, th := h.consentPage(vals, url.Values{"lang": {"th"}}, nil)
 	mustContain(t, th,
-		`<html lang="th">`, "เชื่อมต่อ Google กับ Nemo ของคุณไหม?", "ตรวจสอบก่อนอนุมัติ",
+		`<html lang="th">`, "เชื่อมต่อ Google กับคุโรนุมะของคุณไหม?", "<title>เชื่อมต่อกับคุโรนุมะ</title>", "ตรวจสอบก่อนอนุมัติ",
 		"ค่าใช้จ่าย", "หมวดหมู่", "งาน สิ่งที่ต้องทำ และโน้ต",
 		"อ่านและแก้ไขได้", "อ่านอย่างเดียว", "อนุมัติ", "ปฏิเสธ",
 		`name="lang" value="th"`, "lang=en", // the form remembers the language, and there is a link back
 	)
-	mustNotContain(t, th, "Connect Google to your Nemo?", "Check before you approve")
+	mustNotContain(t, th, "Connect Google to your Kuronuma?", "Check before you approve", "Nemo") // [keep-nemosyne]
 
 	thAccept := map[string]string{"Accept-Language": "th-TH,th;q=0.9,en;q=0.8"}
 	_, page := h.consentPage(vals, nil, thAccept)
 	mustContain(t, page, `<html lang="th">`)
 	_, page = h.consentPage(vals, url.Values{"lang": {"en"}}, thAccept)
-	mustContain(t, page, `<html lang="en">`, "Connect Google to your Nemo?", "lang=th")
+	mustContain(t, page, `<html lang="en">`, "Connect Google to your Kuronuma?", "lang=th")
 	_, page = h.consentPage(vals, nil, map[string]string{"Accept-Language": "en-US,en;q=0.9"})
 	mustContain(t, page, `<html lang="en">`)
 	_, page = h.consentPage(vals, url.Values{"lang": {"xx"}}, nil)
@@ -210,11 +211,12 @@ func TestReadOnlyTokenCarriesOnlyReadScopes(t *testing.T) {
 
 func TestErrorPageIsBranded(t *testing.T) {
 	h := newOH(t)
-	rec := h.send("GET", "/api/oauth/authorize?client_id=nem_c_nope&redirect_uri=http://x.example/<b>", "", "", nil, nil)
+	rec := h.send("GET", "/api/oauth/authorize?client_id=kuro_c_nope&redirect_uri=http://x.example/<b>", "", "", nil, nil)
 	body := rec.Body.String()
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	mustContain(t, body, "NEMO", "unknown client_id")
+	mustContain(t, body, "KURONUMA", "unknown client_id", "/brand/kuronuma-logo.png")
+	mustNotContain(t, body, "NEMO", "Nemo") // [keep-nemosyne]
 	mustNotContain(t, body, "<b>")
 }

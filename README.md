@@ -1,10 +1,10 @@
-# Nemosyne
+# Kuronuma
 
-**Nemo (เนโม่)** is the friendly name for Nemosyne, so it is easy to say and remember. Nemosyne stays the technical name (repository, MCP server name, environment variables).
+**Kuronuma (คุโรนุมะ)** is an open-source memory for AI assistants.
 
-> Memory for your AI assistant. Named for the Greek goddess of memory (classically spelled *Mnemosyne*), mother of the Muses.
+> Memory for your AI assistant.
 
-Nemosyne is an open-source personal data hub exposed to AI assistants over [MCP](https://modelcontextprotocol.io). Users keep their spending, tasks, routines and work data in one place, and their own assistant reads and writes it through scoped tools.
+Kuronuma is an open-source personal data hub exposed to AI assistants over [MCP](https://modelcontextprotocol.io). Users keep their spending, tasks, routines and work data in one place, and their own assistant reads and writes it through scoped tools.
 
 **Status:** early. Working: Google sign-in (Cerberus), web shell (Olympus), Docker/nginx. Built and awaiting real-world testing: the MCP endpoint (Hermes), OAuth for assistants, and the spending (Plutus), category (Themis) and memory (Atlas) tools. See [docs/design.md](docs/design.md).
 
@@ -47,14 +47,14 @@ Until a client is configured the app runs with sign-in disabled.
 | `/dashboard` | Sign in and your modules (sign-in returns here) |
 | `/connect` | MCP URL and setup steps for assistants |
 
-Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` adds a "Source code" link in the footer (leave unset while the repository is private), and `NEXT_PUBLIC_SITE_URL` (for example `https://nemo.example.com`) enables the social-preview image. The Docker build does not pass either yet.
+Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` adds a "Source code" link in the footer (leave unset while the repository is private), and `NEXT_PUBLIC_SITE_URL` (for example `https://kuronuma.example.com`) enables the social-preview image. The Docker build does not pass either yet.
 
 ### Connect an assistant
 
 Once signed in, open **/connect** on your deployment for the MCP URL (`https://your-domain/mcp`) and setup steps.
 
 - **Claude:** Settings, Connectors, add a custom connector, paste the URL, then sign in with Google and approve.
-- **Claude Code:** `claude mcp add --transport http nemosyne https://your-domain/mcp`, then `/mcp` to sign in.
+- **Claude Code:** `claude mcp add --transport http kuronuma https://your-domain/mcp`, then `/mcp` to sign in.
 
 Remote assistants need a public HTTPS address. Tools: `add_transaction`, `list_transactions`, `get_spending_summary`, `delete_transaction`, `list_categories`, `create_category`, `rename_category`, `merge_categories`, `set_payee_rule`, `list_payee_rules`, `delete_payee_rule`, `add_memory`, `list_memories`, `update_memory`, `delete_memory`. Scopes: `plutus:read`, `plutus:write`, `categories:read`, `categories:write`, `atlas:read`, `atlas:write`. A connector added before the category tools existed keeps its old scopes; re-add or re-authorize it to see them.
 
@@ -69,14 +69,14 @@ Enable the commit template once: `git config commit.template .gitmessage` (Conve
 
 ```bash
 # API (needs a Postgres and the env vars from .env.example)
-cd apps/api && go test ./... && go run ./cmd/nemosyne-api
+cd apps/api && go test ./... && go run ./cmd/kuronuma-api
 # Web (proxies /api to http://localhost:8081)
 cd apps/web && npm install && npm run dev
 ```
 
 ## First use case
 
-Snap a bank slip, attach it in your assistant's chat, confirm the extracted amount, payee and date, and Nemosyne stores it. Ask for reports any time.
+Snap a bank slip, attach it in your assistant's chat, confirm the extracted amount, payee and date, and Kuronuma stores it. Ask for reports any time.
 
 ## Stack
 
@@ -110,7 +110,7 @@ Snap a bank slip, attach it in your assistant's chat, confirm the extracted amou
 ## Security
 
 - Found a vulnerability? Please report it privately, not in a public issue. See [SECURITY.md](SECURITY.md).
-- Running your own Nemo: set `ALLOWED_EMAILS` unless you want any verified Google account to be able to sign in, choose a strong `POSTGRES_PASSWORD` and `SESSION_SECRET`, terminate TLS in front of nginx, and keep `.env` out of git.
+- Running your own Kuronuma: set `ALLOWED_EMAILS` unless you want any verified Google account to be able to sign in, choose a strong `POSTGRES_PASSWORD` and `SESSION_SECRET`, terminate TLS in front of nginx, and keep `.env` out of git.
 - Behind a CDN or load balancer every visitor shares that proxy's address, so configure `real_ip_header` and `set_real_ip_from` in `deploy/nginx/nginx.conf` first, or the per-IP rate limits will apply to everyone together.
 
 ## License

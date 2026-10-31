@@ -482,7 +482,7 @@ func TestTokenEndpointRejections(t *testing.T) {
 			return codeForm(other, code, testRedirect, testVerifier)
 		}, 400, "invalid_grant"},
 		{"unknown client", func(h *oh, cid, code string) url.Values {
-			return codeForm("nem_c_nope", code, testRedirect, testVerifier)
+			return codeForm("kuro_c_nope", code, testRedirect, testVerifier)
 		}, 401, "invalid_client"},
 		{"unknown code", func(h *oh, cid, code string) url.Values {
 			return codeForm(cid, "not-a-code", testRedirect, testVerifier)
@@ -559,7 +559,7 @@ func TestAuthorizeRequestValidation(t *testing.T) {
 		wantErrKey string // otherwise: error code sent back to the client
 	}{
 		{"unregistered redirect_uri", func(v url.Values) { v.Set("redirect_uri", "http://localhost:7777/evil") }, true, ""},
-		{"unknown client", func(v url.Values) { v.Set("client_id", "nem_c_missing") }, true, ""},
+		{"unknown client", func(v url.Values) { v.Set("client_id", "kuro_c_missing") }, true, ""},
 		{"missing client_id", func(v url.Values) { v.Del("client_id") }, true, ""},
 		{"missing PKCE", func(v url.Values) { v.Del("code_challenge") }, false, "invalid_request"},
 		{"plain PKCE", func(v url.Values) { v.Set("code_challenge_method", "plain") }, false, "invalid_request"},

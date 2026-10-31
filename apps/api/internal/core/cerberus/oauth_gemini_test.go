@@ -134,7 +134,7 @@ func TestTokenEndpointRejectsBadClientAuth(t *testing.T) {
 		hdr    map[string]string
 	}{
 		"header and form name different clients": {other, basicAuth(cid, "x")},
-		"unknown id in the header":               {"", basicAuth("nem_c_nope", "x")},
+		"unknown id in the header":               {"", basicAuth("kuro_c_nope", "x")},
 		"empty id in the header":                 {"", basicAuth("", "x")},
 		"header is not base64":                   {"", map[string]string{"Authorization": "Basic !!!not-base64"}},
 		"header has no colon":                    {"", map[string]string{"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte("nocolon"))}},

@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/cerberus"
 )
 
 //go:embed migrations/*.sql

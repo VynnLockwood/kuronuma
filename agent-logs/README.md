@@ -1,6 +1,6 @@
 # Agent logs
 
-Each agent that works on Nemosyne writes its own session logs here, in its own folder:
+Each agent that works on Kuronuma writes its own session logs here, in its own folder:
 
 ```
 agent-logs/

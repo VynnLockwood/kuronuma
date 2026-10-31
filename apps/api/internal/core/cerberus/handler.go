@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	sessionCookie = "nem_session"
-	flowCookie    = "nem_flow"
+	sessionCookie = "kuro_session"
+	flowCookie    = "kuro_flow"
 	flowTTL       = 10 * time.Minute
 )
 

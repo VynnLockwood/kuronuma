@@ -25,7 +25,7 @@ var (
 	reScheme    = regexp.MustCompile(`^[a-z][a-z0-9+.-]*$`)
 )
 
-const consentDomain = "nemosyne-oauth-consent-v1\x00"
+const consentDomain = "kuronuma-oauth-consent-v1\x00"
 
 // OAuthOptions configures the OAuth authorization server.
 type OAuthOptions struct {
@@ -121,7 +121,7 @@ func (o *OAuth) protectedResource(w http.ResponseWriter, _ *http.Request) {
 		"authorization_servers":    []string{o.opt.PublicURL},
 		"scopes_supported":         o.scopeNames(),
 		"bearer_methods_supported": []string{"header"},
-		"resource_name":            "Nemosyne",
+		"resource_name":            "Kuronuma",
 	})
 }
 
@@ -260,7 +260,7 @@ func (o *OAuth) register(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		name = "Unnamed app"
 	}
-	c := OAuthClient{ID: "nem_c_" + id, Name: name, RedirectURIs: req.RedirectURIs, CreatedAt: o.opt.Now()}
+	c := OAuthClient{ID: "kuro_c_" + id, Name: name, RedirectURIs: req.RedirectURIs, CreatedAt: o.opt.Now()}
 	if err := o.store.CreateClient(r.Context(), c); err != nil {
 		o.log.Error("create oauth client failed", "err", err)
 		oauthError(w, http.StatusInternalServerError, "server_error", "temporary failure")

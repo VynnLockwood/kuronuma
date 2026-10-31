@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-const metaURL = "https://nemosyne.example/.well-known/oauth-protected-resource"
+const metaURL = "https://kuronuma.example/.well-known/oauth-protected-resource"
 
 type fakeAuth struct{}
 
@@ -30,7 +30,7 @@ func (fakeAuth) Authenticate(_ context.Context, bearer string) (Caller, error) {
 
 func newServer() *Server {
 	s := New(Options{
-		Name: "nemosyne", Title: "Nemosyne", Version: "test",
+		Name: "kuronuma", Title: "Kuronuma", Version: "test",
 		Instructions: "be careful", ResourceMetadataURL: metaURL,
 	}, fakeAuth{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	s.AddTool(Tool{
@@ -174,7 +174,7 @@ func TestInitializeNegotiation(t *testing.T) {
 	out := decode(t, post(s, "read", `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`, nil))
 	info := out.Result["serverInfo"].(map[string]any)
 	caps := out.Result["capabilities"].(map[string]any)
-	if info["name"] != "nemosyne" || caps["tools"] == nil || out.Result["instructions"] != "be careful" {
+	if info["name"] != "kuronuma" || caps["tools"] == nil || out.Result["instructions"] != "be careful" {
 		t.Fatalf("initialize result: %+v", out.Result)
 	}
 }

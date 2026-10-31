@@ -21,7 +21,7 @@ type flowState struct {
 	Expires  int64  `json:"e"` // unix seconds
 }
 
-const flowDomain = "nemosyne-oauth-flow-v1:"
+const flowDomain = "kuronuma-oauth-flow-v1:"
 
 var errBadFlow = errors.New("cerberus: invalid or expired login flow")
 

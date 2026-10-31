@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
 // OAuth scopes used by the tools below.
@@ -94,7 +94,7 @@ func Ensure(ctx context.Context, s CategoryStore, userID, category string) (crea
 		}
 	}
 	if len(names) >= MaxCategories {
-		return false, hermes.Errorf("Category %q was not created: the user already has %d categories, the most Nemosyne keeps. "+
+		return false, hermes.Errorf("Category %q was not created: the user already has %d categories, the most Kuronuma keeps. "+
 			"Use one of their existing categories (list_categories shows them), or ask the user whether to combine some with merge_categories.",
 			category, len(names))
 	}
@@ -132,7 +132,7 @@ func Check(category string, names []string) error {
 		list += "."
 	}
 	return hermes.Errorf("Category %q is not in the user's list. %s Ask the user whether to create it (create_category) or to choose one of these. "+
-		"If create_category is not available to you, tell the user they can reconnect Nemosyne to manage categories. "+
+		"If create_category is not available to you, tell the user they can reconnect Kuronuma to manage categories. "+
 		"If you cannot ask, omit the category to file it under uncategorized.", category, list)
 }
 

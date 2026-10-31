@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/cerberus"
 )
 
 var _ cerberus.OAuthStore = (*Postgres)(nil)

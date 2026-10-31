@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/plutus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/plutus"
 )
 
 const payeeRuleColumns = `id::text, payee, payee_norm, category, description, updated_at`

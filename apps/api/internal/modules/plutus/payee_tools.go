@@ -6,8 +6,8 @@ import (
 	"sort"
 	"unicode/utf8"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
 // registerPayeeTools adds the payee rule tools. They use the existing plutus scopes.
@@ -15,7 +15,7 @@ func (m *Module) registerPayeeTools(s *hermes.Server) {
 	s.AddTool(hermes.Tool{
 		Name:  "set_payee_rule",
 		Title: "Remember what a payee is",
-		Description: "Teach Nemo what a payee is, for example 7-Eleven is a convenience store in category food. From then on, new spending whose merchant " +
+		Description: "Teach Kuronuma what a payee is, for example 7-Eleven is a convenience store in category food. From then on, new spending whose merchant " +
 			"contains this text is filed under that category when you give none. Matching ignores case and spacing and uses contains, so a short payee " +
 			"can match unrelated merchants: choose a distinctive name. Ask the user before saving a rule. Rules affect only future transactions; saved " +
 			"records are not changed. Saving the same payee again updates its rule.",

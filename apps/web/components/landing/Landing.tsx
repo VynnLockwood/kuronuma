@@ -82,7 +82,7 @@ export function Landing({ lang }: { lang: Lang }) {
         }
       >
         <LangSwitch lang={lang} label={c.switchLabel} />
-        <AuthButton signIn={c.signIn} openApp={c.openApp} className={buttonVariants({ size: "sm" })} />
+        <AuthButton signIn={c.signIn} openApp={c.openApp} className={cn(buttonVariants({ size: "sm" }), "max-[419px]:hidden")} />
       </SiteHeader>
 
       <main id="main">
@@ -298,7 +298,7 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Final call to action */}
         <section className="px-6 pb-24 md:pb-30">
           <div className="mx-auto max-w-[1120px] rounded-[32px] bg-muted px-6 py-22 text-center" {...rv()}>
-            <img src="/brand/nemo-logo.png" width={80} height={80} alt="" className="mx-auto size-20" />
+            <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="mx-auto size-20" />
             <h2 className="mt-6 text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.cta.title}</h2>
             <p className="mx-auto mt-4 max-w-xl text-[19px] text-muted-foreground">{c.cta.sub}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
