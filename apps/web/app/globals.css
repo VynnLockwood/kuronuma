@@ -1,40 +1,41 @@
 @import "tailwindcss";
 
 /*
- * Kuronuma theme: shadcn/ui tokens, white and soft grey, in the spirit of a product store page.
+ * Kuronuma theme, Blush: shadcn/ui tokens on a pink-tinted white with a rose action colour. Every text and
+ * background pair is checked for contrast by npm run check:design.
  * Colours are defined here only (npm run check:design enforces it); components use the Tailwind utilities below.
  */
 :root {
   color-scheme: light;
 
-  --background: #ffffff;
-  --foreground: #1d1d1f;
+  --background: #fffafb;
+  --foreground: #2a2024;
   --card: #ffffff;
-  --card-foreground: #1d1d1f;
+  --card-foreground: #2a2024;
   --popover: #ffffff;
-  --popover-foreground: #1d1d1f;
-  --primary: #0071e3;
+  --popover-foreground: #2a2024;
+  --primary: #c23b69;
   --primary-foreground: #ffffff;
-  --secondary: #f5f5f7;
-  --secondary-foreground: #1d1d1f;
-  --muted: #f5f5f7;
-  --muted-foreground: #6e6e73;
-  --accent: #f5f5f7;
-  --accent-foreground: #1d1d1f;
+  --secondary: #fdf0f4;
+  --secondary-foreground: #2a2024;
+  --muted: #fdf0f4;
+  --muted-foreground: #7a5c68;
+  --accent: #fdf0f4;
+  --accent-foreground: #2a2024;
   --destructive: #b42318;
   --destructive-muted: #fff4f2;
   --success: #1a7f37;
   --success-muted: #e8f5ec;
-  --info: #0058b0;
-  --info-muted: #e8f1fc;
-  --border: #d2d2d7;
-  --hairline: #e8e8ed;
-  --input: #d2d2d7;
-  --ring: #0071e3;
-  --link: #0066cc;
-  --link-hover: #004f9e;
-  --subtle: #86868b;
-  --ink-2: #424245;
+  --info: #5646c4;
+  --info-muted: #efeaff;
+  --border: #efd3dd;
+  --hairline: #f6e3ea;
+  --input: #efd3dd;
+  --ring: #c23b69;
+  --link: #b03361;
+  --link-hover: #8f274d;
+  --subtle: #a08592;
+  --ink-2: #5c4650;
   --live: #34c759;
 
   --radius: 1.25rem;
