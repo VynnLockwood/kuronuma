@@ -9,7 +9,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/cerberus"
 )
 
 const googleIssuer = "https://accounts.google.com"

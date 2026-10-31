@@ -11,9 +11,9 @@ COPY . .
 # Transitional fallback: without a committed go.sum, resolve versions at build time.
 # Remove this line once go.sum is on main.
 RUN if [ ! -f go.sum ]; then go mod tidy; fi \
- && CGO_ENABLED=0 go build -mod=readonly -trimpath -ldflags="-s -w" -o /out/nemosyne-api ./cmd/nemosyne-api
+ && CGO_ENABLED=0 go build -mod=readonly -trimpath -ldflags="-s -w" -o /out/kuronuma-api ./cmd/kuronuma-api
 
 FROM gcr.io/distroless/static-debian12:nonroot
-COPY --from=build /out/nemosyne-api /nemosyne-api
+COPY --from=build /out/kuronuma-api /kuronuma-api
 EXPOSE 8081
-ENTRYPOINT ["/nemosyne-api"]
+ENTRYPOINT ["/kuronuma-api"]

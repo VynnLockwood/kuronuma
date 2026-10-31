@@ -5,7 +5,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
 // Limits for payee rules.

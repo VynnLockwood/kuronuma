@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
 func (m *memStore) setNames(user string, names ...string) {

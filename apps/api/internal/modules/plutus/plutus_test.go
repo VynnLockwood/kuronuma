@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
 // ---- in-memory store (per-user, like the real one) ----

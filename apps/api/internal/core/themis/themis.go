@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
 // OAuth scopes used by the tools below.

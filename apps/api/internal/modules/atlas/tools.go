@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
 var reUUID = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)

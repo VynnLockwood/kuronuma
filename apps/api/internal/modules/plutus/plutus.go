@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
 // OAuth scopes used by the tools below.

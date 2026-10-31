@@ -3,7 +3,7 @@ package atlas
 import (
 	"strings"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
 )
 
 // NormalizeTags cleans tags: lower case, whitespace collapsed, invisible characters removed, each at most 30

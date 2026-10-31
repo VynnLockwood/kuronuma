@@ -11,14 +11,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/config"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/cerberus/google"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/atlas"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/modules/plutus"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/store"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/config"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/cerberus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/cerberus/google"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/atlas"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/plutus"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/store"
 )
 
 const version = "0.2.0"

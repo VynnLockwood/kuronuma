@@ -63,9 +63,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build api image
-        run: docker build -t nemosyne-api:ci apps/api
+        run: docker build -t kuronuma-api:ci apps/api
       - name: Build web image
-        run: docker build -t nemosyne-web:ci apps/web
+        run: docker build -t kuronuma-web:ci apps/web
       - name: Validate compose file
         run: docker compose -f deploy/docker-compose.yml config -q
         env:

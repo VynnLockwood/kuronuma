@@ -6,8 +6,8 @@ import (
 	"sort"
 	"unicode/utf8"
 
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
 // registerPayeeTools adds the payee rule tools. They use the existing plutus scopes.
