@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
 )
 
 func (m *memStore) setNames(user string, names ...string) {
@@ -28,11 +30,37 @@ func withRef(i int, extra map[string]any) map[string]any {
 	return a
 }
 
-func TestCategoryMustBeInTheList(t *testing.T) {
+func (m *memStore) CreateCategory(_ context.Context, userID, name string) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.names == nil {
+		m.names = map[string][]string{}
+	}
+	for _, n := range m.names[userID] {
+		if n == name {
+			return false, nil
+		}
+	}
+	m.names[userID] = append(m.names[userID], name)
+	return true, nil
+}
+
+func (m *memStore) listed(user, name string) bool {
+	names, _ := m.CategoryNames(context.Background(), user)
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
+}
+
+func TestUnknownCategoryIsCreated(t *testing.T) {
 	e := newEnv(t)
 	e.store.setNames("alice", "food")
 
-	for i, c := range []string{"food", "Food", " fo​od "} {
+	// A name already in the list is used as is, whatever its case or invisible characters; nothing is created.
+	for i, c := range []string{"food", "Food", " fo\u200bod "} {
 		data, text, isErr := e.call("alice", "add_transaction", withRef(i, map[string]any{"category": c}))
 		if isErr {
 			t.Fatalf("category %q refused: %s", c, text)
@@ -40,22 +68,37 @@ func TestCategoryMustBeInTheList(t *testing.T) {
 		if got := data["transaction"].(map[string]any)["category"]; got != "food" {
 			t.Errorf("category %q saved as %v, want food", c, got)
 		}
-	}
-	before := e.store.count("alice")
-
-	_, text, isErr := e.call("alice", "add_transaction", withRef(10, map[string]any{"category": "travel"}))
-	if !isErr {
-		t.Fatal("an unknown category must be refused")
-	}
-	for _, want := range []string{`"travel"`, "food", "create_category", "reconnect", "omit", "uncategorized"} {
-		if !strings.Contains(text, want) {
-			t.Errorf("refusal message lacks %q: %s", want, text)
+		if _, has := data["category_created"]; has {
+			t.Errorf("category %q already existed, so category_created must be absent: %v", c, data)
 		}
 	}
-	if e.store.count("alice") != before {
-		t.Fatal("a refused transaction must not be stored")
+
+	// A new name is created in the user's list and used.
+	data, text, isErr := e.call("alice", "add_transaction", withRef(10, map[string]any{"category": "Travel"}))
+	if isErr {
+		t.Fatalf("a new category must be created, not refused: %s", text)
+	}
+	if got := data["transaction"].(map[string]any)["category"]; got != "travel" {
+		t.Errorf("saved as %v, want travel", got)
+	}
+	if data["category_created"] != true {
+		t.Errorf("the result must say the category was created: %v", data)
+	}
+	if !e.store.listed("alice", "travel") {
+		t.Error("travel must now be in alice's list")
+	}
+	if e.store.listed("bob", "travel") {
+		t.Error("another user's list must not change")
 	}
 
+	// The second save finds it: no second creation notice.
+	data, _, _ = e.call("alice", "add_transaction", withRef(11, map[string]any{"category": "travel"}))
+	if _, has := data["category_created"]; has {
+		t.Errorf("travel already exists now: %v", data)
+	}
+
+	// Leaving the category out or using uncategorized never creates anything.
+	before, _ := e.store.CategoryNames(context.Background(), "alice")
 	for i, args := range []map[string]any{{}, {"category": "uncategorized"}, {"category": "Uncategorized"}} {
 		data, text, isErr := e.call("alice", "add_transaction", withRef(20+i, args))
 		if isErr {
@@ -65,11 +108,15 @@ func TestCategoryMustBeInTheList(t *testing.T) {
 			t.Errorf("args %v saved as %v, want uncategorized", args, got)
 		}
 	}
+	if after, _ := e.store.CategoryNames(context.Background(), "alice"); len(after) != len(before) {
+		t.Errorf("no category should have been created: %v -> %v", before, after)
+	}
 
+	// A user with no categories at all can start one.
 	e.store.setNames("bob")
-	_, text, isErr = e.call("bob", "add_transaction", withRef(30, map[string]any{"category": "x"}))
-	if !isErr || !strings.Contains(text, "no categories yet") {
-		t.Errorf("a user with no categories: isErr=%v text=%q", isErr, text)
+	data, text, isErr = e.call("bob", "add_transaction", withRef(30, map[string]any{"category": "x"}))
+	if isErr || data["category_created"] != true {
+		t.Errorf("first category ever: isErr=%v text=%q", isErr, text)
 	}
 }
 
@@ -83,20 +130,50 @@ func TestThaiCategory(t *testing.T) {
 	if got := data["transaction"].(map[string]any)["category"]; got != "อาหาร" {
 		t.Errorf("saved as %v", got)
 	}
-	_, text, isErr = e.call("alice", "add_transaction", withRef(2, map[string]any{"category": "เดินทาง"}))
-	if !isErr || !strings.Contains(text, "อาหาร") || !strings.Contains(text, "เดินทาง") {
-		t.Errorf("refusal must show the Thai names intact: isErr=%v %s", isErr, text)
+	data, text, isErr = e.call("alice", "add_transaction", withRef(2, map[string]any{"category": "เดินทาง"}))
+	if isErr || data["category_created"] != true || data["transaction"].(map[string]any)["category"] != "เดินทาง" {
+		t.Errorf("a new Thai category must be created intact: isErr=%v %s", isErr, text)
+	}
+	if !e.store.listed("alice", "เดินทาง") {
+		t.Error("the Thai name must be in the list")
 	}
 }
 
-func TestRefusalListIsCapped(t *testing.T) {
+func TestCategoryCap(t *testing.T) {
+	e := newEnv(t)
+	var names []string
+	for i := 1; i <= themis.MaxCategories; i++ {
+		names = append(names, fmt.Sprintf("cat%03d", i))
+	}
+	e.store.setNames("alice", names...)
+
+	_, text, isErr := e.call("alice", "add_transaction", withRef(1, map[string]any{"category": "zzz"}))
+	if !isErr {
+		t.Fatal("a new category beyond the cap must be refused")
+	}
+	for _, want := range []string{`"zzz"`, "merge_categories", fmt.Sprint(themis.MaxCategories)} {
+		if !strings.Contains(text, want) {
+			t.Errorf("refusal lacks %q: %s", want, text)
+		}
+	}
+	if e.store.count("alice") != 0 || e.store.listed("alice", "zzz") {
+		t.Fatal("a refused save must store nothing and create nothing")
+	}
+	if _, text, isErr := e.call("alice", "add_transaction", withRef(2, map[string]any{"category": "cat007"})); isErr {
+		t.Fatalf("a listed category still works at the cap: %s", text)
+	}
+}
+
+// set_payee_rule keeps the old rule: its category must already be in the list, and the refusal names the
+// first 50 of the user's categories.
+func TestPayeeRuleRefusalListIsCapped(t *testing.T) {
 	e := newEnv(t)
 	var names []string
 	for i := 1; i <= 120; i++ {
 		names = append(names, fmt.Sprintf("cat%03d", i))
 	}
 	e.store.setNames("alice", names...)
-	_, text, isErr := e.call("alice", "add_transaction", withRef(1, map[string]any{"category": "zzz"}))
+	_, text, isErr := e.call("alice", "set_payee_rule", map[string]any{"payee": "Grab", "category": "zzz"})
 	if !isErr {
 		t.Fatal("want a refusal")
 	}
@@ -109,10 +186,47 @@ func TestCategoryListIsPerUser(t *testing.T) {
 	e := newEnv(t)
 	e.store.setNames("bob", "work")
 	e.store.setNames("alice", "food")
-	if _, text, isErr := e.call("alice", "add_transaction", withRef(1, map[string]any{"category": "work"})); !isErr {
-		t.Fatalf("alice must not use bob's category: %s", text)
+	data, text, isErr := e.call("alice", "add_transaction", withRef(1, map[string]any{"category": "work"}))
+	if isErr || data["category_created"] != true {
+		t.Fatalf("alice has no work category yet, so it must be created for her, even though bob has one: %v %s", isErr, text)
 	}
-	if _, text, isErr := e.call("bob", "add_transaction", withRef(2, map[string]any{"category": "work"})); isErr {
+	if names, _ := e.store.CategoryNames(context.Background(), "bob"); len(names) != 1 {
+		t.Errorf("bob's list must not change: %v", names)
+	}
+	data, text, isErr = e.call("bob", "add_transaction", withRef(2, map[string]any{"category": "work"}))
+	if isErr {
 		t.Fatalf("bob's own category refused: %s", text)
+	}
+	if _, has := data["category_created"]; has {
+		t.Errorf("bob already had work: %v", data)
+	}
+}
+
+// A new category is created before the duplicate checks, so a save that ends up storing nothing can still have
+// made one. The result must say so, or the user is never told and the empty category counts toward the cap.
+func TestCategoryCreatedIsReportedWhenNothingIsSaved(t *testing.T) {
+	e := newEnv(t)
+	e.store.setNames("alice", "food")
+
+	e.addTx(1, "alice", map[string]any{"category": "food"})
+	data, text, isErr := e.call("alice", "add_transaction", withRef(1, map[string]any{"category": "typo"}))
+	if isErr || data["status"] != "already_saved" {
+		t.Fatalf("same reference again: %v %v %s", isErr, data["status"], text)
+	}
+	if data["category_created"] != true || !e.store.listed("alice", "typo") {
+		t.Errorf("already_saved after creating a category must say category_created: %v", data)
+	}
+
+	noRef := map[string]any{"amount": "99", "currency": "THB", "merchant": "Same Shop", "occurred_on": "2026-10-29", "category": "food"}
+	if _, text, isErr := e.call("alice", "add_transaction", noRef); isErr {
+		t.Fatalf("first save: %s", text)
+	}
+	noRef["category"] = "typo2"
+	data, text, isErr = e.call("alice", "add_transaction", noRef)
+	if isErr || data["status"] != "possible_duplicate" {
+		t.Fatalf("same slip without a reference: %v %v %s", isErr, data["status"], text)
+	}
+	if data["category_created"] != true || !e.store.listed("alice", "typo2") {
+		t.Errorf("possible_duplicate after creating a category must say category_created: %v", data)
 	}
 }

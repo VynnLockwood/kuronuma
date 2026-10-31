@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/nemosyne/apps/api/internal/core/themis"
 )
 
 // ---- in-memory store, per user, mirroring the Postgres store's behaviour ----
@@ -39,6 +40,31 @@ func (s *memStore) CategoryNames(_ context.Context, user string) ([]string, erro
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return append([]string(nil), s.names[user]...), nil
+}
+
+func (s *memStore) CreateCategory(_ context.Context, user, name string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.names == nil {
+		s.names = map[string][]string{}
+	}
+	for _, n := range s.names[user] {
+		if n == name {
+			return false, nil
+		}
+	}
+	s.names[user] = append(s.names[user], name)
+	return true, nil
+}
+
+func (s *memStore) listed(user, name string) bool {
+	names, _ := s.CategoryNames(context.Background(), user)
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *memStore) AddMemory(_ context.Context, user string, n NewMemory) (Memory, error) {
@@ -290,16 +316,12 @@ func TestAddMemory(t *testing.T) {
 		"date before 1990": base(map[string]any{"due_on": "1980-01-01"}),
 		"date after 2100":  base(map[string]any{"due_on": "2101-01-01"}),
 		"eleven tags":      base(map[string]any{"tags": eleven}),
-		"unknown category": base(map[string]any{"category": "nope"}),
 		"unknown argument": base(map[string]any{"user_id": "bob"}),
 	}
 	for name, args := range bad {
 		if _, text, isErr := e.call("alice", "add_memory", args); !isErr {
 			t.Errorf("%s: want an error, got %s", name, text)
 		}
-	}
-	if _, text, _ := e.call("alice", "add_memory", base(map[string]any{"category": "nope"})); !strings.Contains(text, "create_category") || !strings.Contains(text, "work") {
-		t.Errorf("an unknown category gets the shared refusal with the user's list: %s", text)
 	}
 
 	long := e.add(map[string]any{"title": strings.Repeat("t", 300), "body": strings.Repeat("b", 5000)})
@@ -465,15 +487,14 @@ func TestUpdateMemory(t *testing.T) {
 	}
 
 	bad := map[string]map[string]any{
-		"no fields":        {"id": id},
-		"bad due":          {"id": id, "due_on": "2026-02-31"},
-		"bad status":       {"id": id, "status": "pending"},
-		"bad priority":     {"id": id, "priority": "urgent"},
-		"empty title":      {"id": id, "title": "​"},
-		"unknown category": {"id": id, "category": "nope"},
-		"malformed id":     {"id": "not-an-id", "title": "x"},
-		"too many tags":    {"id": id, "tags": []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"}},
-		"no id":            {"title": "x"},
+		"no fields":     {"id": id},
+		"bad due":       {"id": id, "due_on": "2026-02-31"},
+		"bad status":    {"id": id, "status": "pending"},
+		"bad priority":  {"id": id, "priority": "urgent"},
+		"empty title":   {"id": id, "title": "​"},
+		"malformed id":  {"id": "not-an-id", "title": "x"},
+		"too many tags": {"id": id, "tags": []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"}},
+		"no id":         {"title": "x"},
 	}
 	for name, args := range bad {
 		if _, text, isErr := e.call("alice", "update_memory", args); !isErr {
@@ -652,5 +673,99 @@ func TestToolTextIsTruthfulAboutArchiving(t *testing.T) {
 	}
 	if got := join(e.titles("alice", map[string]any{"status": "open"})); got != "Open one" {
 		t.Errorf("status open shows only what is still to do: %q", got)
+	}
+}
+
+func TestUnknownCategoryIsCreated(t *testing.T) {
+	e := newEnv(t)
+	e.store.setNames("alice", "work")
+
+	// Already listed: used as is, no creation notice.
+	data, text, isErr := e.call("alice", "add_memory", map[string]any{"kind": "task", "title": "a", "category": "Work"})
+	if isErr || data["memory"].(map[string]any)["category"] != "work" {
+		t.Fatalf("listed category: %v %s", isErr, text)
+	}
+	if _, has := data["category_created"]; has {
+		t.Errorf("work already existed: %v", data)
+	}
+
+	// New name on add: created, used, announced.
+	data, text, isErr = e.call("alice", "add_memory", map[string]any{"kind": "todo", "title": "b", "category": "Home Repairs"})
+	if isErr {
+		t.Fatalf("a new category must be created, not refused: %s", text)
+	}
+	if data["memory"].(map[string]any)["category"] != "home repairs" || data["category_created"] != true {
+		t.Errorf("add with new category: %v", data)
+	}
+	if !e.store.listed("alice", "home repairs") || e.store.listed("bob", "home repairs") {
+		t.Error("the category belongs in alice's list only")
+	}
+
+	// Same on update, and a repeat finds it.
+	id := data["memory"].(map[string]any)["id"]
+	data, text, isErr = e.call("alice", "update_memory", map[string]any{"id": id, "category": "Errands"})
+	if isErr || data["memory"].(map[string]any)["category"] != "errands" || data["category_created"] != true {
+		t.Fatalf("update with new category: %v %s", isErr, text)
+	}
+	data, _, _ = e.call("alice", "update_memory", map[string]any{"id": id, "category": "errands"})
+	if _, has := data["category_created"]; has {
+		t.Errorf("errands exists now: %v", data)
+	}
+
+	// uncategorized, an empty category, or none at all create nothing.
+	before, _ := e.store.CategoryNames(context.Background(), "alice")
+	for _, c := range []string{"uncategorized", "", "  "} {
+		if _, text, isErr := e.call("alice", "update_memory", map[string]any{"id": id, "category": c}); isErr {
+			t.Fatalf("category %q: %s", c, text)
+		}
+	}
+	e.call("alice", "add_memory", map[string]any{"kind": "note", "title": "c"})
+	if after, _ := e.store.CategoryNames(context.Background(), "alice"); len(after) != len(before) {
+		t.Errorf("nothing should have been created: %v -> %v", before, after)
+	}
+}
+
+func TestCategoryCapOnMemory(t *testing.T) {
+	e := newEnv(t)
+	var names []string
+	for i := 1; i <= themis.MaxCategories; i++ {
+		names = append(names, fmt.Sprintf("cat%03d", i))
+	}
+	e.store.setNames("alice", names...)
+	id := e.add(map[string]any{"category": "cat001"})["id"]
+
+	for tool, args := range map[string]map[string]any{
+		"add_memory":    {"kind": "task", "title": "x", "category": "zzz"},
+		"update_memory": {"id": id, "category": "zzz"},
+	} {
+		_, text, isErr := e.call("alice", tool, args)
+		if !isErr {
+			t.Fatalf("%s: a new category beyond the cap must be refused", tool)
+		}
+		for _, want := range []string{`"zzz"`, "merge_categories", fmt.Sprint(themis.MaxCategories)} {
+			if !strings.Contains(text, want) {
+				t.Errorf("%s: refusal lacks %q: %s", tool, want, text)
+			}
+		}
+	}
+	if e.store.listed("alice", "zzz") {
+		t.Fatal("a refused call must not create the category")
+	}
+	if got := e.titles("alice", map[string]any{}); len(got) != 1 {
+		t.Errorf("a refused add must store nothing: %v", got)
+	}
+}
+
+// update_memory creates the category before it looks for the item; if the id is unknown nothing else changes,
+// and the result must still say a category was made.
+func TestCategoryCreatedIsReportedWhenNotFound(t *testing.T) {
+	e := newEnv(t)
+	e.store.setNames("alice", "work")
+	data, text, isErr := e.call("alice", "update_memory", map[string]any{"id": "00000000-0000-0000-0000-999999999999", "category": "Typo"})
+	if isErr || data["status"] != "not_found" {
+		t.Fatalf("unknown id: %v %v %s", isErr, data["status"], text)
+	}
+	if data["category_created"] != true || !e.store.listed("alice", "typo") {
+		t.Errorf("not_found after creating a category must say category_created: %v", data)
 	}
 }

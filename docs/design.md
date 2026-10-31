@@ -86,7 +86,7 @@ Google is the only identity provider for now. Users never create a Nemosyne pass
 
 ## Plutus (spending)
 
-Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`, destructive), `list_transactions` and `get_spending_summary` (`plutus:read`). The tool descriptions instruct the assistant to show what it read from a slip and get the user's confirmation before saving. A category must be in the user's list (see Themis); an unknown one is refused.
+Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`, destructive), `list_transactions` and `get_spending_summary` (`plutus:read`). The tool descriptions instruct the assistant to show what it read from a slip and get the user's confirmation before saving. A category the user does not have yet is created when the record is saved (see Themis).
 
 - Amounts are stored as hundredths of the currency unit (`bigint`); input with more than two decimals is rejected rather than rounded. Totals are reported per currency and never mixed.
 - Duplicates: a unique index on `(user_id, reference)` blocks saving the same slip twice. Without a reference, an identical amount, currency, date and merchant is flagged and only saved if the user confirms (`allow_duplicate`).
@@ -95,7 +95,7 @@ Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`,
 
 ## Themis (categories)
 
-One category list per user, shared by every module. Records refer to a category by name; the server checks the name against the list when saving, and `uncategorized` is always valid. An unknown category is refused with the user's list in the message, so the assistant asks the user (or omits the category) instead of inventing one.
+One category list per user, shared by every module. Records refer to a category by name, and `uncategorized` is always valid. Saving spending, a task, a to-do or a note with a name the user does not have yet creates that category on the spot (`themis.Ensure`) and the result says `category_created`, so an assistant can file something under a new category without a separate step. Assistants are told to reuse an existing category when one fits. A user can have at most 100 categories; past that a new name is refused with a message to pick an existing one or merge some. `set_payee_rule` is the exception: its category must already be in the list, and an unknown one is refused with the user's list in the message.
 
 Tools: `list_categories` (`categories:read`), `create_category` and `rename_category` (`categories:write`), `merge_categories` (`categories:write`, destructive). Rename and merge update every record that uses the name in one transaction. A name that is in use but missing from the list shows as `unlisted` so it can be merged.
 

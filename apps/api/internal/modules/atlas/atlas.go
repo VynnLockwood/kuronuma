@@ -90,4 +90,6 @@ type Store interface {
 	DeleteMemory(ctx context.Context, userID, id string) (bool, error)
 	// CategoryNames returns the names in the user's category list, sorted (themis.Uncategorized is built in).
 	CategoryNames(ctx context.Context, userID string) ([]string, error)
+	// CreateCategory adds name to the user's list; created is false when it was already there.
+	CreateCategory(ctx context.Context, userID, name string) (created bool, err error)
 }
