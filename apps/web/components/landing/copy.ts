@@ -83,7 +83,7 @@ const en: Copy = {
   hero: {
     eyebrow: "Open-source memory for AI",
     title: ["Your assistant’s memory,", "owned by you."],
-    sub: "Nemo (short for Nemosyne) gives any assistant that supports MCP a memory it can read and write. You approve what it can see. It starts with spending, and more kinds of data are on the way.",
+    sub: "Nemo (short for Nemosyne) gives any assistant that supports MCP a memory it can read and write. You approve what it can see. It remembers your spending, tasks, to-dos and notes, and more kinds of data are on the way.",
     primary: "Get started",
     secondary: "See how it works",
     chips: ["MIT licensed", "Google sign-in", "Self-host with Docker", "Memory you own"],
@@ -175,12 +175,12 @@ const en: Copy = {
   modules: {
     eyebrow: "Modules",
     title: "A pantheon of modules",
-    sub: "Each kind of memory is a module named after a Greek god. Spending is live; more are on the way.",
+    sub: "Each kind of memory is a module named after a Greek god. Spending and tasks are live; more are on the way.",
     available: "Available",
     soon: "Coming soon",
     items: [
       { god: "Plutus", area: "Spending", body: "Slips, totals and reports.", live: true },
-      { god: "Atlas", area: "Tasks", body: "Tasks your assistant keeps for you.", live: false },
+      { god: "Atlas", area: "Tasks and notes", body: "Tasks, to-dos and notes your assistant keeps for you.", live: true },
       { god: "Horae", area: "Routines", body: "Daily and weekly routines.", live: false },
       { god: "Hephaestus", area: "Work data", body: "Notes and data from your work.", live: false },
     ],
@@ -188,12 +188,11 @@ const en: Copy = {
   mission: {
     eyebrow: "Mission",
     title: "Get better at every kind of data",
-    sub: "Spending is where Nemo starts. Our mission is to make it a good memory for the other kinds of data you want your assistant to keep.",
+    sub: "Spending and tasks are where Nemo starts. Our mission is to make it a good memory for the other kinds of data you want your assistant to keep.",
     items: [
-      { title: "Tasks (Atlas)", body: "Things you ask your assistant to remember to do." },
       { title: "Routines (Horae)", body: "Daily and weekly habits and schedules." },
       { title: "Work data (Hephaestus)", body: "Notes and data from your work." },
-      { title: "Better at what it keeps", body: "Smarter organisation of what is already stored, such as grouping spending by who you paid." },
+      { title: "Better at what it keeps", body: "Smarter organisation of what is stored. Categories and payee rules already group spending; more is planned." },
     ],
     note: "These are goals, not release dates. A module is called available only when it works.",
   },
@@ -229,7 +228,7 @@ const en: Copy = {
       },
       {
         q: "What can it remember today?",
-        a: "The spending records you confirm. Tasks, routines and work data are planned modules and are not available yet.",
+        a: "The spending records you confirm, and the tasks, to-dos and notes your assistant saves for you. Routines and work data are planned modules and are not available yet.",
       },
       {
         q: "Which assistants work with it?",
@@ -286,7 +285,7 @@ const th: Copy = {
   hero: {
     eyebrow: "ความจำแบบโอเพนซอร์สสำหรับ AI",
     title: ["ความจำของผู้ช่วย AI", "คุณเป็นเจ้าของเอง"],
-    sub: "เนโม่ (Nemo ชื่อย่อของ Nemosyne) ให้ผู้ช่วยที่รองรับ MCP มีความจำที่อ่านและเขียนได้ คุณเป็นคนอนุมัติว่าผู้ช่วยเห็นอะไรได้บ้าง เริ่มจากค่าใช้จ่าย และจะมีข้อมูลประเภทอื่นตามมา",
+    sub: "เนโม่ (Nemo ชื่อย่อของ Nemosyne) ให้ผู้ช่วยที่รองรับ MCP มีความจำที่อ่านและเขียนได้ คุณเป็นคนอนุมัติว่าผู้ช่วยเห็นอะไรได้บ้าง จำค่าใช้จ่าย งาน สิ่งที่ต้องทำ และโน้ตของคุณได้ และจะมีข้อมูลประเภทอื่นตามมา",
     primary: "เริ่มใช้งาน",
     secondary: "ดูวิธีใช้งาน",
     chips: ["ลิขสิทธิ์ MIT", "ล็อกอินด้วย Google", "โฮสต์เองด้วย Docker", "ความจำที่คุณเป็นเจ้าของ"],
@@ -378,12 +377,12 @@ const th: Copy = {
   modules: {
     eyebrow: "โมดูล",
     title: "กลุ่มโมดูลแห่งเทพเจ้า",
-    sub: "ความจำแต่ละประเภทเป็นโมดูลที่ตั้งชื่อตามเทพเจ้ากรีก ค่าใช้จ่ายใช้งานได้แล้ว และจะมีอีกหลายอย่างตามมา",
+    sub: "ความจำแต่ละประเภทเป็นโมดูลที่ตั้งชื่อตามเทพเจ้ากรีก ค่าใช้จ่ายและงานใช้งานได้แล้ว และจะมีอีกหลายอย่างตามมา",
     available: "ใช้งานได้",
     soon: "เร็ว ๆ นี้",
     items: [
       { god: "Plutus", area: "ค่าใช้จ่าย", body: "สลิป ยอดรวม และรายงาน", live: true },
-      { god: "Atlas", area: "งาน", body: "งานที่ผู้ช่วยจดไว้ให้คุณ", live: false },
+      { god: "Atlas", area: "งานและโน้ต", body: "งาน สิ่งที่ต้องทำ และโน้ตที่ผู้ช่วยจดไว้ให้คุณ", live: true },
       { god: "Horae", area: "กิจวัตร", body: "กิจวัตรรายวันและรายสัปดาห์", live: false },
       { god: "Hephaestus", area: "ข้อมูลงาน", body: "โน้ตและข้อมูลจากงานของคุณ", live: false },
     ],
@@ -391,12 +390,11 @@ const th: Copy = {
   mission: {
     eyebrow: "พันธกิจ",
     title: "เก่งขึ้นกับข้อมูลทุกประเภท",
-    sub: "ค่าใช้จ่ายคือจุดเริ่มต้น พันธกิจของเนโม่คือทำให้เป็นความจำที่ดีสำหรับข้อมูลประเภทอื่นที่คุณอยากให้ผู้ช่วยจำ",
+    sub: "ค่าใช้จ่ายและงานคือจุดเริ่มต้น พันธกิจของเนโม่คือทำให้เป็นความจำที่ดีสำหรับข้อมูลประเภทอื่นที่คุณอยากให้ผู้ช่วยจำ",
     items: [
-      { title: "งาน (Atlas)", body: "สิ่งที่คุณให้ผู้ช่วยจำไว้ว่าต้องทำ" },
       { title: "กิจวัตร (Horae)", body: "กิจวัตรและตารางรายวันรายสัปดาห์" },
       { title: "ข้อมูลงาน (Hephaestus)", body: "โน้ตและข้อมูลจากงานของคุณ" },
-      { title: "เก่งขึ้นกับสิ่งที่เก็บ", body: "จัดระเบียบสิ่งที่เก็บไว้ให้ฉลาดขึ้น เช่น จัดกลุ่มค่าใช้จ่ายตามผู้ที่คุณจ่ายให้" },
+      { title: "เก่งขึ้นกับสิ่งที่เก็บ", body: "จัดระเบียบสิ่งที่เก็บไว้ให้ฉลาดขึ้น หมวดหมู่และกฎผู้รับเงินช่วยจัดกลุ่มค่าใช้จ่ายได้แล้ว และมีแผนทำเพิ่มอีก" },
     ],
     note: "เหล่านี้คือเป้าหมาย ไม่ใช่วันวางจำหน่าย เราจะเรียกโมดูลว่าใช้งานได้เมื่อมันใช้งานได้จริงเท่านั้น",
   },
@@ -432,7 +430,7 @@ const th: Copy = {
       },
       {
         q: "ตอนนี้จำอะไรได้บ้าง",
-        a: "รายการค่าใช้จ่ายที่คุณยืนยัน ส่วนงาน กิจวัตร และข้อมูลงานเป็นโมดูลที่วางแผนไว้ ยังใช้งานไม่ได้",
+        a: "รายการค่าใช้จ่ายที่คุณยืนยัน รวมถึงงาน สิ่งที่ต้องทำ และโน้ตที่ผู้ช่วยจดไว้ให้ ส่วนกิจวัตรและข้อมูลงานเป็นโมดูลที่วางแผนไว้ ยังใช้งานไม่ได้",
       },
       {
         q: "ใช้กับผู้ช่วยตัวไหนได้บ้าง",

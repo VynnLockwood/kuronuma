@@ -8,7 +8,7 @@ import { authErrorMessages, fetchSession, signInUrl, signOut, type SessionState 
 
 const modules = [
   { god: "Plutus", area: "Spending", note: "Bank slips, totals and reports", live: true },
-  { god: "Atlas", area: "Tasks", note: "Coming soon", live: false },
+  { god: "Atlas", area: "Tasks and notes", note: "Tasks, to-dos and notes", live: true },
   { god: "Horae", area: "Routines", note: "Coming soon", live: false },
   { god: "Hephaestus", area: "Work data", note: "Coming soon", live: false },
 ];
