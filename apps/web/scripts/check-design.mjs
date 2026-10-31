@@ -1,37 +1,46 @@
-// Static conformance check: globals.css must use design tokens only (see docs/superpowers/specs/2026-10-30-web-design-system-design.md).
-import { readFileSync } from "node:fs";
+// Static conformance check for the shadcn/ui theme:
+//  - hex colours live only in the :root token block of app/globals.css; components use Tailwind token utilities;
+//  - no gradients anywhere (flat white and grey surfaces only).
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
-const file = join(dirname(fileURLToPath(import.meta.url)), "..", "app", "globals.css");
-const lines = readFileSync(file, "utf8").split("\n");
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const problems = [];
 
-// Track the current selector so gradients and 50% radii can be allowed in named rules only.
-let selector = "";
-const GRADIENT_OK = /\.hero::before|^\.hero-field|\.bx-hero__grid/;
-const ROUND_OK = /dot|avatar/;
-const RADIUS_OK = /^(0|1px|2px|4px|var\(--radius-[a-z]+\)|inherit)$/;
-
-lines.forEach((raw, i) => {
+// 1. globals.css: hex only inside `:root { ... }`.
+const css = readFileSync(join(root, "app", "globals.css"), "utf8").split("\n");
+let inRoot = false;
+css.forEach((raw, i) => {
   const line = raw.replace(/\/\*.*?\*\//g, "");
-  const n = i + 1;
-  if (/\{\s*$/.test(line) && !/^\s*@/.test(line)) selector = line.replace(/\{\s*$/, "").trim();
-  if (/#[0-9a-fA-F]{3,8}\b/.test(line)) problems.push(`${n}: hex colour literal: ${raw.trim()}`);
-  const shadow = line.match(/box-shadow\s*:\s*([^;]+);/);
-  if (shadow && !/^(none|var\(--shadow-overlay\))$/.test(shadow[1].trim())) problems.push(`${n}: box-shadow: ${raw.trim()}`);
-  if (/(linear|radial|conic)-gradient/.test(line) && !GRADIENT_OK.test(selector)) problems.push(`${n}: gradient outside hero grid: ${raw.trim()}`);
-  const radius = line.match(/border-radius\s*:\s*([^;]+);/);
-  if (radius) {
-    const v = radius[1].trim();
-    const ok = v.split(/\s+/).every((p) => RADIUS_OK.test(p)) || (v === "50%" && ROUND_OK.test(selector));
-    if (!ok) problems.push(`${n}: border-radius ${v}: ${raw.trim()}`);
-  }
+  if (/^:root\s*\{/.test(line)) inRoot = true;
+  if (!inRoot && /#[0-9a-fA-F]{3,8}\b/.test(line)) problems.push(`app/globals.css:${i + 1}: hex colour outside :root: ${raw.trim()}`);
+  if (/(linear|radial|conic)-gradient/.test(line)) problems.push(`app/globals.css:${i + 1}: gradient: ${raw.trim()}`);
+  if (inRoot && /^\}/.test(line)) inRoot = false;
 });
+
+// 2. Components and pages: no hex colours and no gradients.
+function walk(dir) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) walk(p);
+    else if (/\.(tsx|ts)$/.test(name)) {
+      readFileSync(p, "utf8")
+        .split("\n")
+        .forEach((raw, i) => {
+          const where = `${relative(root, p)}:${i + 1}`;
+          if (!/themeColor/.test(raw) && /["'`\s(\[]#[0-9a-fA-F]{3,8}\b/.test(raw)) problems.push(`${where}: hex colour (use a theme token): ${raw.trim()}`);
+          if (/(linear|radial|conic)-gradient|bg-gradient-|bg-linear-|bg-radial-/.test(raw)) problems.push(`${where}: gradient: ${raw.trim()}`);
+        });
+    }
+  }
+}
+walk(join(root, "app"));
+walk(join(root, "components"));
 
 if (problems.length) {
   console.error(problems.join("\n"));
-  console.error(`\n${problems.length} design-system violation(s) in app/globals.css`);
+  console.error(`\n${problems.length} design-system violation(s)`);
   process.exit(1);
 }
 console.log("check:design ok");

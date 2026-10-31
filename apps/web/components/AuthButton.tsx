@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { fetchSession, signInUrl } from "@/lib/api";
 
 // Several buttons can be on one page; share a single request.
@@ -15,7 +16,7 @@ type Props = {
 
 // Shows "Open dashboard" when a session exists, otherwise "Sign in with Google".
 // Starts as the sign-in link so the button never jumps size while the session loads.
-export function AuthButton({ signIn, openApp, className = "btn btn-primary" }: Props) {
+export function AuthButton({ signIn, openApp, className = buttonVariants() }: Props) {
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
