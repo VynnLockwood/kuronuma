@@ -201,3 +201,32 @@ func TestCategoryListIsPerUser(t *testing.T) {
 		t.Errorf("bob already had work: %v", data)
 	}
 }
+
+// A new category is created before the duplicate checks, so a save that ends up storing nothing can still have
+// made one. The result must say so, or the user is never told and the empty category counts toward the cap.
+func TestCategoryCreatedIsReportedWhenNothingIsSaved(t *testing.T) {
+	e := newEnv(t)
+	e.store.setNames("alice", "food")
+
+	e.addTx(1, "alice", map[string]any{"category": "food"})
+	data, text, isErr := e.call("alice", "add_transaction", withRef(1, map[string]any{"category": "typo"}))
+	if isErr || data["status"] != "already_saved" {
+		t.Fatalf("same reference again: %v %v %s", isErr, data["status"], text)
+	}
+	if data["category_created"] != true || !e.store.listed("alice", "typo") {
+		t.Errorf("already_saved after creating a category must say category_created: %v", data)
+	}
+
+	noRef := map[string]any{"amount": "99", "currency": "THB", "merchant": "Same Shop", "occurred_on": "2026-10-29", "category": "food"}
+	if _, text, isErr := e.call("alice", "add_transaction", noRef); isErr {
+		t.Fatalf("first save: %s", text)
+	}
+	noRef["category"] = "typo2"
+	data, text, isErr = e.call("alice", "add_transaction", noRef)
+	if isErr || data["status"] != "possible_duplicate" {
+		t.Fatalf("same slip without a reference: %v %v %s", isErr, data["status"], text)
+	}
+	if data["category_created"] != true || !e.store.listed("alice", "typo2") {
+		t.Errorf("possible_duplicate after creating a category must say category_created: %v", data)
+	}
+}

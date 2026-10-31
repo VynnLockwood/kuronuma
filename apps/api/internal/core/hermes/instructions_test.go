@@ -21,8 +21,16 @@ func TestDefaultInstructions(t *testing.T) {
 			t.Errorf("instructions lack %q:\n%s", want, DefaultInstructions)
 		}
 	}
-	if strings.Contains(DefaultInstructions, "ask the user before creating") {
-		t.Error("categories are created without asking now")
+	// Creating a category needs no question, but the record itself is still confirmed: both must be said, and
+	// the first must not be worded so that it reads as dropping the second.
+	if !strings.Contains(DefaultInstructions, "no separate question") {
+		t.Error("instructions must say a new category needs no separate question")
+	}
+	if !strings.Contains(DefaultInstructions, "still confirm the record") {
+		t.Error("instructions must say the record itself is still confirmed")
+	}
+	if strings.Contains(DefaultInstructions, "do not need to ask first") {
+		t.Error("ambiguous wording: it reads as skipping confirmation of the record")
 	}
 }
 

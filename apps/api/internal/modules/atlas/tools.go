@@ -175,13 +175,17 @@ func (m *Module) category(ctx context.Context, userID, raw string) (category str
 	return category, created, nil
 }
 
-// saved is the response for a successful add or update; category_created appears only when the call made a new category.
-func saved(status string, mem Memory, categoryCreated bool) (string, error) {
-	out := map[string]any{"status": status, "memory": toOut(mem)}
+// respond sends a result; category_created appears only when the call made a new category. That includes a call
+// that then found nothing to change (not_found), because the category is created first: the user must still be told.
+func respond(out map[string]any, categoryCreated bool) (string, error) {
 	if categoryCreated {
 		out["category_created"] = true
 	}
 	return hermes.Respond(out)
+}
+
+func saved(status string, mem Memory, categoryCreated bool) (string, error) {
+	return respond(map[string]any{"status": status, "memory": toOut(mem)}, categoryCreated)
 }
 
 func cleanEnum(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
@@ -379,7 +383,7 @@ func (m *Module) update(ctx context.Context, c hermes.Caller, raw json.RawMessag
 		return "", err
 	}
 	if !found {
-		return hermes.Respond(map[string]any{"status": "not_found"})
+		return respond(map[string]any{"status": "not_found"}, categoryCreated)
 	}
 	return saved("updated", mem, categoryCreated)
 }

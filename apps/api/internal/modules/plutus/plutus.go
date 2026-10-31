@@ -310,11 +310,12 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 		if id, found, err := m.store.FindPossibleDuplicate(ctx, c.UserID, n); err != nil {
 			return "", err
 		} else if found {
-			return hermes.Respond(map[string]any{
+			// The category may have just been created above, so say so even though nothing is saved.
+			return hermes.Respond(withCategoryCreated(map[string]any{
 				"status":      "possible_duplicate",
 				"existing_id": id,
 				"message":     "A record with the same amount, currency, date and merchant already exists, so nothing was saved. Ask the user whether this is a separate payment; if so, call again with allow_duplicate=true.",
-			})
+			}, categoryCreated))
 		}
 	}
 
@@ -323,20 +324,27 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 		return "", err
 	}
 	if !created {
-		return hermes.Respond(map[string]any{
+		return hermes.Respond(withCategoryCreated(map[string]any{
 			"status":      "already_saved",
 			"transaction": toOut(tx),
 			"message":     "A record with this reference already exists, so nothing new was saved.",
-		})
+		}, categoryCreated))
 	}
-	saved := map[string]any{"status": "saved", "transaction": toOut(tx), "category_source": source}
-	if categoryCreated {
-		saved["category_created"] = true
-	}
+	saved := withCategoryCreated(map[string]any{"status": "saved", "transaction": toOut(tx), "category_source": source}, categoryCreated)
 	if matched != "" {
 		saved["matched_payee"] = hermes.Untrusted(matched, maxPayeeLen)
 	}
 	return hermes.Respond(saved)
+}
+
+// withCategoryCreated adds category_created to a response when the call made a new category. The category is created
+// before the duplicate checks, so every outcome after that point reports it, saved or not, or the user would never
+// learn about an empty category that counts toward their limit.
+func withCategoryCreated(out map[string]any, created bool) map[string]any {
+	if created {
+		out["category_created"] = true
+	}
+	return out
 }
 
 // checkCategory refuses a category that is not in the user's list (see themis.Check). uncategorized is always

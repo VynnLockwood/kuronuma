@@ -755,3 +755,17 @@ func TestCategoryCapOnMemory(t *testing.T) {
 		t.Errorf("a refused add must store nothing: %v", got)
 	}
 }
+
+// update_memory creates the category before it looks for the item; if the id is unknown nothing else changes,
+// and the result must still say a category was made.
+func TestCategoryCreatedIsReportedWhenNotFound(t *testing.T) {
+	e := newEnv(t)
+	e.store.setNames("alice", "work")
+	data, text, isErr := e.call("alice", "update_memory", map[string]any{"id": "00000000-0000-0000-0000-999999999999", "category": "Typo"})
+	if isErr || data["status"] != "not_found" {
+		t.Fatalf("unknown id: %v %v %s", isErr, data["status"], text)
+	}
+	if data["category_created"] != true || !e.store.listed("alice", "typo") {
+		t.Errorf("not_found after creating a category must say category_created: %v", data)
+	}
+}
