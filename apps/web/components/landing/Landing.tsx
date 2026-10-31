@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { BRAND, REPO_URL } from "@/lib/brand";
+import { Cloud, Letter, MotifDivider, Petal, Sparkle, Sprout, Star } from "@/components/motifs";
 import { cn } from "@/lib/utils";
 import { RevealController } from "./Reveal";
 import { copy, type Lang } from "./copy";
@@ -87,7 +88,11 @@ export function Landing({ lang }: { lang: Lang }) {
 
       <main id="main">
         {/* Hero */}
-        <section className="px-6 pt-20 text-center md:pt-24">
+        <section className="relative overflow-x-clip px-6 pt-20 text-center md:pt-24">
+          <div aria-hidden="true" data-motif-layer className="pointer-events-none absolute inset-x-0 top-0 h-20 md:h-24">
+            <Sparkle size={36} className="absolute top-5 left-[7%]" />
+            <Star size={30} className="absolute top-7 right-[9%] md:size-9" />
+          </div>
           <p className="mb-3 inline-flex items-center gap-1.5 text-[17px] font-semibold text-link">
             <Icon name="sparkle" size={16} /> {c.hero.eyebrow}
           </p>
@@ -111,7 +116,11 @@ export function Landing({ lang }: { lang: Lang }) {
           <p className="mt-5 text-sm text-muted-foreground">{c.hero.worksWith}</p>
 
           {/* Product shot: an example chat and the memory panel */}
-          <div className="mx-auto mt-16 max-w-[1120px] overflow-hidden rounded-t-[32px] bg-muted px-4 pt-10 sm:px-6 md:pt-14">
+          <div className="relative mx-auto mt-16 max-w-[1120px] overflow-hidden rounded-t-[32px] bg-muted px-4 pt-10 sm:px-6 md:pt-14">
+            <div aria-hidden="true" data-motif-layer className="pointer-events-none absolute inset-x-0 top-0 h-10 md:h-14">
+              <Petal size={32} className="absolute top-1 left-4 md:top-2 md:left-8 md:size-11" />
+              <Sprout size={32} className="absolute top-1 right-4 md:top-2 md:right-8 md:size-11" />
+            </div>
             <div className="mx-auto grid max-w-[880px] items-end gap-5 text-left md:grid-cols-2">
               <div role="img" aria-label={c.mock.example} className="rounded-t-3xl bg-background p-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
                 <div className="flex items-center gap-2 border-b border-hairline pb-4">
@@ -280,6 +289,8 @@ export function Landing({ lang }: { lang: Lang }) {
         </Section>
 
         {/* FAQ */}
+        <MotifDivider />
+
         <section id="faq" className="px-6 py-24 md:py-30">
           <div className="mx-auto max-w-[760px]">
             <h2 className="mb-10 text-center text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl" {...rv()}>
@@ -296,9 +307,15 @@ export function Landing({ lang }: { lang: Lang }) {
         </section>
 
         {/* Final call to action */}
+        <MotifDivider />
+
         <section className="px-6 pb-24 md:pb-30">
           <div className="mx-auto max-w-[1120px] rounded-[32px] bg-muted px-6 py-22 text-center" {...rv()}>
-            <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="mx-auto size-20" />
+            <div className="flex items-center justify-center gap-6">
+              <Letter size={40} />
+              <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="size-20" />
+              <Sparkle size={34} />
+            </div>
             <h2 className="mt-6 text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.cta.title}</h2>
             <p className="mx-auto mt-4 max-w-xl text-[19px] text-muted-foreground">{c.cta.sub}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
@@ -311,7 +328,8 @@ export function Landing({ lang }: { lang: Lang }) {
         </section>
       </main>
 
-      <footer className="bg-muted px-6 pt-10 pb-6 text-xs text-muted-foreground">
+      <footer className="relative bg-muted px-6 pt-10 pb-6 text-xs text-muted-foreground">
+        <Cloud size={56} className="absolute top-0 right-6 -translate-y-1/2 opacity-90" />
         <div className="mx-auto max-w-[1120px]">
           <div className="grid gap-8 border-b border-border pb-7 sm:grid-cols-2 lg:grid-cols-4">
             <div>

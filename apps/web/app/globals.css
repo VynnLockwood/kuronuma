@@ -38,6 +38,16 @@
   --ink-2: #5c4650;
   --live: #34c759;
 
+  /* Motif colours: a fill and a line colour per motif family (components/motifs). */
+  --motif-gold: #ffd66b;
+  --motif-gold-line: #c99a1d;
+  --motif-leaf: #9ad8ae;
+  --motif-leaf-line: #4f9a6a;
+  --motif-rose: #fbd3e0;
+  --motif-rose-line: #d98aa6;
+  --motif-lilac: #e5defa;
+  --motif-lilac-line: #8d7fd6;
+
   --radius: 1.25rem;
 }
 
