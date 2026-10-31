@@ -53,7 +53,7 @@ export function makeLetters(count: number, width: number, height: number, seed: 
       by,
       rot: (r() - 0.5) * 16,
       size,
-      opacity: 0.35 + r() * 0.35,
+      opacity: 0.18 + r() * 0.1, // at most 0.28: above that, muted text and links crossed by a letter outline drop below 4.5:1
     });
   }
   return out;
