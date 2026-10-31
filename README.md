@@ -6,7 +6,7 @@
 
 Nemosyne is an open-source personal data hub exposed to AI assistants over [MCP](https://modelcontextprotocol.io). Users keep their spending, tasks, routines and work data in one place, and their own assistant reads and writes it through scoped tools.
 
-**Status:** early. Working: Google sign-in (Cerberus), web shell (Olympus), Docker/nginx. Built and awaiting real-world testing: the MCP endpoint (Hermes), OAuth for assistants, and the spending tools (Plutus). See [docs/design.md](docs/design.md).
+**Status:** early. Working: Google sign-in (Cerberus), web shell (Olympus), Docker/nginx. Built and awaiting real-world testing: the MCP endpoint (Hermes), OAuth for assistants, and the spending (Plutus), category (Themis) and memory (Atlas) tools. See [docs/design.md](docs/design.md).
 
 **AI agents working in this repo:** read [AGENTS.md](AGENTS.md) first. It has the rules, and each agent keeps a log in `agent-logs/<name>/`.
 
@@ -101,7 +101,8 @@ Snap a bank slip, attach it in your assistant's chat, confirm the extracted amou
 | **Gaia** | PostgreSQL storage |
 | **Pythia** | Slip intake: validation, dedupe, review queue |
 | **Plutus** | Spending module (first module) |
-| **Atlas** | Tasks module |
+| **Themis** | Categories shared by every module |
+| **Atlas** | Tasks, to-dos and notes module |
 | **Horae** | Routines module |
 | **Hephaestus** | Work data module |
 | **Moirai** | Background jobs and scheduling (later) |

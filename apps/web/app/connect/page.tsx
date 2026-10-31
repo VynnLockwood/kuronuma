@@ -37,6 +37,9 @@ export default function Connect() {
       <main className="page">
         <h1 className="page-h1">Connect your assistant</h1>
         <p className="lead">One URL. Your assistant signs you in with Google and asks for your approval.</p>
+        <p className="muted">
+          Connected before? Remove Nemo from your assistant’s connectors and add it again to see new tools such as tasks and categories.
+        </p>
 
         <section className="card url-card">
           <strong>Your Nemo MCP URL</strong>
@@ -94,6 +97,7 @@ export default function Connect() {
             <ul className="steps">
               <li>Attach a bank slip photo and say: “Save this to Nemo.” Confirm the amount, payee and date it shows you.</li>
               <li>Ask: “How much did I spend on food this month?”</li>
+              <li>Say: “Add a to-do for Friday: send the report. Tag it work.” Later ask: “What is on my to-do list for work?”</li>
             </ul>
           </section>
         </div>

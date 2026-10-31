@@ -111,12 +111,12 @@ Tools: `list_memories` (`atlas:read`), `add_memory` and `update_memory` (`atlas:
 
 - Migration 00006. New scopes `atlas:read` and `atlas:write`; existing connectors must be re-authorized to see the tools.
 - No duplicate detection: the tool descriptions tell the assistant to list before adding.
-- Not built yet: a web screen for browsing memories, reminders, recurring items (Horae). The landing and dashboard copy still say "Coming soon" until the copy change.
+- Not built yet: a web screen for browsing memories, reminders, recurring items (Horae). The landing page, `/th` and the dashboard show Atlas as Available.
 
 ## Build status
 
 - Live: hosted with working Google sign-in; dependencies locked (`go.sum`); CI, Dependabot, PR/issue templates and agent rules (`AGENTS.md`) in place.
-- Built, not yet used with a real assistant: OAuth server, MCP endpoint, Plutus tools, `/connect` page.
+- Built, not yet used with a real assistant: OAuth server, MCP endpoint, Plutus tools (including payee rules), Themis category tools, Atlas memory tools, `/connect` page.
 - Verified: unit and integration tests (stdlib), SQL and migrations against a real Postgres (up, down, up), browser smoke test of the web pages. The Go-to-Postgres driver wiring was only compile-checked against stubs and is covered by CI's build.
 - Known gaps:
   - No "connected apps" page to review or revoke an assistant's access yet; there is no refresh-token reuse detection.
