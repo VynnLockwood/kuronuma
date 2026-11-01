@@ -311,12 +311,15 @@ export function Pencil(props: MotifProps) {
   );
 }
 
-export function MotifDivider() {
+// Three small ones in a row. `variant` rotates the middle picture so no two dividers on a page look the same.
+const DIVIDER_MIDDLE = [Sprout, Bow, Daisy, Bird];
+export function MotifDivider({ variant = 0 }: { variant?: number }) {
+  const Middle = DIVIDER_MIDDLE[variant % DIVIDER_MIDDLE.length];
   return (
-    <div aria-hidden="true" className="flex items-center justify-center gap-4 py-2">
-      <Sparkle size={18} className="motif-twinkle" style={{ "--delay": "-0.4s" } as CSSProperties} />
-      <Sprout size={18} className="motif-float" style={{ "--delay": "-2.2s" } as CSSProperties} />
-      <Sparkle size={18} className="motif-twinkle" style={{ "--delay": "-1.6s" } as CSSProperties} />
+    <div aria-hidden="true" data-divider className="flex items-center justify-center gap-4 py-2">
+      <Sparkle size={20} className="motif-twinkle" style={{ "--delay": "-0.4s" } as CSSProperties} />
+      <Middle size={20} className="motif-float" style={{ "--delay": "-2.2s" } as CSSProperties} />
+      <Sparkle size={20} className="motif-twinkle" style={{ "--delay": "-1.6s" } as CSSProperties} />
     </div>
   );
 }

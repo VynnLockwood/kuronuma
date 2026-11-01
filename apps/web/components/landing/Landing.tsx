@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { BRAND, REPO_URL } from "@/lib/brand";
 import { Cloud, Letter, MotifDivider, Petal, Sparkle, Sprout, Star } from "@/components/motifs";
+import { Accents, Spot, type MotifName } from "@/components/motifs/Spot";
 import { cn } from "@/lib/utils";
 import { RevealController } from "./Reveal";
 import { copy, type Lang } from "./copy";
@@ -25,6 +26,7 @@ const hi = (i: number) => ({ "--i": i }) as React.CSSProperties;
 const home = (lang: Lang) => (lang === "th" ? "/th" : "/");
 
 const stepIcons: IconName[] = ["plug", "layers", "chat"];
+const moduleMotif: Record<string, MotifName> = { Plutus: "strawberry", Atlas: "pencil", Horae: "moon", Hephaestus: "mushroom" };
 
 function LangSwitch({ lang, label }: { lang: Lang; label: string }) {
   const item = (active: boolean) =>
@@ -192,6 +194,7 @@ export function Landing({ lang }: { lang: Lang }) {
               <p className="mb-2 text-[17px] font-semibold text-muted-foreground">{c.demo.eyebrow}</p>
               <h2 className="text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.demo.title}</h2>
               <p className="mt-5 text-[19px] leading-normal text-muted-foreground">{c.demo.sub}</p>
+              <Spot motif={["teddy", "plane"]} className="mt-8 justify-start" />
             </div>
             <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {c.demo.points.map((t, i) => (
@@ -220,6 +223,7 @@ export function Landing({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ol>
+          <Spot motif="plane" className="mt-14" />
         </Section>
 
         {/* Features */}
@@ -236,6 +240,7 @@ export function Landing({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ul>
+          <Spot motif="heart" className="mt-14" />
         </Section>
 
         {/* Modules */}
@@ -244,7 +249,7 @@ export function Landing({ lang }: { lang: Lang }) {
           <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {c.modules.items.map((m, i) => (
               <li key={m.god} {...rv(i)}>
-                <Card cute className="flex h-full min-h-[220px] flex-col rounded-[28px]">
+                <Card cute corner={moduleMotif[m.god]} className="flex h-full min-h-[220px] flex-col rounded-[28px]">
                   <Badge variant={m.live ? "success" : "muted"}>{m.live ? c.modules.available : c.modules.soon}</Badge>
                   <h3 className={cn("mt-auto pt-12 text-[28px] font-bold tracking-[-0.02em]", !m.live && "text-muted-foreground")}>{m.god}</h3>
                   <p className={cn("text-[15px] font-semibold", !m.live && "text-muted-foreground")}>{m.area}</p>
@@ -262,6 +267,7 @@ export function Landing({ lang }: { lang: Lang }) {
               <h2 className="text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.mission.title}</h2>
               <p className="mt-5 text-[19px] leading-normal text-muted-foreground">{c.mission.sub}</p>
               <p className="mt-5 text-sm text-muted-foreground">{c.mission.note}</p>
+              <Spot motif="rainbow" className="mt-8 justify-start" />
             </div>
             <ol className="flex flex-col">
               {c.mission.items.map((m, i) => (
@@ -298,13 +304,15 @@ export function Landing({ lang }: { lang: Lang }) {
           <p className="mt-6 flex max-w-3xl items-start gap-2.5 text-sm leading-normal text-muted-foreground">
             <Icon name="lock" size={18} className="mt-0.5 shrink-0" /> <span>{c.privacy.note}</span>
           </p>
+          <Spot motif="cat" className="mt-12" />
         </Section>
 
         {/* FAQ */}
-        <MotifDivider />
+        <MotifDivider variant={1} />
 
         <section id="faq" className="px-6 py-24 md:py-30">
           <div className="mx-auto max-w-[760px]">
+            <Spot motif="teacup" size={64} className="mb-6" />
             <h2 className="mb-10 text-center text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl" {...rv()}>
               {c.faq.title}
             </h2>
@@ -319,10 +327,9 @@ export function Landing({ lang }: { lang: Lang }) {
         </section>
 
         {/* Final call to action */}
-        <MotifDivider />
-
-        <section className="px-6 pb-24 md:pb-30">
-          <div className="mx-auto max-w-[1120px] rounded-[32px] bg-muted px-6 py-22 text-center" {...rv()}>
+        <section className="px-6 pt-10 pb-24 md:pb-30">
+          <div className="relative mx-auto max-w-[1120px] rounded-[32px] bg-muted px-6 py-22 text-center" {...rv()}>
+            <Accents left="bunny" right="balloon" />
             <div className="flex items-center justify-center gap-6">
               <Letter size={40} className="motif-float" style={mo(-2.8, 6.5)} />
               <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="size-20" />
