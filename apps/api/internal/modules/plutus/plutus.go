@@ -69,6 +69,8 @@ type Store interface {
 	// AddTransaction inserts t. created is false when a record with the same reference already exists,
 	// in which case the existing record is returned.
 	AddTransaction(ctx context.Context, userID string, t NewTransaction) (tx Transaction, created bool, err error)
+	// TransactionByReference returns the user's record with that reference, if any.
+	TransactionByReference(ctx context.Context, userID, reference string) (tx Transaction, found bool, err error)
 	// CountTransactions returns how many transactions the user has, for the per-user cap.
 	CountTransactions(ctx context.Context, userID string) (int, error)
 	// FindPossibleDuplicate looks for the same amount, currency, date and merchant.
@@ -280,6 +282,20 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	if n, err := m.store.CountTransactions(ctx, c.UserID); err != nil {
 		return "", err
 	} else if n >= maxTransactions {
+		// A slip that was already saved is still "already saved": a retry changes nothing and is not an error.
+		if ref := hermes.Untrusted(a.Reference, 100); ref != "" {
+			tx, found, err := m.store.TransactionByReference(ctx, c.UserID, ref)
+			if err != nil {
+				return "", err
+			}
+			if found {
+				return hermes.Respond(map[string]any{
+					"status":      "already_saved",
+					"transaction": toOut(tx),
+					"message":     "A record with this reference already exists, so nothing new was saved.",
+				})
+			}
+		}
 		return "", hermes.Errorf("The user already has %d transactions, the most Kuronuma keeps. Ask the user whether to delete some with delete_transaction.", maxTransactions)
 	}
 	// Category: what the caller gave wins (a name the user does not have yet is created); with none given the

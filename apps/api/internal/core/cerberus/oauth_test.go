@@ -608,7 +608,8 @@ func TestAuthorizeRequestValidation(t *testing.T) {
 				if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
 					t.Fatalf("content type = %q, want our HTML error page", ct)
 				}
-				mustContain(t, rec.Body.String(), "KURONUMA")
+				// The user is told how to recover, since an assistant that never gets the error cannot.
+				mustContain(t, rec.Body.String(), "KURONUMA", "start the connection again", "add it again")
 			})
 		}
 	}
@@ -712,28 +713,26 @@ func TestCleanupExpired(t *testing.T) {
 	h.token(codeForm(cid, code, testRedirect, testVerifier))
 	h.now = h.now.Add(60 * 24 * time.Hour)
 	n, err := h.o.CleanupExpired(context.Background())
-	if err != nil || n != 3 { // access + refresh, then the client that is left with nothing and is 60 days old
+	if err != nil || n != 2 { // access + refresh; the client is only 60 days old, so it stays
 		t.Fatalf("cleanup = %d, %v", n, err)
 	}
 }
 
-// Registration is open, so clients that were never used would pile up. A client goes only when it is more than 30
-// days old and holds no code and no token; a used client (a live token), a newer one and one with a live code stay.
+// Registration is open, so clients that were never used would pile up. A client goes only when it is more than 180
+// days old and holds no code and no token; a client with a live token or code, and a younger one, stay.
 func TestCleanupRemovesOnlyUnusedOldClients(t *testing.T) {
 	h := newOH(t)
 	unused := h.registerClient("Unused", testRedirect)
 	used := h.registerClient("Used", testRedirect)
 	withCode := h.registerClient("With code", testRedirect)
-	code := h.authorizeCode(used, testRedirect, "")
-	tr := decodeToken(t, h.token(codeForm(used, code, testRedirect, testVerifier)))
 
-	h.now = h.now.Add(15 * 24 * time.Hour)
-	if rec := h.token(url.Values{"grant_type": {"refresh_token"}, "client_id": {used}, "refresh_token": {tr.RefreshToken}}); rec.Code != 200 {
-		t.Fatalf("refresh: %d %s", rec.Code, rec.Body.String())
-	}
-	fresh := h.registerClient("Fresh", testRedirect)
+	h.now = h.now.Add(2 * 24 * time.Hour)
+	almost := h.registerClient("Almost", testRedirect) // 179 days old at the cleanup
+	h.now = h.now.Add(98 * 24 * time.Hour)
+	fresh := h.registerClient("Fresh", testRedirect) // 81 days old at the cleanup
 
-	h.now = h.now.Add(16 * 24 * time.Hour)                                                       // day 31: "Unused" and "With code" are over 30 days old
+	h.now = h.now.Add(81 * 24 * time.Hour) // day 181
+	h.store.tokens["live"] = Token{ClientID: used, Kind: TokenRefresh, ExpiresAt: h.now.Add(time.Hour)}
 	h.store.codes["live-code"] = AuthCode{ClientID: withCode, ExpiresAt: h.now.Add(time.Minute)} // a pending authorization
 	if _, err := h.o.CleanupExpired(context.Background()); err != nil {
 		t.Fatal(err)
@@ -741,7 +740,7 @@ func TestCleanupRemovesOnlyUnusedOldClients(t *testing.T) {
 	for name, want := range map[string]struct {
 		id   string
 		kept bool
-	}{"unused": {unused, false}, "used": {used, true}, "with a live code": {withCode, true}, "registered 16 days ago": {fresh, true}} {
+	}{"unused": {unused, false}, "with a live token": {used, true}, "with a live code": {withCode, true}, "179 days old": {almost, true}, "81 days old": {fresh, true}} {
 		_, err := h.store.GetClient(context.Background(), want.id)
 		if kept := err == nil; kept != want.kept {
 			t.Errorf("%s: kept = %v, want %v", name, kept, want.kept)

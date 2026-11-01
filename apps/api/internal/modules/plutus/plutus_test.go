@@ -35,6 +35,17 @@ type memStore struct {
 	padding map[string]int // records a user is pretended to have already, to reach a cap without inserting thousands
 }
 
+func (m *memStore) TransactionByReference(_ context.Context, userID, ref string) (Transaction, bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, r := range m.rows {
+		if r.userID == userID && r.tx.Reference == ref {
+			return r.tx, true, nil
+		}
+	}
+	return Transaction{}, false, nil
+}
+
 func (m *memStore) CountTransactions(_ context.Context, userID string) (int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -603,5 +614,25 @@ func TestPerUserTransactionCap(t *testing.T) {
 	}
 	if got := e.add("alice", base(map[string]any{"merchant": "Other"})); got["status"] != "saved" {
 		t.Fatalf("after deleting: %v", got)
+	}
+}
+
+// At the cap a slip that was already saved is still answered as "already saved" (a retry changes nothing and is
+// not an error), while a new slip is refused.
+func TestAtTheCapARepeatedReferenceIsNotAnError(t *testing.T) {
+	e := newEnv(t)
+	e.store.padding = map[string]int{"alice": maxTransactions - 1}
+	if got := e.add("alice", base(map[string]any{"reference": "SLIP-1"})); got["status"] != "saved" {
+		t.Fatalf("last free slot: %v", got)
+	}
+	again := e.add("alice", base(map[string]any{"reference": "SLIP-1"}))
+	if again["status"] != "already_saved" {
+		t.Fatalf("repeat at the cap: %v", again)
+	}
+	if n, _ := e.store.CountTransactions(context.Background(), "alice"); n != maxTransactions {
+		t.Fatalf("a repeat must not insert: count = %d", n)
+	}
+	if _, text, isErr := e.call("alice", "add_transaction", base(map[string]any{"reference": "SLIP-2"})); !isErr || !strings.Contains(text, "delete") {
+		t.Fatalf("a new slip at the cap must be refused: isErr=%v %q", isErr, text)
 	}
 }

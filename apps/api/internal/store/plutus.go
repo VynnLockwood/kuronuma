@@ -48,6 +48,16 @@ func (p *Postgres) AddTransaction(ctx context.Context, userID string, t plutus.N
 	return existing, false, err
 }
 
+// TransactionByReference returns the user's record with that reference, if there is one.
+func (p *Postgres) TransactionByReference(ctx context.Context, userID, reference string) (plutus.Transaction, bool, error) {
+	tx, err := scanTx(p.pool.QueryRow(ctx,
+		`SELECT `+txColumns+` FROM transactions WHERE user_id = $1::uuid AND reference = $2`, userID, reference))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return plutus.Transaction{}, false, nil
+	}
+	return tx, err == nil, err
+}
+
 // CountTransactions returns how many transactions the user has.
 func (p *Postgres) CountTransactions(ctx context.Context, userID string) (int, error) {
 	var n int
