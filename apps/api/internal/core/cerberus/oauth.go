@@ -98,9 +98,20 @@ func (o *OAuth) VerifyAccessToken(ctx context.Context, token string) (TokenInfo,
 	return TokenInfo{UserID: t.UserID, ClientID: t.ClientID, Scopes: t.Scopes}, nil
 }
 
-// CleanupExpired removes expired codes and tokens.
+// unusedClientAge is how old a registered client must be before it can be removed for holding nothing. Registration
+// is open, so without this clients that were never used would accumulate forever. An assistant that still holds a
+// removed client id gets invalid_client and registers again, which MCP clients must handle.
+const unusedClientAge = 30 * 24 * time.Hour
+
+// CleanupExpired removes expired codes and tokens, then clients that are over 30 days old and hold neither.
 func (o *OAuth) CleanupExpired(ctx context.Context) (int64, error) {
-	return o.store.DeleteExpiredOAuth(ctx, o.opt.Now())
+	now := o.opt.Now()
+	n, err := o.store.DeleteExpiredOAuth(ctx, now)
+	if err != nil {
+		return n, err
+	}
+	c, err := o.store.DeleteUnusedClients(ctx, now.Add(-unusedClientAge))
+	return n + c, err
 }
 
 // ---- discovery ----

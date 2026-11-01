@@ -130,6 +130,27 @@ func (m *memOAuthStore) DeleteExpiredOAuth(_ context.Context, now time.Time) (in
 	return n, nil
 }
 
+// DeleteUnusedClients removes clients registered before `before` that hold no code and no token at all.
+func (m *memOAuthStore) DeleteUnusedClients(_ context.Context, before time.Time) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	used := map[string]bool{}
+	for _, c := range m.codes {
+		used[c.ClientID] = true
+	}
+	for _, t := range m.tokens {
+		used[t.ClientID] = true
+	}
+	var n int64
+	for id, c := range m.clients {
+		if c.CreatedAt.Before(before) && !used[id] {
+			delete(m.clients, id)
+			n++
+		}
+	}
+	return n, nil
+}
+
 // ---- harness ----
 
 type oh struct {
@@ -691,7 +712,39 @@ func TestCleanupExpired(t *testing.T) {
 	h.token(codeForm(cid, code, testRedirect, testVerifier))
 	h.now = h.now.Add(60 * 24 * time.Hour)
 	n, err := h.o.CleanupExpired(context.Background())
-	if err != nil || n != 2 { // access + refresh
+	if err != nil || n != 3 { // access + refresh, then the client that is left with nothing and is 60 days old
 		t.Fatalf("cleanup = %d, %v", n, err)
+	}
+}
+
+// Registration is open, so clients that were never used would pile up. A client goes only when it is more than 30
+// days old and holds no code and no token; a used client (a live token), a newer one and one with a live code stay.
+func TestCleanupRemovesOnlyUnusedOldClients(t *testing.T) {
+	h := newOH(t)
+	unused := h.registerClient("Unused", testRedirect)
+	used := h.registerClient("Used", testRedirect)
+	withCode := h.registerClient("With code", testRedirect)
+	code := h.authorizeCode(used, testRedirect, "")
+	tr := decodeToken(t, h.token(codeForm(used, code, testRedirect, testVerifier)))
+
+	h.now = h.now.Add(15 * 24 * time.Hour)
+	if rec := h.token(url.Values{"grant_type": {"refresh_token"}, "client_id": {used}, "refresh_token": {tr.RefreshToken}}); rec.Code != 200 {
+		t.Fatalf("refresh: %d %s", rec.Code, rec.Body.String())
+	}
+	fresh := h.registerClient("Fresh", testRedirect)
+
+	h.now = h.now.Add(16 * 24 * time.Hour)                                                       // day 31: "Unused" and "With code" are over 30 days old
+	h.store.codes["live-code"] = AuthCode{ClientID: withCode, ExpiresAt: h.now.Add(time.Minute)} // a pending authorization
+	if _, err := h.o.CleanupExpired(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for name, want := range map[string]struct {
+		id   string
+		kept bool
+	}{"unused": {unused, false}, "used": {used, true}, "with a live code": {withCode, true}, "registered 16 days ago": {fresh, true}} {
+		_, err := h.store.GetClient(context.Background(), want.id)
+		if kept := err == nil; kept != want.kept {
+			t.Errorf("%s: kept = %v, want %v", name, kept, want.kept)
+		}
 	}
 }
