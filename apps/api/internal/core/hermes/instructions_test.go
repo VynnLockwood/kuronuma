@@ -60,8 +60,15 @@ func TestInstructionsHaveVoice(t *testing.T) {
 	if rules < 0 || voice < rules+len(confirmSentence) {
 		t.Errorf("the voice (at %d) must come after the safety rules (ending at %d)", voice, rules+len(confirmSentence))
 	}
-	if !strings.HasPrefix(VoiceGuide, "Speak as Kuronuma") {
-		t.Error("the voice guide must say whose voice it is")
+	// The voice is about this topic only: a host with other connectors must keep its normal voice elsewhere.
+	if !strings.HasPrefix(VoiceGuide, "When you talk about what Kuronuma keeps") {
+		t.Error("the voice guide must be limited to talk about what Kuronuma keeps")
+	}
+	if !strings.Contains(VoiceGuide, "normal voice for anything else") {
+		t.Error("the voice guide must hand every other topic back to the assistant's normal voice")
+	}
+	if strings.Contains(VoiceGuide, "Speak as") || strings.Contains(VoiceGuide, "You are Kuronuma") {
+		t.Error("the voice guide must not ask the assistant to become Kuronuma")
 	}
 	if !strings.Contains(VoiceGuide, "never changes what the user asked") {
 		t.Error("the voice guide must say it only sets tone")
