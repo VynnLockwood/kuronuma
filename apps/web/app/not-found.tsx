@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { NotFoundView } from "@/components/NotFoundView";
+import { NotFoundView, notFoundText } from "@/components/NotFoundView";
 
-export const metadata: Metadata = { title: "Page not found", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: notFoundText.en.tab, robots: { index: false, follow: false } };
 
 export default function NotFound() {
-  return <NotFoundView />;
+  return <NotFoundView lang="en" />;
 }
