@@ -11,6 +11,7 @@ import (
 
 	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/atlas"
+	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/plutus"
 )
 
 // TestPostgresMemories needs a real database, so it only runs when TEST_DATABASE_URL is set
@@ -214,4 +215,54 @@ func TestPostgresMemories(t *testing.T) {
 		t.Fatalf("after two concurrent adds there are %d items, want %d", after, before+2)
 	}
 	_ = c
+}
+
+// TestPostgresCounts checks the per-user counts behind the caps. Like the tests above it needs TEST_DATABASE_URL.
+func TestPostgresCounts(t *testing.T) {
+	url := os.Getenv("TEST_DATABASE_URL")
+	if url == "" {
+		t.Skip("TEST_DATABASE_URL not set")
+	}
+	ctx := context.Background()
+	db, err := Open(ctx, url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if err := db.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	newUser := func() string {
+		sub := fmt.Sprintf("counts-test-%d", time.Now().UnixNano())
+		var id string
+		if err := db.pool.QueryRow(ctx,
+			`INSERT INTO users (google_sub, email) VALUES ($1, $2) RETURNING id::text`, sub, sub+"@example.test").Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _, _ = db.pool.Exec(context.Background(), `DELETE FROM users WHERE id = $1::uuid`, id) })
+		return id
+	}
+	a, b := newUser(), newUser()
+	for i := 0; i < 2; i++ {
+		if _, err := db.AddMemory(ctx, a, atlas.NewMemory{Kind: "note", Title: fmt.Sprintf("n%d", i), Priority: "normal", Category: themis.Uncategorized}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, _, err := db.AddTransaction(ctx, a, plutus.NewTransaction{AmountMinor: 100, Currency: "THB", Merchant: "m", Category: themis.Uncategorized, OccurredOn: time.Now()}); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name string
+		got  func() (int, error)
+		want int
+	}{
+		{"memories a", func() (int, error) { return db.CountMemories(ctx, a) }, 2},
+		{"memories b", func() (int, error) { return db.CountMemories(ctx, b) }, 0},
+		{"transactions a", func() (int, error) { return db.CountTransactions(ctx, a) }, 1},
+		{"transactions b", func() (int, error) { return db.CountTransactions(ctx, b) }, 0},
+	} {
+		if n, err := c.got(); err != nil || n != c.want {
+			t.Errorf("%s: count = %d, %v; want %d", c.name, n, err, c.want)
+		}
+	}
 }

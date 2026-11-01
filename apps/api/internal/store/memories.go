@@ -37,6 +37,13 @@ func (p *Postgres) AddMemory(ctx context.Context, userID string, n atlas.NewMemo
 		userID, n.Kind, n.Title, n.Body, n.Priority, n.DueOn, n.Category, nonNil(n.Tags)))
 }
 
+// CountMemories returns how many items the user has.
+func (p *Postgres) CountMemories(ctx context.Context, userID string) (int, error) {
+	var n int
+	err := p.pool.QueryRow(ctx, `SELECT count(*) FROM memories WHERE user_id = $1::uuid`, userID).Scan(&n)
+	return n, err
+}
+
 // ListMemories returns the user's items that match f, in the order atlas.Less describes.
 func (p *Postgres) ListMemories(ctx context.Context, userID string, f atlas.Filter) ([]atlas.Memory, error) {
 	var q strings.Builder

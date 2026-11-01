@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -31,6 +32,19 @@ type memStore struct {
 	names   map[string][]string    // per-user category list
 	rules   map[string][]PayeeRule // per-user payee rules
 	ruleSeq int
+	padding map[string]int // records a user is pretended to have already, to reach a cap without inserting thousands
+}
+
+func (m *memStore) CountTransactions(_ context.Context, userID string) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	n := m.padding[userID]
+	for _, r := range m.rows {
+		if r.userID == userID {
+			n++
+		}
+	}
+	return n, nil
 }
 
 func (m *memStore) AddTransaction(_ context.Context, userID string, t NewTransaction) (Transaction, bool, error) {
@@ -558,5 +572,36 @@ func TestDelete(t *testing.T) {
 	}
 	if _, _, isErr := e.call("alice", "delete_transaction", map[string]any{"id": id}); !isErr {
 		t.Error("deleting twice must report not found")
+	}
+}
+
+// Each user can hold only so many transactions. At the cap new records are refused with a plain message, one
+// below it they are accepted, deleting frees room, and another user's count is separate.
+func TestPerUserTransactionCap(t *testing.T) {
+	e := newEnv(t)
+	e.store.padding = map[string]int{"alice": maxTransactions - 1}
+
+	saved := e.add("alice", base(nil)) // the last free slot
+	if saved["status"] != "saved" {
+		t.Fatalf("below the cap: %v", saved)
+	}
+	_, text, isErr := e.call("alice", "add_transaction", base(map[string]any{"merchant": "Other"}))
+	if !isErr || !strings.Contains(text, strconv.Itoa(maxTransactions)) || !strings.Contains(text, "delete") {
+		t.Fatalf("at the cap want a tool error naming the cap and asking to delete, got isErr=%v %q", isErr, text)
+	}
+	if n, _ := e.store.CountTransactions(context.Background(), "alice"); n != maxTransactions {
+		t.Fatalf("a refused add must not insert: count = %d", n)
+	}
+	// Another user is not affected.
+	if got := e.add("bob", base(nil)); got["status"] != "saved" {
+		t.Fatalf("bob: %v", got)
+	}
+	// Deleting frees a slot.
+	id := saved["transaction"].(map[string]any)["id"].(string)
+	if _, text, isErr := e.call("alice", "delete_transaction", map[string]any{"id": id}); isErr {
+		t.Fatalf("delete at the cap must work: %s", text)
+	}
+	if got := e.add("alice", base(map[string]any{"merchant": "Other"})); got["status"] != "saved" {
+		t.Fatalf("after deleting: %v", got)
 	}
 }

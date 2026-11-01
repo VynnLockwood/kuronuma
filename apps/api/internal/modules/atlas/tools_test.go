@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -21,10 +22,17 @@ import (
 // ---- in-memory store, per user, mirroring the Postgres store's behaviour ----
 
 type memStore struct {
-	mu    sync.Mutex
-	items map[string][]*Memory
-	names map[string][]string
-	seq   int
+	mu      sync.Mutex
+	items   map[string][]*Memory
+	names   map[string][]string
+	seq     int
+	padding map[string]int // items a user is pretended to have already, to reach a cap without inserting thousands
+}
+
+func (s *memStore) CountMemories(_ context.Context, user string) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.items[user]) + s.padding[user], nil
 }
 
 func (s *memStore) setNames(user string, names ...string) {
@@ -767,5 +775,32 @@ func TestCategoryCreatedIsReportedWhenNotFound(t *testing.T) {
 	}
 	if data["category_created"] != true || !e.store.listed("alice", "typo") {
 		t.Errorf("not_found after creating a category must say category_created: %v", data)
+	}
+}
+
+// Each user can hold only so many items. At the cap new items are refused with a plain message, changing an
+// existing item and deleting still work, and another user's count is separate.
+func TestPerUserMemoryCap(t *testing.T) {
+	e := newEnv(t)
+	e.store.padding = map[string]int{"alice": maxMemories - 1}
+
+	first := e.add(map[string]any{"title": "last free slot"}) // below the cap
+	_, text, isErr := e.call("alice", "add_memory", map[string]any{"kind": "note", "title": "one too many"})
+	if !isErr || !strings.Contains(text, strconv.Itoa(maxMemories)) || !strings.Contains(text, "delete") {
+		t.Fatalf("at the cap want a tool error naming the cap and asking to delete, got isErr=%v %q", isErr, text)
+	}
+	if n, _ := e.store.CountMemories(context.Background(), "alice"); n != maxMemories {
+		t.Fatalf("a refused add must not insert: count = %d", n)
+	}
+	id := first["id"].(string)
+	if data := e.must("alice", "update_memory", map[string]any{"id": id, "title": "changed"}); data["status"] == "not_found" {
+		t.Fatalf("update at the cap must work: %v", data)
+	}
+	if got := e.must("bob", "add_memory", map[string]any{"kind": "note", "title": "bob's"}); got["memory"] == nil {
+		t.Fatalf("bob: %v", got)
+	}
+	e.must("alice", "delete_memory", map[string]any{"id": id})
+	if got := e.must("alice", "add_memory", map[string]any{"kind": "note", "title": "fits again"}); got["memory"] == nil {
+		t.Fatalf("after deleting: %v", got)
 	}
 }

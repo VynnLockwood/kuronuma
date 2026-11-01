@@ -230,6 +230,13 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 		}
 		due = &d
 	}
+	// The per-user cap, checked before a category is created for an item that would be refused. A count then an
+	// insert can overshoot by one under a race, which is fine for a cap.
+	if n, err := m.store.CountMemories(ctx, c.UserID); err != nil {
+		return "", err
+	} else if n >= maxMemories {
+		return "", hermes.Errorf("The user already has %d tasks, to-dos and notes, the most Kuronuma keeps. Ask the user whether to delete some with delete_memory.", maxMemories)
+	}
 	category, categoryCreated, err := m.category(ctx, c.UserID, a.Category)
 	if err != nil {
 		return "", err

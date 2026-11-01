@@ -36,13 +36,16 @@ const (
 
 // Limits.
 const (
-	MaxTitleLen  = 200
-	MaxBodyLen   = 4000
-	MaxTags      = 10
-	MaxTagLen    = 30
-	MaxTerms     = 5
-	MaxTermLen   = 50
-	MaxLimit     = 200
+	MaxTitleLen = 200
+	MaxBodyLen  = 4000
+	MaxTags     = 10
+	MaxTagLen   = 30
+	MaxTerms    = 5
+	MaxTermLen  = 50
+	MaxLimit    = 200
+	// maxMemories is the most tasks, to-dos and notes one user can keep. Adding one more is refused with a message
+	// asking to delete some; changing and deleting are never blocked.
+	maxMemories  = 5000
 	DefaultLimit = 50
 )
 
@@ -83,6 +86,8 @@ type Filter struct {
 // Store persists memories. Every method is scoped to userID.
 type Store interface {
 	AddMemory(ctx context.Context, userID string, n NewMemory) (Memory, error)
+	// CountMemories returns how many items the user has, for the per-user cap.
+	CountMemories(ctx context.Context, userID string) (int, error)
 	ListMemories(ctx context.Context, userID string, f Filter) ([]Memory, error)
 	// UpdateMemory applies u and returns the item. found is false when the user has no item with that id.
 	// completed_at follows the status: set on becoming done, cleared on leaving done, kept otherwise.

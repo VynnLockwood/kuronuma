@@ -48,6 +48,13 @@ func (p *Postgres) AddTransaction(ctx context.Context, userID string, t plutus.N
 	return existing, false, err
 }
 
+// CountTransactions returns how many transactions the user has.
+func (p *Postgres) CountTransactions(ctx context.Context, userID string) (int, error) {
+	var n int
+	err := p.pool.QueryRow(ctx, `SELECT count(*) FROM transactions WHERE user_id = $1::uuid`, userID).Scan(&n)
+	return n, err
+}
+
 // FindPossibleDuplicate looks for the same amount, currency, date and merchant (case-insensitive).
 func (p *Postgres) FindPossibleDuplicate(ctx context.Context, userID string, t plutus.NewTransaction) (string, bool, error) {
 	var id string
