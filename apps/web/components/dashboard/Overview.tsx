@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons";
+import { Spot } from "@/components/motifs/Spot";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { compactAmount, compareAmount, dueBucket, formatAmount, lastMonths, localISODate, monthName, monthStartISO, share } from "@/lib/format";
@@ -77,6 +78,7 @@ export function Overview() {
     return (
       <div className="flex flex-col gap-10">
         <Card className="rounded-[28px] bg-muted p-8 text-center">
+          <Spot motif="bunny" className="mb-4" />
           <h2 className="text-2xl font-bold tracking-[-0.02em]">{o.emptyTitle}</h2>
           <p className="mx-auto mt-2 max-w-md text-[15px] leading-normal text-muted-foreground">{o.emptyBody}</p>
           <Link href="/connect" className={buttonVariants({ className: "mt-5" })}>

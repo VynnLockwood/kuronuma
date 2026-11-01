@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Spot } from "@/components/motifs/Spot";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -433,7 +434,8 @@ export function Memories() {
       {list.status === "ok" &&
         (list.data.memories.length === 0 ? (
           <div className="rounded-[28px] bg-muted p-8 text-center">
-            <p className="text-[15px] text-muted-foreground">{filtered ? c.emptyFiltered : c.emptyNone}</p>
+            <Spot motif={filtered ? "mushroom" : "pencil"} size={filtered ? 64 : 96} className="mb-4" />
+              <p className="text-[15px] text-muted-foreground">{filtered ? c.emptyFiltered : c.emptyNone}</p>
             {!filtered && (
               <Link href="/connect" className={buttonVariants({ className: "mt-4" })}>
                 {copy.common.connectLink}

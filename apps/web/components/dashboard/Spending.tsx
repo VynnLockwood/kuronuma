@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Spot } from "@/components/motifs/Spot";
 import { Alert } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -343,6 +344,7 @@ export function Spending() {
         {list.status === "ok" &&
           (list.data.transactions.length === 0 ? (
             <div className="rounded-[28px] bg-muted p-8 text-center">
+              <Spot motif={filtered ? "mushroom" : "cupcake"} size={filtered ? 64 : 96} className="mb-4" />
               <p className="text-[15px] text-muted-foreground">{filtered ? c.emptyFiltered : c.emptyNone}</p>
               {!filtered && (
                 <Link href="/connect" className={buttonVariants({ className: "mt-4" })}>

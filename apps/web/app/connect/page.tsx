@@ -5,6 +5,7 @@ import { AppNav } from "@/components/AppNav";
 import { Icon, type IconName } from "@/components/icons";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
+import { Spot } from "@/components/motifs/Spot";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -53,6 +54,7 @@ export default function Connect() {
 
       <main>
         <section className="px-6 pt-20 pb-14 text-center md:pt-22">
+          <Spot motif="plane" size={64} className="mb-6" />
           <p className="mb-3 text-[17px] font-semibold text-link">Setup guide</p>
           <h1 className="text-[40px] leading-[1.05] font-bold tracking-[-0.035em] md:text-[64px]">Connect your assistant.</h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-normal text-muted-foreground md:text-[21px]">
@@ -128,6 +130,7 @@ export default function Connect() {
 
         <section className="px-6 pt-24 pb-30">
           <div className="mx-auto max-w-[1120px]">
+            <Spot motif="bird" size={64} className="mb-5" />
             <h2 className="text-center text-4xl leading-[1.1] font-bold tracking-[-0.03em]">Then just ask.</h2>
             <ul className="mt-10 grid gap-5 md:grid-cols-3">
               {tryIt.map((t) => (
