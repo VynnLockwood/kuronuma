@@ -60,6 +60,33 @@ export type DashboardCopy = {
     fullNote: (n: number) => string;
     gone: string;
     updateFailed: string;
+    form: {
+      addButton: string;
+      addTitle: string;
+      editTitle: string;
+      kind: string;
+      title: string;
+      body: string;
+      bodyHint: string;
+      due: string;
+      priority: string;
+      category: string;
+      categoryHint: string;
+      tags: string;
+      tagsHint: string;
+      save: string;
+      saving: string;
+    };
+    saved: string;
+    savedNewCategory: (name: string) => string;
+    updated: string;
+    nothingToChange: string;
+    edit: string;
+    editLabel: (title: string) => string;
+    deleteLabel: (title: string) => string;
+    deleteTitle: string;
+    deleteBody: (title: string) => string;
+    deleteFailed: string;
   };
   spending: {
     title: string;
@@ -207,6 +234,33 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       fullNote: (n) => `Showing the first ${n} items. Use the filters to narrow it down.`,
       gone: "That item was already changed or removed, so the list has been refreshed.",
       updateFailed: "The change could not be saved.",
+      form: {
+        addButton: "Add item",
+        addTitle: "Add an item",
+        editTitle: "Edit item",
+        kind: "Type",
+        title: "Title",
+        body: "Details",
+        bodyHint: "Line breaks aren’t kept.",
+        due: "Due date",
+        priority: "Priority",
+        category: "Category",
+        categoryHint: "Pick one of yours or type a new name.",
+        tags: "Tags",
+        tagsHint: "Separate with commas. Up to 10.",
+        save: "Save",
+        saving: "Saving…",
+      },
+      saved: "Saved.",
+      savedNewCategory: (name) => `Saved. “${name}” is a new category.`,
+      updated: "Changes saved.",
+      nothingToChange: "Nothing to change.",
+      edit: "Edit",
+      editLabel: (t) => `Edit “${t}”`,
+      deleteLabel: (t) => `Delete “${t}”`,
+      deleteTitle: "Delete this item?",
+      deleteBody: (t) => `“${t}” will be permanently deleted. You can archive it instead to keep it out of the way.`,
+      deleteFailed: "The item could not be deleted.",
     },
     spending: {
       title: "Spending",
@@ -352,6 +406,33 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       fullNote: (n) => `แสดง ${n} รายการแรก ใช้ตัวกรองเพื่อจำกัดให้แคบลง`,
       gone: "รายการนี้ถูกเปลี่ยนหรือถูกลบไปแล้ว จึงรีเฟรชรายการให้แล้ว",
       updateFailed: "บันทึกการเปลี่ยนแปลงไม่สำเร็จ",
+      form: {
+        addButton: "เพิ่มรายการ",
+        addTitle: "เพิ่มงานหรือโน้ต",
+        editTitle: "แก้ไขรายการ",
+        kind: "ประเภท",
+        title: "ชื่อเรื่อง",
+        body: "รายละเอียด",
+        bodyHint: "ระบบไม่เก็บการขึ้นบรรทัดใหม่",
+        due: "วันครบกำหนด",
+        priority: "ความสำคัญ",
+        category: "หมวดหมู่",
+        categoryHint: "เลือกจากหมวดหมู่ของคุณ หรือพิมพ์ชื่อใหม่",
+        tags: "แท็ก",
+        tagsHint: "คั่นด้วยเครื่องหมายจุลภาค ได้สูงสุด 10 แท็ก",
+        save: "บันทึก",
+        saving: "กำลังบันทึก…",
+      },
+      saved: "บันทึกแล้ว",
+      savedNewCategory: (name) => `บันทึกแล้ว “${name}” เป็นหมวดหมู่ใหม่`,
+      updated: "บันทึกการเปลี่ยนแปลงแล้ว",
+      nothingToChange: "ไม่มีอะไรที่เปลี่ยน",
+      edit: "แก้ไข",
+      editLabel: (t) => `แก้ไข “${t}”`,
+      deleteLabel: (t) => `ลบ “${t}”`,
+      deleteTitle: "ลบรายการนี้ไหม",
+      deleteBody: (t) => `“${t}” จะถูกลบถาวร หากอยากเก็บไว้แต่ไม่ให้เกะกะ ให้เก็บถาวรแทน`,
+      deleteFailed: "ลบรายการนี้ไม่สำเร็จ",
     },
     spending: {
       title: "ค่าใช้จ่าย",
