@@ -10,6 +10,11 @@ import (
 	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
+const (
+	msgRuleAppliesLater = "Just so you know, this applies to new transactions only; saved records are unchanged."
+	msgRuleLimit        = "Sorry, the user already has %d payee rules, the maximum. Delete one with delete_payee_rule first."
+)
+
 // registerPayeeTools adds the payee rule tools. They use the existing plutus scopes.
 func (m *Module) registerPayeeTools(s *hermes.Server) {
 	s.AddTool(hermes.Tool{
@@ -97,7 +102,7 @@ func (m *Module) setPayeeRule(ctx context.Context, c hermes.Caller, raw json.Raw
 		}
 	}
 	if !exists && len(rules) >= maxPayeeRules {
-		return "", hermes.Errorf("The user already has %d payee rules, the maximum. Delete one with delete_payee_rule first.", maxPayeeRules)
+		return "", hermes.Errorf(msgRuleLimit, maxPayeeRules)
 	}
 	rule, created, err := m.store.SetPayeeRule(ctx, c.UserID, PayeeRule{
 		Payee:       hermes.Untrusted(a.Payee, maxPayeeLen),
@@ -115,7 +120,7 @@ func (m *Module) setPayeeRule(ctx context.Context, c hermes.Caller, raw json.Raw
 	return hermes.Respond(map[string]any{
 		"status":  status,
 		"rule":    toRuleOut(rule),
-		"message": "Applies to new transactions only; saved records are unchanged.",
+		"message": msgRuleAppliesLater,
 	})
 }
 

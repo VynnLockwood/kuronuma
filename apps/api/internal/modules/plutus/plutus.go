@@ -14,6 +14,14 @@ import (
 	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
 )
 
+// Fixed sentences Plutus writes itself, in Kuronuma's voice: gentle, short, no user text, and each still says what
+// happened and what to do next. Facts and instructions to the assistant must not be softened away.
+const (
+	msgRefExists         = "Just so you know, a record with this reference already exists, so nothing new was saved."
+	msgPossibleDuplicate = "Sorry, a record with the same amount, currency, date and merchant already exists, so nothing was saved. Ask the user whether this is a separate payment; if so, call again with allow_duplicate=true."
+	msgTransactionLimit  = "Sorry, the user already has %d transactions, the most Kuronuma keeps. Ask the user whether to delete some with delete_transaction."
+)
+
 // OAuth scopes used by the tools below.
 const (
 	ScopeRead  = "plutus:read"
@@ -292,11 +300,11 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 				return hermes.Respond(map[string]any{
 					"status":      "already_saved",
 					"transaction": toOut(tx),
-					"message":     "A record with this reference already exists, so nothing new was saved.",
+					"message":     msgRefExists,
 				})
 			}
 		}
-		return "", hermes.Errorf("The user already has %d transactions, the most Kuronuma keeps. Ask the user whether to delete some with delete_transaction.", maxTransactions)
+		return "", hermes.Errorf(msgTransactionLimit, maxTransactions)
 	}
 	// Category: what the caller gave wins (a name the user does not have yet is created); with none given the
 	// user's payee rule for this merchant decides; otherwise uncategorized.
@@ -343,7 +351,7 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 			return hermes.Respond(withCategoryCreated(map[string]any{
 				"status":      "possible_duplicate",
 				"existing_id": id,
-				"message":     "A record with the same amount, currency, date and merchant already exists, so nothing was saved. Ask the user whether this is a separate payment; if so, call again with allow_duplicate=true.",
+				"message":     msgPossibleDuplicate,
 			}, categoryCreated))
 		}
 	}
@@ -356,7 +364,7 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 		return hermes.Respond(withCategoryCreated(map[string]any{
 			"status":      "already_saved",
 			"transaction": toOut(tx),
-			"message":     "A record with this reference already exists, so nothing new was saved.",
+			"message":     msgRefExists,
 		}, categoryCreated))
 	}
 	saved := withCategoryCreated(map[string]any{"status": "saved", "transaction": toOut(tx), "category_source": source}, categoryCreated)
