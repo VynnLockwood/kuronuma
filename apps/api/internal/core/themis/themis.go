@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
@@ -123,7 +124,7 @@ func Check(category string, names []string) error {
 		}
 		clean := make([]string, len(shown))
 		for i, n := range shown {
-			clean[i] = hermes.Untrusted(n, 40)
+			clean[i] = strconv.Quote(hermes.Untrusted(n, 40)) // quoted and escaped: a name is data, never part of the sentence
 		}
 		list = "Their categories: " + strings.Join(clean, ", ")
 		if more := len(names) - len(shown); more > 0 {
