@@ -188,9 +188,9 @@ export function Shell({ lang }: { lang: Lang }) {
               </div>
 
               <Tabs value={tab} onValueChange={chooseTab} className="mt-10 gap-8">
-                <TabsList aria-label={copy.shell.tabsLabel} className="w-full overflow-x-auto md:w-fit">
+                <TabsList aria-label={copy.shell.tabsLabel} className="w-full md:w-fit">
                   {tabIds.map((id) => (
-                    <TabsTrigger key={id} value={id} className="shrink-0 flex-none px-5 whitespace-nowrap">
+                    <TabsTrigger key={id} value={id} className="h-auto min-h-10 min-w-0 flex-1 px-2 py-2 text-center leading-tight whitespace-normal md:flex-none md:px-5 md:whitespace-nowrap">
                       {labels[id]}
                     </TabsTrigger>
                   ))}

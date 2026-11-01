@@ -62,7 +62,7 @@ const parseTags = (text: string) => text.split(",").map((t) => t.trim()).filter(
 const sameTags = (a: string[], b: string[]) => JSON.stringify(a.map((x) => x.toLowerCase())) === JSON.stringify(b.map((x) => x.toLowerCase()));
 
 type Editor = { mode: "add" } | { mode: "edit"; memory: Memory };
-type Notice = { kind: "ok" | "info" | "error"; text: string };
+type Notice = { kind: "ok" | "info" | "error"; text: string; title?: string };
 
 const selectClass = "h-12 w-full min-w-0 rounded-2xl border border-input bg-background px-4 text-[15px] text-foreground focus-visible:border-ring";
 
@@ -125,7 +125,10 @@ export function Memories() {
       return;
     }
     if (r.data.status === "not_found") setNotice({ kind: "info", text: c.gone });
+    else setNotice({ kind: "ok", text: status === "done" ? c.markedDone : status === "open" ? c.reopened : c.archived });
     reloadList();
+    // The list is replaced while it reloads, which removes the button that was pressed: keep the focus on the heading.
+    heading.current?.focus();
   }
 
   // The add and edit form.
@@ -223,7 +226,7 @@ export function Memories() {
       ...(due !== (o.due_on ?? "") && { due_on: due }),
       ...(priority !== o.priority && { priority }),
       ...(category.trim() !== categoryField(o) && { category: category.trim() }),
-      ...(!sameTags(tags, o.tags) && { tags }),
+      ...(tagsText !== o.tags.join(", ") && !sameTags(tags, o.tags) && { tags }), // untouched text is never a change, even for a tag with a comma in it
     };
     if (Object.keys(changes).length === 0) {
       setNotice({ kind: "info", text: c.nothingToChange });
@@ -257,10 +260,10 @@ export function Memories() {
     setToDelete(null);
     if (!r.ok) {
       if (r.kind === "signed-out") onSignedOut();
-      else setNotice({ kind: "error", text: r.message });
+      else setNotice({ kind: "error", text: r.message, title: c.deleteFailed });
       return;
     }
-    setNotice(r.data.status === "not_found" ? { kind: "info", text: c.gone } : null);
+    setNotice(r.data.status === "not_found" ? { kind: "info", text: c.gone } : { kind: "ok", text: c.deleted });
     focusAfterDelete.current = true; // the row is about to go
     reloadList();
   }
@@ -414,7 +417,7 @@ export function Memories() {
       {notice?.kind === "error" && (
         <Alert variant="destructive">
           <div>
-            <p className="font-semibold">{c.updateFailed}</p>
+            <p className="font-semibold">{notice.title ?? c.updateFailed}</p>
             <p className="break-words">{notice.text}</p>
           </div>
         </Alert>

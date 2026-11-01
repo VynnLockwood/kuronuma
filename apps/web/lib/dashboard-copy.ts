@@ -80,6 +80,10 @@ export type DashboardCopy = {
     saved: string;
     savedNewCategory: (name: string) => string;
     updated: string;
+    markedDone: string;
+    reopened: string;
+    archived: string;
+    deleted: string;
     nothingToChange: string;
     edit: string;
     editLabel: (title: string) => string;
@@ -226,7 +230,7 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       complete: "Mark done",
       reopen: "Reopen",
       archive: "Archive",
-      completeLabel: (t) => `Mark “${t}” as done`,
+      completeLabel: (t) => `Mark done: “${t}”`,
       reopenLabel: (t) => `Reopen “${t}”`,
       archiveLabel: (t) => `Archive “${t}”`,
       emptyNone: "Nothing saved yet.",
@@ -254,6 +258,10 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       saved: "Saved.",
       savedNewCategory: (name) => `Saved. “${name}” is a new category.`,
       updated: "Changes saved.",
+      markedDone: "Marked as done.",
+      reopened: "Reopened.",
+      archived: "Archived.",
+      deleted: "Deleted.",
       nothingToChange: "Nothing to change.",
       edit: "Edit",
       editLabel: (t) => `Edit “${t}”`,
@@ -395,12 +403,12 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       priorities: { low: "ความสำคัญต่ำ", normal: "ความสำคัญปกติ", high: "ความสำคัญสูง" },
       overdue: "เลยกำหนด",
       due: (date) => `ครบกำหนด ${date}`,
-      complete: "ทำเสร็จแล้ว",
+      complete: "ทำเครื่องหมายว่าเสร็จ",
       reopen: "เปิดใหม่",
       archive: "เก็บถาวร",
-      completeLabel: (t) => `ทำเครื่องหมาย “${t}” ว่าเสร็จแล้ว`,
-      reopenLabel: (t) => `เปิด “${t}” ใหม่`,
-      archiveLabel: (t) => `เก็บ “${t}” ถาวร`,
+      completeLabel: (t) => `ทำเครื่องหมายว่าเสร็จ: “${t}”`,
+      reopenLabel: (t) => `เปิดใหม่ “${t}”`,
+      archiveLabel: (t) => `เก็บถาวร “${t}”`,
       emptyNone: "ยังไม่มีอะไรที่บันทึกไว้",
       emptyFiltered: "ไม่พบรายการที่ตรงกับตัวกรอง",
       fullNote: (n) => `แสดง ${n} รายการแรก ใช้ตัวกรองเพื่อจำกัดให้แคบลง`,
@@ -426,6 +434,10 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       saved: "บันทึกแล้ว",
       savedNewCategory: (name) => `บันทึกแล้ว “${name}” เป็นหมวดหมู่ใหม่`,
       updated: "บันทึกการเปลี่ยนแปลงแล้ว",
+      markedDone: "ทำเครื่องหมายว่าเสร็จแล้ว",
+      reopened: "เปิดใหม่แล้ว",
+      archived: "เก็บถาวรแล้ว",
+      deleted: "ลบแล้ว",
       nothingToChange: "ไม่มีอะไรที่เปลี่ยน",
       edit: "แก้ไข",
       editLabel: (t) => `แก้ไข “${t}”`,
