@@ -66,7 +66,7 @@ export function Overview() {
             {o.connect.button}
           </Link>
         </div>
-        <Link href="/connect" className="text-[15px] text-link hover:underline">
+        <Link href="/connect" className="inline-flex min-h-10 items-center text-[15px] text-link hover:underline">
           {o.connect.guide}
         </Link>
       </div>

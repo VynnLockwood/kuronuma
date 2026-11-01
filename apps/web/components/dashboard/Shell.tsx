@@ -15,10 +15,11 @@ import type { Lang } from "@/lib/web";
 import { cn } from "@/lib/utils";
 import { DashContext } from "./context";
 import { Overview } from "./Overview";
+import { Memories } from "./Memories";
 import { Spending } from "./Spending";
 
 // One entry per tab. Later tabs are added here; the shell does not change.
-const tabIds = ["overview", "spending"] as const;
+const tabIds = ["overview", "spending", "tasks"] as const;
 type TabId = (typeof tabIds)[number];
 const isTab = (v: string | null): v is TabId => tabIds.includes(v as TabId);
 
@@ -153,7 +154,7 @@ export function Shell({ lang }: { lang: Lang }) {
     setSession({ status: "signed-out" });
   }
   const user = session?.status === "signed-in" ? session.user : null;
-  const labels: Record<TabId, string> = { overview: copy.tabs.overview, spending: copy.tabs.spending };
+  const labels: Record<TabId, string> = { overview: copy.tabs.overview, spending: copy.tabs.spending, tasks: copy.tabs.tasks };
 
   return (
     <div lang={copy.htmlLang} data-dashboard>
@@ -199,6 +200,9 @@ export function Shell({ lang }: { lang: Lang }) {
                 </TabsContent>
                 <TabsContent value="spending">
                   <Spending />
+                </TabsContent>
+                <TabsContent value="tasks">
+                  <Memories />
                 </TabsContent>
               </Tabs>
             </div>
