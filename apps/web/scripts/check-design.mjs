@@ -52,6 +52,10 @@ const contrast = (a, b) => {
 for (const [name, value] of Object.entries({ background: "#fffafb", primary: "#c23b69" })) {
   if (tokens[name] !== value) problems.push(`app/globals.css: --${name} must be ${value} (Blush), found ${tokens[name] ?? "nothing"}`);
 }
+// The motifs draw only with these decorative colour pairs; a missing one would silently draw nothing.
+for (const name of ["gold", "leaf", "rose", "lilac", "honey", "sky"]) {
+  for (const t of [`motif-${name}`, `motif-${name}-line`]) if (!tokens[t]) problems.push(`app/globals.css: --${t} is missing from :root (the motifs use it)`);
+}
 const pairs = [
   ["foreground", ["background", "muted", "card"], 7],
   ["muted-foreground", ["background", "muted"], 4.5],
