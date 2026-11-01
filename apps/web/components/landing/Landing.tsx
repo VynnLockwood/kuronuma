@@ -194,7 +194,7 @@ export function Landing({ lang }: { lang: Lang }) {
               <p className="mb-2 text-[17px] font-semibold text-muted-foreground">{c.demo.eyebrow}</p>
               <h2 className="text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.demo.title}</h2>
               <p className="mt-5 text-[19px] leading-normal text-muted-foreground">{c.demo.sub}</p>
-              <Spot motif={["teddy", "plane"]} className="mt-8 justify-start" />
+              <Spot drift motif={["teddy", "plane"]} className="mt-8 justify-start" />
             </div>
             <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {c.demo.points.map((t, i) => (
@@ -223,7 +223,7 @@ export function Landing({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ol>
-          <Spot motif="plane" className="mt-14" />
+          <Spot drift motif="plane" className="mt-14" />
         </Section>
 
         {/* Features */}
@@ -240,7 +240,7 @@ export function Landing({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ul>
-          <Spot motif="heart" className="mt-14" />
+          <Spot drift motif="heart" className="mt-14" />
         </Section>
 
         {/* Modules */}
@@ -267,7 +267,7 @@ export function Landing({ lang }: { lang: Lang }) {
               <h2 className="text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl">{c.mission.title}</h2>
               <p className="mt-5 text-[19px] leading-normal text-muted-foreground">{c.mission.sub}</p>
               <p className="mt-5 text-sm text-muted-foreground">{c.mission.note}</p>
-              <Spot motif="rainbow" className="mt-8 justify-start" />
+              <Spot drift motif="rainbow" className="mt-8 justify-start" />
             </div>
             <ol className="flex flex-col">
               {c.mission.items.map((m, i) => (
@@ -304,7 +304,7 @@ export function Landing({ lang }: { lang: Lang }) {
           <p className="mt-6 flex max-w-3xl items-start gap-2.5 text-sm leading-normal text-muted-foreground">
             <Icon name="lock" size={18} className="mt-0.5 shrink-0" /> <span>{c.privacy.note}</span>
           </p>
-          <Spot motif="cat" className="mt-12" />
+          <Spot drift motif="cat" className="mt-12" />
         </Section>
 
         {/* FAQ */}
@@ -312,7 +312,7 @@ export function Landing({ lang }: { lang: Lang }) {
 
         <section id="faq" className="px-6 py-24 md:py-30">
           <div className="mx-auto max-w-[760px]">
-            <Spot motif="teacup" size={64} className="mb-6" />
+            <Spot drift motif="teacup" size={64} className="mb-6" />
             <h2 className="mb-10 text-center text-4xl leading-[1.08] font-bold tracking-[-0.03em] md:text-5xl" {...rv()}>
               {c.faq.title}
             </h2>
@@ -329,7 +329,7 @@ export function Landing({ lang }: { lang: Lang }) {
         {/* Final call to action */}
         <section className="px-6 pt-10 pb-24 md:pb-30">
           <div className="relative mx-auto max-w-[1120px] rounded-[32px] bg-muted px-6 py-22 text-center" {...rv()}>
-            <Accents left="bunny" right="balloon" />
+            <Accents drift left="bunny" right="balloon" />
             <div className="flex items-center justify-center gap-6">
               <Letter size={40} className="motif-float" style={mo(-2.8, 6.5)} />
               <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="size-20" />
