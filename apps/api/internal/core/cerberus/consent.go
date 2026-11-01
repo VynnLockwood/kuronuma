@@ -223,11 +223,12 @@ const (
 	colSurface    = "#fdf0f4"
 )
 
-// Two small original motifs, drawn inline because the page's security policy allows no scripts and loads
+// Three small original motifs, drawn inline because the page's security policy allows no scripts and loads
 // nothing but our own images. They are decoration: hidden from assistive technology and never focusable.
 const (
 	motifSparkle = `<svg aria-hidden="true" focusable="false" width="30" height="30" viewBox="0 0 48 48"><path d="M24 4 C25.5 16 32 22.5 44 24 C32 25.5 25.5 32 24 44 C22.5 32 16 25.5 4 24 C16 22.5 22.5 16 24 4Z" fill="#ffd66b" stroke="#c99a1d" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`
 	motifSprout  = `<svg aria-hidden="true" focusable="false" width="30" height="30" viewBox="0 0 48 48"><path d="M24 44 V22" fill="none" stroke="#4f9a6a" stroke-width="3" stroke-linecap="round"/><path d="M24 26 C12 26 8 16 10 10 C20 10 25 16 24 26Z" fill="#9ad8ae" stroke="#4f9a6a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M24 22 C24 14 30 8 40 8 C41 18 35 24 24 22Z" fill="#9ad8ae" stroke="#4f9a6a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`
+	motifPlane   = `<svg aria-hidden="true" focusable="false" data-motif="plane" width="40" height="40" viewBox="0 0 48 48"><path d="M3 39 C8 33 12 41 17 36 S25 41 29 38" fill="none" stroke="#6da9d1" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="1.5 3.2"/><path d="M5 22 L43 6 L24 29Z" fill="#ffffff" stroke="#6da9d1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M43 6 L24 29 L31 43Z" fill="#cfe8f8" stroke="#6da9d1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M24 29 L26.6 36" fill="none" stroke="#6da9d1" stroke-width="1.2" stroke-linecap="round"/></svg>`
 )
 
 // pageStyle is shared by the consent and error pages. The page's security policy allows no scripts or fonts, so it
@@ -306,4 +307,4 @@ var errorTmpl = template.Must(template.New("error").Parse(`<!doctype html>
 <title>Kuronuma</title>
 <style>` + pageStyle + `</style></head><body><main>
 <header><a class="brand" href="/"><img src="/brand/kuronuma-logo.png" width="44" height="44" alt=""><span>KURONUMA</span></a></header>
-<div class="card"><div class="deco">` + motifSparkle + `</div><p>{{.}}</p></div></main></body></html>`))
+<div class="card"><div class="deco">` + motifPlane + `</div><p>{{.}}</p></div></main></body></html>`))

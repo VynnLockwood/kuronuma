@@ -47,6 +47,10 @@
   --motif-rose-line: #d98aa6;
   --motif-lilac: #e5defa;
   --motif-lilac-line: #8d7fd6;
+  --motif-honey: #f2cfa0;
+  --motif-honey-line: #b9824f;
+  --motif-sky: #cfe8f8;
+  --motif-sky-line: #6da9d1;
 
   /* Motion */
   --dur-quick: 180ms;

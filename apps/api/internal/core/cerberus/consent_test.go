@@ -251,6 +251,8 @@ func TestErrorPageHasAMotif(t *testing.T) {
 		t.Errorf("error page has %d <svg> elements, want 1", n)
 	}
 	mustContain(t, body, `<svg aria-hidden="true"`)
+	mustContain(t, body, `data-motif="plane"`)
+	mustNotContain(t, body, "M24 4 C25.5") // the sparkle's path: the error page uses the paper plane now
 	mustNotContain(t, body, "<script")
 }
 

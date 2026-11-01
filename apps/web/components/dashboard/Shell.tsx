@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AppNav } from "@/components/AppNav";
 import { Icon } from "@/components/icons";
+import { Bow, Sparkle } from "@/components/motifs";
+import { Spot } from "@/components/motifs/Spot";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Alert } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -43,8 +45,12 @@ function SignInCard({ lang, error }: { lang: Lang; error: string | null }) {
   return (
     <div className="flex min-h-[calc(100vh-53px)] items-center justify-center bg-muted px-6 py-16">
       <section className="w-full max-w-[440px] rounded-[28px] bg-background px-10 py-12 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_60px_rgba(0,0,0,0.06)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="mx-auto size-20" />
+        <div className="flex items-center justify-center gap-5">
+          <Bow size={32} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/kuronuma-logo.png" width={80} height={80} alt="" className="size-20" />
+          <Sparkle size={32} />
+        </div>
         <h1 className="mt-6 mb-2 text-[32px] font-bold tracking-[-0.025em]">{c.title}</h1>
         <p className="text-base leading-normal text-muted-foreground">{c.sub}</p>
         {error && (
@@ -85,9 +91,7 @@ function Unreachable({ lang, onRetry }: { lang: Lang; onRetry: () => void }) {
   return (
     <div className="flex min-h-[calc(100vh-53px)] items-center justify-center px-6 py-16">
       <section className="max-w-sm text-center">
-        <span className="inline-flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Icon name="unplug" size={28} />
-        </span>
+        <Spot motif="plane" size={64} />
         <h1 className="mt-5 mb-2 text-2xl font-bold tracking-[-0.02em]">{c.title}</h1>
         <p role="alert" className="text-[15px] leading-normal text-muted-foreground">
           {c.body}

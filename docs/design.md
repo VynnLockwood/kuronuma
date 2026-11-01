@@ -54,7 +54,7 @@ docs/
 
 - **Names:** Kuronuma (คุโรนุมะ) is the name used in the UI, copy, repository (`kuronuma-mcp`), MCP server and cookies (`kuro_session`, `kuro_flow`). The database name, database user and Compose project name stay `nemosyne` so the data volume is not orphaned (see `deploy/docker-compose.yml`). <!-- [keep-nemosyne] -->
 - **Logo:** the owner's illustration (a geometric dragonfly among clouds, black ink on transparent). The web app shows it at 28 px next to the wordmark in the header and footer, and at 80 px on the sign-in card and the closing call to action; the source image is 256 px, so it is never rendered larger than that. The favicon is `app/icon.png`.
-- **Theme and design system:** the Blush look: a warm white page (`#fffafb`), near-black plum ink (`#2a2024`), one raspberry action colour (`#c23b69`), soft pink surfaces (`#fdf0f4`) and borders (`#efd3dd`), pill-shaped buttons, large-radius cards (20 to 32 px) and no gradients. Styling is Tailwind CSS v4 on shadcn/ui-style components (`apps/web/components/ui/`: Button, Card, Badge, Input, Tabs on Radix, Alert, Skeleton, and an Accordion on native `<details>`). Colour tokens, including the four motif colours (`--motif-*`), are CSS variables in the `:root` block of `apps/web/app/globals.css`. `npm run check:design` in `apps/web` enforces hex colours only in that block, no gradients, the pinned background and primary values, and WCAG contrast for every text pair (main ink 7:1, other text and button labels at least 4.5:1, large-only text and focus rings 3:1). The consent and error pages served by the API use the same colours as Go constants and a test checks their contrast. Typefaces, self-hosted via `@fontsource` (no requests to Google Fonts): Inter for all UI text, Geist Mono for URLs and code. Prompt follows Inter for Thai glyphs; Thai headings are never tracked tighter. Six small original SVG motifs (sparkle, sprout, cloud, letter, petal, star) decorate the landing page and are always `aria-hidden`, never focusable and never over text.
+- **Theme and design system:** the Blush look: a warm white page (`#fffafb`), near-black plum ink (`#2a2024`), one raspberry action colour (`#c23b69`), soft pink surfaces (`#fdf0f4`) and borders (`#efd3dd`), pill-shaped buttons, large-radius cards (20 to 32 px) and no gradients. Styling is Tailwind CSS v4 on shadcn/ui-style components (`apps/web/components/ui/`: Button, Card, Badge, Input, Tabs on Radix, Alert, Skeleton, and an Accordion on native `<details>`). Colour tokens, including the four motif colours (`--motif-*`), are CSS variables in the `:root` block of `apps/web/app/globals.css`. `npm run check:design` in `apps/web` enforces hex colours only in that block, no gradients, the pinned background and primary values, and WCAG contrast for every text pair (main ink 7:1, other text and button labels at least 4.5:1, large-only text and focus rings 3:1). The consent and error pages served by the API use the same colours as Go constants and a test checks their contrast. Typefaces, self-hosted via `@fontsource` (no requests to Google Fonts): Inter for all UI text, Geist Mono for URLs and code. Prompt follows Inter for Thai glyphs; Thai headings are never tracked tighter. Twenty-two small original SVG motifs are always `aria-hidden`, never focusable and never over text; see "Motifs and where they go" below.
 - **Positioning:** Kuronuma is a memory for your AI assistant. Spending (Plutus) is the first module attached to it, not the product. Copy only describes what is built; modules that are not built are labeled "Coming soon".
 - **Motion (landing page and shared components):** the hero enters in a short stagger; motifs twinkle or drift slowly; sections fade up as they scroll into view; feature, module and step cards lift and show a sparkle on hover; the main buttons get a flat shimmer on hover (on every page that uses them); tab panels fade in; FAQ answers open with a smooth height change. Hover effects apply only on devices that can hover. Everything is off under `prefers-reduced-motion`, and content stays visible without JavaScript. Because gradients are banned, the link underline fades in by colour instead of sliding in. `@view-transition` cross-fades full page loads only; client-side `<Link>` navigation does not animate. No animation library is used.
 - **Letter field:** about 14 faint paper letters (8 below 640 px) drift behind every page and ease away from a mouse pointer (`components/LetterField.tsx`, physics in `lib/letter-physics.ts`). Letters are drawn at 18 to 28% opacity: above 28%, muted text or a link crossed by a letter's outline would fall below 4.5:1. The layer is fixed, behind the content, `aria-hidden` and click-through; touch screens get drift only; under reduced motion the letters are drawn once and never move. It is the only continuous script animation: one `requestAnimationFrame` loop that writes only `transform` and stops while the tab is hidden. Low-end phones will feel it first; if it ever shows jank, lower the letter count in `LetterField.tsx`.
@@ -148,3 +148,32 @@ Tools: `list_memories` (`atlas:read`), `add_memory` and `update_memory` (`atlas:
 ## Mission
 
 Spending is where Kuronuma starts. The mission is to make Kuronuma a good memory for more kinds of data you want your assistant to keep: tasks (Atlas), routines (Horae) and work data (Hephaestus), and to get better at organising what it already stores (for example, grouping spending by who you paid). These are goals, not release dates. A module is described as available only when it works. The landing page has a matching "Mission" section.
+
+## Motifs and where they go
+
+The motifs live in `apps/web/components/motifs/`: sparkle, sprout, cloud, letter, petal and star, plus teddy, plane, heart, moon, bunny, cat, cupcake, strawberry, balloon, rainbow, daisy, bird, teacup, mushroom, bow and pencil. All are original drawings on a 48 by 48 grid, coloured only through the `--motif-*` tokens. The Go pages use inline copies with literal colours.
+
+**Rules.** Three sizes only: a spot (64 or 96 px), an accent (32 px, 36 on module cards) and a micro (20 px, used in dividers). Each section gets at most one spot, placed in the normal flow and never over text. Accents come in mirrored pairs, only from the `lg` breakpoint up, in empty corners. No more than five decorative motifs are visible at once (the falling-letter background does not count). Pages where people read or edit data stay calm: a populated dashboard shows none, and motifs appear only in sign-in, unreachable, empty and no-match states. Motion is on the landing page only, and none of it runs under reduced motion. `Spot` and `Accents` in `components/motifs/Spot.tsx` implement these rules.
+
+**Map.**
+
+| Place | Motif |
+|---|---|
+| Landing: demo | teddy with a small plane |
+| Landing: how it works | plane |
+| Landing: features | heart |
+| Landing: modules (card corners) | Plutus strawberry, Atlas pencil, Horae moon, Hephaestus mushroom |
+| Landing: mission | rainbow |
+| Landing: privacy | cat |
+| Landing: FAQ | teacup |
+| Landing: closing band (`lg` and up) | bunny and balloon |
+| Dividers | sparkle with a rotating middle: sprout, bow, daisy, bird |
+| Connect page | plane above the heading, bird above "Then just ask." |
+| Dashboard sign-in | bow and sparkle beside the logo |
+| Dashboard unreachable | plane |
+| Overview empty | bunny |
+| Spending empty / Tasks empty | cupcake / pencil |
+| No filter match | mushroom |
+| 404 page | bunny |
+| Error page (API) | plane |
+| Share image (`og.png`) | teddy, plane, heart, sparkle, sprout |
