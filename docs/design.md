@@ -85,6 +85,18 @@ Google is the only identity provider for now. Users never create a Kuronuma pass
 - User-supplied text is cleaned with `hermes.Untrusted` (control and invisible characters removed, length capped) and tool output carries a note that those fields are data, not instructions. This reduces prompt-injection risk; it cannot eliminate it.
 - CORS is open (`*`) on discovery, registration, token and `/mcp` because they use bearer tokens, never cookies.
 
+## Web bridge (Hermes, for the dashboard)
+
+`POST /api/web/call` lets the website's own pages run the same registered tools as the assistants, as the signed-in user, so the dashboard has no second API and the rules (limits, sanitising, per-user queries) live in one place. Spec: `docs/superpowers/specs/2026-10-31-web-dashboard-design.md`.
+
+- **Request:** `{"tool": "list_memories", "arguments": {...}}` (arguments optional), at most 64 KB, with the session cookie, the header `X-Kuronuma-Web: 1` and `Content-Type: application/json`.
+- **Identity:** the user id comes only from the verified session cookie, never from the body. The caller is `Caller{UserID, ClientID: "web", Scopes: every scope of the registered tools}`: the web session is the user acting as themselves, so there is no consent screen. Tools reject unknown arguments, so a user id smuggled into `arguments` is refused.
+- **Checks (`internal/core/webguard`)**, in this order after the method: the custom header, a JSON content type, an `Origin` (when present) equal to `PUBLIC_URL`'s origin, and a `Sec-Fetch-Site` (when present) of `same-origin` or `none` (`same-site` is refused too: a sibling subdomain is not our page). No CORS headers are ever sent, so a page on another site cannot add the custom header. Then the session (401), the body size (413), the JSON (400), the tool name (404).
+- **Responses**, all `Cache-Control: no-store`: 200 `{"result": {...}}`; 400, 401 `not signed in`, 403 `forbidden`, 404 `unknown tool`, 405, 413; 422 `{"error": "<the tool's own text>"}` when a tool refuses the input (written for people and shown in the UI); 500 with a generic sentence for anything else (the cause is logged, never returned).
+- **Logging:** the same single line as an MCP call (tool, user id, client `web`, ok, milliseconds). Never arguments, results or the cookie.
+- **Code:** `hermes.Server.CallAs` is the one place a tool handler runs (20 second timeout, panic recovery, the log line); MCP `tools/call` and the bridge both use it. `hermes.WebHandler` is the endpoint; `main.go` adapts the sign-in code to its one-method `SessionUser` interface, so the `cerberus` package is untouched.
+- **nginx:** `location /api/web/` has its own rate limit (300 requests a minute per IP, burst 60) and `client_max_body_size 64k`, and comes before the general `/api/` block.
+
 ## Plutus (spending)
 
 Tools: `add_transaction` (`plutus:write`), `delete_transaction` (`plutus:write`, destructive), `list_transactions` and `get_spending_summary` (`plutus:read`). The tool descriptions instruct the assistant to show what it read from a slip and get the user's confirmation before saving. A category the user does not have yet is created when the record is saved (see Themis).
