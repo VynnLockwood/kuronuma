@@ -16,7 +16,7 @@ export type DashboardCopy = {
     nav: { dashboard: string; connect: string };
     authErrors: Record<string, string>;
   };
-  tabs: { overview: string; spending: string };
+  tabs: { overview: string; spending: string; tasks: string };
   overview: {
     thisMonth: string;
     byCategory: string;
@@ -40,6 +40,57 @@ export type DashboardCopy = {
     tryAsking: string;
     prompts: string[];
     connect: { title: string; body: string; button: string; guide: string };
+  };
+  tasks: {
+    title: string;
+    filters: { kind: string; status: string; category: string; tag: string; search: string; allKinds: string; allStatuses: string; allCategories: string; clear: string };
+    kinds: { task: string; todo: string; note: string };
+    statuses: { open: string; done: string; archived: string };
+    priorities: { low: string; normal: string; high: string };
+    overdue: string;
+    due: (date: string) => string;
+    complete: string;
+    reopen: string;
+    archive: string;
+    completeLabel: (title: string) => string;
+    reopenLabel: (title: string) => string;
+    archiveLabel: (title: string) => string;
+    emptyNone: string;
+    emptyFiltered: string;
+    fullNote: (n: number) => string;
+    gone: string;
+    updateFailed: string;
+    form: {
+      addButton: string;
+      addTitle: string;
+      editTitle: string;
+      kind: string;
+      title: string;
+      body: string;
+      bodyHint: string;
+      due: string;
+      priority: string;
+      category: string;
+      categoryHint: string;
+      tags: string;
+      tagsHint: string;
+      save: string;
+      saving: string;
+    };
+    saved: string;
+    savedNewCategory: (name: string) => string;
+    updated: string;
+    markedDone: string;
+    reopened: string;
+    archived: string;
+    deleted: string;
+    nothingToChange: string;
+    edit: string;
+    editLabel: (title: string) => string;
+    deleteLabel: (title: string) => string;
+    deleteTitle: string;
+    deleteBody: (title: string) => string;
+    deleteFailed: string;
   };
   spending: {
     title: string;
@@ -128,7 +179,7 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         server_error: "Something went wrong on our side. Please try again.",
       },
     },
-    tabs: { overview: "Overview", spending: "Spending" },
+    tabs: { overview: "Overview", spending: "Spending", tasks: "Tasks and notes" },
     overview: {
       thisMonth: "This month",
       byCategory: "Spending by category",
@@ -157,6 +208,67 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         button: "Connect",
         guide: "Read the setup guide ›",
       },
+    },
+    tasks: {
+      title: "Tasks and notes",
+      filters: {
+        kind: "Type",
+        status: "Status",
+        category: "Category",
+        tag: "Tag",
+        search: "Search",
+        allKinds: "All types",
+        allStatuses: "All statuses",
+        allCategories: "All categories",
+        clear: "Clear filters",
+      },
+      kinds: { task: "Task", todo: "To-do", note: "Note" },
+      statuses: { open: "Open", done: "Done", archived: "Archived" },
+      priorities: { low: "Low priority", normal: "Normal priority", high: "High priority" },
+      overdue: "Overdue",
+      due: (date) => `Due ${date}`,
+      complete: "Mark done",
+      reopen: "Reopen",
+      archive: "Archive",
+      completeLabel: (t) => `Mark done: “${t}”`,
+      reopenLabel: (t) => `Reopen “${t}”`,
+      archiveLabel: (t) => `Archive “${t}”`,
+      emptyNone: "Nothing saved yet.",
+      emptyFiltered: "No items match these filters.",
+      fullNote: (n) => `Showing the first ${n} items. Use the filters to narrow it down.`,
+      gone: "That item was already changed or removed, so the list has been refreshed.",
+      updateFailed: "The change could not be saved.",
+      form: {
+        addButton: "Add item",
+        addTitle: "Add an item",
+        editTitle: "Edit item",
+        kind: "Type",
+        title: "Title",
+        body: "Details",
+        bodyHint: "Line breaks aren’t kept.",
+        due: "Due date",
+        priority: "Priority",
+        category: "Category",
+        categoryHint: "Pick one of yours or type a new name.",
+        tags: "Tags",
+        tagsHint: "Separate with commas. Up to 10.",
+        save: "Save",
+        saving: "Saving…",
+      },
+      saved: "Saved.",
+      savedNewCategory: (name) => `Saved. “${name}” is a new category.`,
+      updated: "Changes saved.",
+      markedDone: "Marked as done.",
+      reopened: "Reopened.",
+      archived: "Archived.",
+      deleted: "Deleted.",
+      nothingToChange: "Nothing to change.",
+      edit: "Edit",
+      editLabel: (t) => `Edit “${t}”`,
+      deleteLabel: (t) => `Delete “${t}”`,
+      deleteTitle: "Delete this item?",
+      deleteBody: (t) => `“${t}” will be permanently deleted. You can archive it instead to keep it out of the way.`,
+      deleteFailed: "The item could not be deleted.",
     },
     spending: {
       title: "Spending",
@@ -243,7 +355,7 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         server_error: "เกิดข้อผิดพลาดที่ฝั่งเรา โปรดลองอีกครั้ง",
       },
     },
-    tabs: { overview: "ภาพรวม", spending: "ค่าใช้จ่าย" },
+    tabs: { overview: "ภาพรวม", spending: "ค่าใช้จ่าย", tasks: "งานและโน้ต" },
     overview: {
       thisMonth: "เดือนนี้",
       byCategory: "ค่าใช้จ่ายแยกตามหมวดหมู่",
@@ -272,6 +384,67 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         button: "เชื่อมต่อ",
         guide: "อ่านคู่มือการตั้งค่า ›",
       },
+    },
+    tasks: {
+      title: "งานและโน้ต",
+      filters: {
+        kind: "ประเภท",
+        status: "สถานะ",
+        category: "หมวดหมู่",
+        tag: "แท็ก",
+        search: "ค้นหา",
+        allKinds: "ทุกประเภท",
+        allStatuses: "ทุกสถานะ",
+        allCategories: "ทุกหมวดหมู่",
+        clear: "ล้างตัวกรอง",
+      },
+      kinds: { task: "งาน", todo: "สิ่งที่ต้องทำ", note: "โน้ต" },
+      statuses: { open: "ยังไม่เสร็จ", done: "เสร็จแล้ว", archived: "เก็บถาวร" },
+      priorities: { low: "ความสำคัญต่ำ", normal: "ความสำคัญปกติ", high: "ความสำคัญสูง" },
+      overdue: "เลยกำหนด",
+      due: (date) => `ครบกำหนด ${date}`,
+      complete: "ทำเครื่องหมายว่าเสร็จ",
+      reopen: "เปิดใหม่",
+      archive: "เก็บถาวร",
+      completeLabel: (t) => `ทำเครื่องหมายว่าเสร็จ: “${t}”`,
+      reopenLabel: (t) => `เปิดใหม่ “${t}”`,
+      archiveLabel: (t) => `เก็บถาวร “${t}”`,
+      emptyNone: "ยังไม่มีอะไรที่บันทึกไว้",
+      emptyFiltered: "ไม่พบรายการที่ตรงกับตัวกรอง",
+      fullNote: (n) => `แสดง ${n} รายการแรก ใช้ตัวกรองเพื่อจำกัดให้แคบลง`,
+      gone: "รายการนี้ถูกเปลี่ยนหรือถูกลบไปแล้ว จึงรีเฟรชรายการให้แล้ว",
+      updateFailed: "บันทึกการเปลี่ยนแปลงไม่สำเร็จ",
+      form: {
+        addButton: "เพิ่มรายการ",
+        addTitle: "เพิ่มงานหรือโน้ต",
+        editTitle: "แก้ไขรายการ",
+        kind: "ประเภท",
+        title: "ชื่อเรื่อง",
+        body: "รายละเอียด",
+        bodyHint: "ระบบไม่เก็บการขึ้นบรรทัดใหม่",
+        due: "วันครบกำหนด",
+        priority: "ความสำคัญ",
+        category: "หมวดหมู่",
+        categoryHint: "เลือกจากหมวดหมู่ของคุณ หรือพิมพ์ชื่อใหม่",
+        tags: "แท็ก",
+        tagsHint: "คั่นด้วยเครื่องหมายจุลภาค ได้สูงสุด 10 แท็ก",
+        save: "บันทึก",
+        saving: "กำลังบันทึก…",
+      },
+      saved: "บันทึกแล้ว",
+      savedNewCategory: (name) => `บันทึกแล้ว “${name}” เป็นหมวดหมู่ใหม่`,
+      updated: "บันทึกการเปลี่ยนแปลงแล้ว",
+      markedDone: "ทำเครื่องหมายว่าเสร็จแล้ว",
+      reopened: "เปิดใหม่แล้ว",
+      archived: "เก็บถาวรแล้ว",
+      deleted: "ลบแล้ว",
+      nothingToChange: "ไม่มีอะไรที่เปลี่ยน",
+      edit: "แก้ไข",
+      editLabel: (t) => `แก้ไข “${t}”`,
+      deleteLabel: (t) => `ลบ “${t}”`,
+      deleteTitle: "ลบรายการนี้ไหม",
+      deleteBody: (t) => `“${t}” จะถูกลบถาวร หากอยากเก็บไว้แต่ไม่ให้เกะกะ ให้เก็บถาวรแทน`,
+      deleteFailed: "ลบรายการนี้ไม่สำเร็จ",
     },
     spending: {
       title: "ค่าใช้จ่าย",

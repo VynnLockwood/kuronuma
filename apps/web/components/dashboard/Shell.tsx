@@ -15,10 +15,11 @@ import type { Lang } from "@/lib/web";
 import { cn } from "@/lib/utils";
 import { DashContext } from "./context";
 import { Overview } from "./Overview";
+import { Memories } from "./Memories";
 import { Spending } from "./Spending";
 
 // One entry per tab. Later tabs are added here; the shell does not change.
-const tabIds = ["overview", "spending"] as const;
+const tabIds = ["overview", "spending", "tasks"] as const;
 type TabId = (typeof tabIds)[number];
 const isTab = (v: string | null): v is TabId => tabIds.includes(v as TabId);
 
@@ -153,7 +154,7 @@ export function Shell({ lang }: { lang: Lang }) {
     setSession({ status: "signed-out" });
   }
   const user = session?.status === "signed-in" ? session.user : null;
-  const labels: Record<TabId, string> = { overview: copy.tabs.overview, spending: copy.tabs.spending };
+  const labels: Record<TabId, string> = { overview: copy.tabs.overview, spending: copy.tabs.spending, tasks: copy.tabs.tasks };
 
   return (
     <div lang={copy.htmlLang} data-dashboard>
@@ -187,9 +188,9 @@ export function Shell({ lang }: { lang: Lang }) {
               </div>
 
               <Tabs value={tab} onValueChange={chooseTab} className="mt-10 gap-8">
-                <TabsList aria-label={copy.shell.tabsLabel} className="w-full overflow-x-auto md:w-fit">
+                <TabsList aria-label={copy.shell.tabsLabel} className="w-full md:w-fit">
                   {tabIds.map((id) => (
-                    <TabsTrigger key={id} value={id} className="shrink-0 flex-none px-5 whitespace-nowrap">
+                    <TabsTrigger key={id} value={id} className="h-auto min-h-10 min-w-0 flex-1 px-2 py-2 text-center leading-tight whitespace-normal md:flex-none md:px-5 md:whitespace-nowrap">
                       {labels[id]}
                     </TabsTrigger>
                   ))}
@@ -199,6 +200,9 @@ export function Shell({ lang }: { lang: Lang }) {
                 </TabsContent>
                 <TabsContent value="spending">
                   <Spending />
+                </TabsContent>
+                <TabsContent value="tasks">
+                  <Memories />
                 </TabsContent>
               </Tabs>
             </div>
