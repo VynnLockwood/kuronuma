@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { compareAmount, dueBucket, formatAmount, lastMonths, localISODate, monthName, monthStartISO, share } from "@/lib/format";
+import { compactAmount, compareAmount, dueBucket, formatAmount, lastMonths, localISODate, monthName, monthStartISO, share } from "@/lib/format";
 import { BarList, Columns } from "./charts";
 import { useDash } from "./context";
 import { BlockError, BlockSkeleton } from "./states";
@@ -151,7 +151,7 @@ export function Overview() {
                 const rows = months.map((m, i) => ({
                   label: monthName(m, lang),
                   value: `${plain(totals[i])} ${cur}`,
-                  display: share(totals[i], max) > 0 ? plain(totals[i]) : "",
+                  display: share(totals[i], max) > 0 ? compactAmount(totals[i]) : "",
                   share: share(totals[i], max),
                 }));
                 return (

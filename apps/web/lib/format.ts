@@ -106,3 +106,22 @@ export function monthName(ym: string, lang: Lang): string {
   if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return ym;
   return months(lang)[Number(m[2]) - 1];
 }
+
+/**
+ * A short form of an amount for a small space, such as the label above a column: "2500.00" is "2.5k", "12345.67" is
+ * "12.3k", "1234567.89" is "1.2M". It cuts digits off (never rounds through floating point) and is only for drawn
+ * labels: the exact amount always stays in the table and the tooltip. Amounts under 1,000 are shown as they are.
+ */
+export function compactAmount(amount: string): string {
+  const m = /^(-?)(\d+)(?:\.\d+)?$/.exec(amount);
+  if (!m) return amount;
+  const int = m[2].replace(/^0+(?=\d)/, "");
+  const step = Math.floor((int.length - 1) / 3);
+  if (step === 0) return amount;
+  const units = ["", "k", "M", "B", "T"];
+  const unit = units[Math.min(step, units.length - 1)];
+  const cut = int.length - 3 * Math.min(step, units.length - 1);
+  const head = int.slice(0, cut);
+  const dec = int.slice(cut, cut + 1);
+  return `${m[1]}${head}${dec !== "0" ? "." + dec : ""}${unit}`;
+}

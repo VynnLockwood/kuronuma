@@ -44,6 +44,7 @@ export type DashboardCopy = {
   spending: {
     title: string;
     totals: string;
+    totalsNote: string;
     period: (from: string, to: string) => string;
     groupBy: string;
     groups: { category: string; month: string; merchant: string };
@@ -160,6 +161,7 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
     spending: {
       title: "Spending",
       totals: "Totals",
+      totalsNote: "Totals cover the dates you pick, or this month if you pick none (the last 12 months when grouped by month). They don’t follow the category filter.",
       period: (from, to) => `${from} – ${to}`,
       groupBy: "Group by",
       groups: { category: "Category", month: "Month", merchant: "Merchant" },
@@ -274,6 +276,7 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
     spending: {
       title: "ค่าใช้จ่าย",
       totals: "ยอดรวม",
+      totalsNote: "ยอดรวมครอบคลุมช่วงวันที่ที่คุณเลือก ถ้าไม่เลือกจะเป็นเดือนนี้ (หรือ 12 เดือนที่ผ่านมาเมื่อจัดกลุ่มตามเดือน) และไม่ขึ้นกับตัวกรองหมวดหมู่",
       period: (from, to) => `${from} – ${to}`,
       groupBy: "จัดกลุ่มตาม",
       groups: { category: "หมวดหมู่", month: "เดือน", merchant: "ร้านค้า" },

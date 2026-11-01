@@ -85,7 +85,7 @@ export function Columns({
       <div aria-hidden="true" className="grid items-end gap-2" style={{ gridTemplateColumns: `repeat(${Math.max(rows.length, 1)}, minmax(0, 1fr))` }}>
         {rows.map((r, i) => (
           <div key={i} className="flex min-w-0 flex-col items-center gap-1.5">
-            <span className="h-4 max-w-full truncate text-[11px] font-semibold tabular-nums text-ink-2">{r.display ?? r.value}</span>
+            <span title={r.value} className="h-4 text-[11px] leading-4 font-semibold whitespace-nowrap tabular-nums text-ink-2">{r.display ?? r.value}</span>
             <span className="flex h-28 w-full items-end rounded-xl bg-muted">
               <span className="block w-full rounded-xl bg-primary" style={{ height: pct(r.share), minHeight: r.share > 0 ? 4 : 0 }} />
             </span>

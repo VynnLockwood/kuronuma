@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { callTool, type Lang } from "@/lib/web";
-import { formatAmount, formatDate, formatMonth, localISODate, share } from "@/lib/format";
+import { formatAmount, formatDate, formatMonth, lastMonths, localISODate, share } from "@/lib/format";
 import { BarList } from "./charts";
 import { Confirm } from "./Confirm";
 import { useDash } from "./context";
@@ -52,7 +52,12 @@ export function Spending() {
 
   const listArgs = { ...(from && { from }), ...(to && { to }), ...(category && { category }), limit: LIMIT };
   const [list, reloadList] = useTool<TxList>("list_transactions", listArgs);
-  const [summary, reloadSummary] = useTool<Summary>("get_spending_summary", { group_by: group, ...(from && { from }), ...(to && { to }) });
+  // Without dates the tool covers this month. Grouped by month that would be one bar, so it asks for 12 months.
+  const wide = group === "month" && !from && !to;
+  const [summary, reloadSummary] = useTool<Summary>("get_spending_summary", {
+    group_by: group,
+    ...(wide ? { from: `${lastMonths(today, 12)[0]}-01`, to: today } : { ...(from && { from }), ...(to && { to }) }),
+  });
   const [cats, reloadCats] = useTool<Categories>("list_categories", {});
   const names = cats.status === "ok" ? cats.data.categories.map((x) => x.name) : [];
   const refresh = () => {
@@ -128,9 +133,18 @@ export function Spending() {
       return;
     }
     setDeleteError(null);
+    focusAfterDelete.current = true; // the row is about to go; see the effect below
     refresh();
-    recordsHeading.current?.focus(); // the row is gone; keep the focus somewhere sensible
   }
+  // Focus moves only after the dialog has closed (it returns focus to the Delete button, which is then removed),
+  // so a keyboard user lands on the Records heading instead of the page body.
+  const focusAfterDelete = useRef(false);
+  useEffect(() => {
+    if (toDelete === null && focusAfterDelete.current) {
+      focusAfterDelete.current = false;
+      recordsHeading.current?.focus();
+    }
+  }, [toDelete]);
 
   const filtered = Boolean(from || to || category);
 
@@ -158,14 +172,17 @@ export function Spending() {
         </div>
         {summary.status === "loading" && <BlockSkeleton />}
         {summary.status === "error" && <BlockError message={summary.message} onRetry={reloadSummary} />}
+        {summary.status === "ok" && (
+          <p className="mb-6 text-sm text-muted-foreground">
+            {summary.data.period && <span className="font-medium text-ink-2">{c.period(formatDate(summary.data.period.from, lang), formatDate(summary.data.period.to, lang))}. </span>}
+            {c.totalsNote}
+          </p>
+        )}
         {summary.status === "ok" &&
           (summary.data.groups.length === 0 ? (
             <p className="text-[15px] text-muted-foreground">{c.noTotals}</p>
           ) : (
             <div className="flex flex-col gap-8">
-              {summary.data.period && (
-                <p className="text-sm text-muted-foreground">{c.period(formatDate(summary.data.period.from, lang), formatDate(summary.data.period.to, lang))}</p>
-              )}
               {summary.data.totals_by_currency.map((tot) => {
                 const rows = summary.data.groups.filter((g) => g.currency === tot.currency);
                 return (
