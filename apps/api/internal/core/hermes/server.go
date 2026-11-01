@@ -280,28 +280,66 @@ func (s *Server) callTool(ctx context.Context, c Caller, params json.RawMessage)
 	if !c.HasScope(t.Scope) {
 		return toolResult("This connection does not have permission for this tool (needs scope "+t.Scope+").", true), nil
 	}
-	args := p.Arguments
-	if len(bytes.TrimSpace(args)) == 0 || string(bytes.TrimSpace(args)) == "null" {
-		args = json.RawMessage(`{}`)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
-	defer cancel()
-	start := time.Now()
-	text, err := s.safeCall(ctx, t, c, args)
-	ok = err == nil
-	// Log who called what, never the arguments or results.
-	s.log.Info("mcp tool call", "tool", t.Name, "user_id", c.UserID, "client_id", c.ClientID, "ok", ok, "ms", time.Since(start).Milliseconds())
-
+	text, err := s.run(ctx, t, c, p.Arguments)
 	if err != nil {
 		var te ToolError
 		if errors.As(err, &te) {
 			return toolResult(te.Msg, true), nil
 		}
-		s.log.Error("tool failed", "tool", t.Name, "err", err)
 		return toolResult("Something went wrong on the server. Please try again.", true), nil
 	}
 	return toolResult(text, false), nil
+}
+
+// ErrUnknownTool and ErrMissingScope are returned by CallAs.
+var (
+	ErrUnknownTool  = errors.New("hermes: unknown tool")
+	ErrMissingScope = errors.New("hermes: the caller lacks the tool's scope")
+)
+
+// AllScopes returns every scope that a registered tool requires, sorted and without duplicates.
+func (s *Server) AllScopes() []string {
+	var out []string
+	for _, t := range s.tools {
+		out = append(out, t.Scope)
+	}
+	slices.Sort(out)
+	return slices.Compact(out)
+}
+
+// CallAs runs a registered tool for a caller that has already been authenticated by some other means (the
+// dashboard's session cookie, say). It takes the same path as an MCP tools/call: scope check, 20 second timeout,
+// panic recovery and one log line. The tool's ToolError is returned as is; any other failure is logged here and
+// returned for the caller to report generically.
+func (s *Server) CallAs(ctx context.Context, c Caller, name string, args json.RawMessage) (string, error) {
+	t, ok := s.tools[name]
+	if !ok {
+		return "", ErrUnknownTool
+	}
+	if !c.HasScope(t.Scope) {
+		return "", ErrMissingScope
+	}
+	return s.run(ctx, t, c, args)
+}
+
+// run is the one place a tool handler is invoked: empty arguments become {}, the call gets a 20 second deadline and
+// panic recovery, and one line is logged with who called what and how long it took, never the arguments or result.
+func (s *Server) run(ctx context.Context, t Tool, c Caller, args json.RawMessage) (string, error) {
+	if len(bytes.TrimSpace(args)) == 0 || string(bytes.TrimSpace(args)) == "null" {
+		args = json.RawMessage(`{}`)
+	}
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	start := time.Now()
+	text, err := s.safeCall(ctx, t, c, args)
+	s.log.Info("mcp tool call", "tool", t.Name, "user_id", c.UserID, "client_id", c.ClientID, "ok", err == nil, "ms", time.Since(start).Milliseconds())
+	if err != nil {
+		var te ToolError
+		if !errors.As(err, &te) {
+			s.log.Error("tool failed", "tool", t.Name, "err", err)
+		}
+	}
+	return text, err
 }
 
 // safeCall runs a handler and converts a panic into an error so one bad tool cannot crash the server.

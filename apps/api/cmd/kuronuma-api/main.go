@@ -37,6 +37,17 @@ func (a mcpAuth) Authenticate(ctx context.Context, bearer string) (hermes.Caller
 	return hermes.Caller{UserID: info.UserID, ClientID: info.ClientID, Scopes: info.Scopes}, nil
 }
 
+// sessionUser lets the web bridge (hermes.WebHandler) learn who is signed in from the session cookie.
+type sessionUser struct{ auth *cerberus.Handler }
+
+func (s sessionUser) UserID(r *http.Request) (string, bool) {
+	u, ok := s.auth.UserFromRequest(r)
+	if !ok {
+		return "", false
+	}
+	return u.ID, true
+}
+
 func main() {
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	if err := run(log); err != nil {
@@ -127,6 +138,8 @@ func run(log *slog.Logger) error {
 	auth.Register(mux)
 	oauth.Register(mux)
 	mux.Handle("/mcp", mcp)
+	// The dashboard runs the same tools as the assistants, as the signed-in user (no bearer token, no consent).
+	mux.Handle("/api/web/call", hermes.WebHandler(mcp, sessionUser{auth: auth}, cfg.PublicURL))
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
