@@ -82,3 +82,27 @@ export function lastMonths(iso: string, n: number): string[] {
   }
   return out;
 }
+
+/**
+ * Where a due date falls relative to today: "overdue" (before today), "week" (today to six days ahead), "later",
+ * or "none" (no usable date). Dates are compared as dates, so midnight and time zones cannot shift the result.
+ * The Overview and the Tasks tab both use this one rule.
+ */
+export function dueBucket(due: string | undefined, today: string): "overdue" | "week" | "later" | "none" {
+  if (!due || !/^\d{4}-\d{2}-\d{2}$/.test(due)) return "none";
+  if (due < today) return "overdue";
+  return due <= addDaysISO(today, 6) ? "week" : "later";
+}
+
+/** Compares two plain amount strings in whole minor units, without floating point. Unusable input counts as zero. */
+export function compareAmount(a: string, b: string): number {
+  const d = (minor(a) ?? 0n) - (minor(b) ?? 0n);
+  return d > 0n ? 1 : d < 0n ? -1 : 0;
+}
+
+/** "2026-05" becomes "May" (Thai: "พ.ค."), for the label under a column. */
+export function monthName(ym: string, lang: Lang): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym);
+  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return ym;
+  return months(lang)[Number(m[2]) - 1];
+}
