@@ -56,6 +56,8 @@ Once signed in, open **/connect** on your deployment for the MCP URL (`https://y
 - **Claude:** Settings, Connectors, add a custom connector, paste the URL, then sign in with Google and approve.
 - **Claude Code:** `claude mcp add --transport http kuronuma https://your-domain/mcp`, then `/mcp` to sign in.
 
+Kuronuma also tells the connected assistant how to sound: quiet, sincere and brief (see "Voice" in [docs/design.md](docs/design.md)). Self-hosters who want a plain voice change `VoiceGuide` in `apps/api/internal/core/hermes/instructions.go`.
+
 Remote assistants need a public HTTPS address. Tools: `add_transaction`, `list_transactions`, `get_spending_summary`, `delete_transaction`, `list_categories`, `create_category`, `rename_category`, `merge_categories`, `set_payee_rule`, `list_payee_rules`, `delete_payee_rule`, `add_memory`, `list_memories`, `update_memory`, `delete_memory`. Scopes: `plutus:read`, `plutus:write`, `categories:read`, `categories:write`, `atlas:read`, `atlas:write`. A connector added before the category tools existed keeps its old scopes; re-add or re-authorize it to see them.
 
 ### CI
