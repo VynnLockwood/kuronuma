@@ -37,12 +37,15 @@ export function BarList({
   labelHead,
   valueHead,
   empty,
+  table = true,
 }: {
   caption: string;
   rows: Datum[];
   labelHead: string;
   valueHead: string;
   empty?: ReactNode;
+  /** false when the caller shows its own visible table with the same numbers. */
+  table?: boolean;
 }) {
   if (rows.length === 0) return <>{empty ?? null}</>;
   return (
@@ -59,7 +62,7 @@ export function BarList({
           </li>
         ))}
       </ul>
-      <SrTable caption={caption} rows={rows} labelHead={labelHead} valueHead={valueHead} />
+      {table && <SrTable caption={caption} rows={rows} labelHead={labelHead} valueHead={valueHead} />}
     </figure>
   );
 }

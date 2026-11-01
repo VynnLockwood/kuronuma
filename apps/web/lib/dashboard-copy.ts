@@ -41,7 +41,48 @@ export type DashboardCopy = {
     prompts: string[];
     connect: { title: string; body: string; button: string; guide: string };
   };
-  spending: { title: string };
+  spending: {
+    title: string;
+    totals: string;
+    period: (from: string, to: string) => string;
+    groupBy: string;
+    groups: { category: string; month: string; merchant: string };
+    recordsHead: string;
+    totalHead: string;
+    noTotals: string;
+    records: string;
+    from: string;
+    to: string;
+    category: string;
+    allCategories: string;
+    clearFilters: string;
+    fullNote: (n: number) => string;
+    emptyNone: string;
+    emptyFiltered: string;
+    deleteLabel: (merchant: string, amount: string) => string;
+    deleteTitle: string;
+    deleteBody: (merchant: string, amount: string) => string;
+    deleteFailed: string;
+    add: {
+      title: string;
+      amount: string;
+      currency: string;
+      merchant: string;
+      date: string;
+      category: string;
+      categoryHint: string;
+      note: string;
+      submit: string;
+      saving: string;
+      saved: string;
+      savedNewCategory: (name: string) => string;
+      alreadySaved: string;
+      dupTitle: string;
+      dupBody: string;
+      saveAnyway: string;
+      dontSave: string;
+    };
+  };
   common: {
     retry: string;
     cancel: string;
@@ -116,7 +157,48 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         guide: "Read the setup guide ›",
       },
     },
-    spending: { title: "Spending" },
+    spending: {
+      title: "Spending",
+      totals: "Totals",
+      period: (from, to) => `${from} – ${to}`,
+      groupBy: "Group by",
+      groups: { category: "Category", month: "Month", merchant: "Merchant" },
+      recordsHead: "Records",
+      totalHead: "Total",
+      noTotals: "No spending in this period.",
+      records: "Records",
+      from: "From",
+      to: "To",
+      category: "Category",
+      allCategories: "All categories",
+      clearFilters: "Clear filters",
+      fullNote: (n) => `Showing the newest ${n} records. Use the dates to narrow it down.`,
+      emptyNone: "No spending saved yet.",
+      emptyFiltered: "No records match these filters.",
+      deleteLabel: (m, a) => `Delete ${m}, ${a}`,
+      deleteTitle: "Delete this record?",
+      deleteBody: (m, a) => `${a} at ${m} will be permanently deleted. This can’t be undone.`,
+      deleteFailed: "The record could not be deleted.",
+      add: {
+        title: "Add a record",
+        amount: "Amount",
+        currency: "Currency",
+        merchant: "Merchant",
+        date: "Date",
+        category: "Category",
+        categoryHint: "Pick one of yours or type a new name.",
+        note: "Note (optional)",
+        submit: "Save record",
+        saving: "Saving…",
+        saved: "Saved.",
+        savedNewCategory: (name) => `Saved. “${name}” is a new category.`,
+        alreadySaved: "This slip was already saved, so nothing new was added.",
+        dupTitle: "This looks like a duplicate",
+        dupBody: "A record with the same amount, currency, date and merchant already exists. Is this a separate payment?",
+        saveAnyway: "Save anyway",
+        dontSave: "Don’t save",
+      },
+    },
     common: {
       retry: "Try again",
       cancel: "Cancel",
@@ -189,7 +271,48 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         guide: "อ่านคู่มือการตั้งค่า ›",
       },
     },
-    spending: { title: "ค่าใช้จ่าย" },
+    spending: {
+      title: "ค่าใช้จ่าย",
+      totals: "ยอดรวม",
+      period: (from, to) => `${from} – ${to}`,
+      groupBy: "จัดกลุ่มตาม",
+      groups: { category: "หมวดหมู่", month: "เดือน", merchant: "ร้านค้า" },
+      recordsHead: "รายการ",
+      totalHead: "รวม",
+      noTotals: "ไม่มีค่าใช้จ่ายในช่วงนี้",
+      records: "รายการ",
+      from: "ตั้งแต่",
+      to: "ถึง",
+      category: "หมวดหมู่",
+      allCategories: "ทุกหมวดหมู่",
+      clearFilters: "ล้างตัวกรอง",
+      fullNote: (n) => `แสดง ${n} รายการล่าสุด ใช้ช่วงวันที่เพื่อจำกัดให้แคบลง`,
+      emptyNone: "ยังไม่มีค่าใช้จ่ายที่บันทึกไว้",
+      emptyFiltered: "ไม่พบรายการที่ตรงกับตัวกรอง",
+      deleteLabel: (m, a) => `ลบ ${m}, ${a}`,
+      deleteTitle: "ลบรายการนี้ไหม",
+      deleteBody: (m, a) => `${a} ที่ ${m} จะถูกลบถาวร และเรียกคืนไม่ได้`,
+      deleteFailed: "ลบรายการนี้ไม่สำเร็จ",
+      add: {
+        title: "เพิ่มรายการ",
+        amount: "จำนวนเงิน",
+        currency: "สกุลเงิน",
+        merchant: "ร้านค้า",
+        date: "วันที่",
+        category: "หมวดหมู่",
+        categoryHint: "เลือกจากหมวดหมู่ของคุณ หรือพิมพ์ชื่อใหม่",
+        note: "บันทึกเพิ่มเติม (ไม่บังคับ)",
+        submit: "บันทึกรายการ",
+        saving: "กำลังบันทึก…",
+        saved: "บันทึกแล้ว",
+        savedNewCategory: (name) => `บันทึกแล้ว “${name}” เป็นหมวดหมู่ใหม่`,
+        alreadySaved: "สลิปนี้บันทึกไว้แล้ว จึงไม่ได้เพิ่มรายการใหม่",
+        dupTitle: "ดูเหมือนรายการซ้ำ",
+        dupBody: "มีรายการที่จำนวนเงิน สกุลเงิน วันที่ และร้านค้าเหมือนกันอยู่แล้ว นี่เป็นการจ่ายเงินคนละครั้งใช่ไหม",
+        saveAnyway: "บันทึกอยู่ดี",
+        dontSave: "ไม่บันทึก",
+      },
+    },
     common: {
       retry: "ลองอีกครั้ง",
       cancel: "ยกเลิก",

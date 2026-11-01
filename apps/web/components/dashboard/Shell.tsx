@@ -102,7 +102,7 @@ function Unreachable({ lang, onRetry }: { lang: Lang; onRetry: () => void }) {
 function LangSwitch({ lang, tab }: { lang: Lang; tab: TabId }) {
   const q = tab === "overview" ? "" : `?tab=${tab}`;
   const item = (active: boolean) =>
-    cn("rounded-full px-2.5 py-1 transition-colors", active ? "bg-background font-semibold text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-muted-foreground hover:text-foreground");
+    cn("inline-flex min-h-10 items-center rounded-full px-3 transition-colors sm:min-h-0 sm:py-1", active ? "bg-background font-semibold text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-muted-foreground hover:text-foreground");
   return (
     <div role="group" aria-label={dashboardCopy[lang].shell.langLabel} className="flex rounded-full bg-muted p-0.5 text-xs">
       <Link href={`/dashboard${q}`} hrefLang="en" lang="en" aria-current={lang === "en" ? "true" : undefined} className={item(lang === "en")}>
@@ -179,7 +179,7 @@ export function Shell({ lang }: { lang: Lang }) {
                   <LangSwitch lang={lang} tab={tab} />
                   <div className="flex max-w-full items-center gap-3.5 rounded-full bg-muted py-2 pr-2 pl-4">
                     <span className="truncate text-sm text-ink-2">{user.email}</span>
-                    <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={handleSignOut}>
                       {copy.shell.signOut}
                     </Button>
                   </div>
