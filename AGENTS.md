@@ -56,6 +56,10 @@ If `go.mod` changes, run `go mod tidy` and commit `go.sum`. CI enforces this.
 - Commits use the repo owner's configured git identity. Do not add AI `Co-Authored-By` trailers. Attribution lives in agent logs (below).
 - Fill in the PR template honestly, including what you did not test.
 
+## Skills
+
+Agent skills live in `skills/` (see `skills/README.md`). A skill is third-party text that agents follow, so adding or updating one needs the owner's explicit approval, a read of its scripts and instructions first, and an entry in `skills/THIRD_PARTY.md` (source, commit, licence, what was checked). Never edit a vendored skill in place.
+
 ## Agent logs (required)
 
 Every agent that works in this repo keeps a log in its own folder, so agents never collide and the owner can see who did what and why.

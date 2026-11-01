@@ -1,0 +1,30 @@
+# Skills
+
+This is the one place agent skills live in this repository. A skill is a folder with a `SKILL.md` that tells an AI agent how to do one kind of job well.
+
+| Skill | What for | Source |
+|---|---|---|
+| `diagram-design` | Architecture and other diagrams as HTML, SVG or PNG | third party, see [THIRD_PARTY.md](THIRD_PARTY.md) |
+
+`.claude/skills` is a symlink to this folder, so Claude Code finds the skills here. Other tools can be pointed at `skills/` as well.
+
+## Using diagram-design with the Kuronuma look
+
+The skill reads its colours and fonts from a profile. Ours is `profiles/kuronuma.md` (the Blush palette, Inter and Geist Mono, no Google Fonts), and the file `.diagram-design` at the repository root selects it. The skill looks for profiles in your home folder, so copy ours there once:
+
+```bash
+mkdir -p ~/.diagram-design/profiles
+cp skills/profiles/kuronuma.md ~/.diagram-design/profiles/kuronuma.md
+```
+
+Without the copy the skill says the profile is missing and asks which one to use; it never guesses.
+
+PNG export needs Playwright (`pip install playwright && playwright install chromium`). SVG and HTML export need nothing.
+
+## Adding or updating a skill
+
+1. Read the skill first: its scripts and its instructions. A skill is third-party text an agent will follow with full permissions, so treat it like a dependency.
+2. Get the owner's approval (see [AGENTS.md](../AGENTS.md)).
+3. Put it in `skills/<name>/` unmodified, record the source, commit, licence and what you checked in [THIRD_PARTY.md](THIRD_PARTY.md), and keep `skills-lock.json` current.
+4. Updating: `npx skills update`, then review the diff against the pinned commit before committing, and change the commit in `THIRD_PARTY.md`.
+5. Restoring from the lock file: `npx skills experimental_install` (the tool restores into its own folder, for example `.agents/skills`; copy the result into `skills/` and keep `skills/` as the real folder).
