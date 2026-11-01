@@ -71,4 +71,6 @@ type OAuthStore interface {
 	ConsumeRefreshToken(ctx context.Context, hash []byte, now time.Time) (Token, error)
 
 	DeleteExpiredOAuth(ctx context.Context, now time.Time) (int64, error)
+	// DeleteUnusedClients removes clients registered before `before` that hold no code and no token at all.
+	DeleteUnusedClients(ctx context.Context, before time.Time) (int64, error)
 }

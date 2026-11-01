@@ -104,3 +104,14 @@ func (p *Postgres) DeleteExpiredOAuth(ctx context.Context, now time.Time) (int64
 	tokens, err := p.pool.Exec(ctx, `DELETE FROM oauth_tokens WHERE expires_at <= $1`, now)
 	return codes.RowsAffected() + tokens.RowsAffected(), err
 }
+
+// DeleteUnusedClients removes clients registered before `before` that hold no code and no token at all, and
+// returns how many were removed.
+func (p *Postgres) DeleteUnusedClients(ctx context.Context, before time.Time) (int64, error) {
+	tag, err := p.pool.Exec(ctx, `
+		DELETE FROM oauth_clients c
+		 WHERE c.created_at < $1
+		   AND NOT EXISTS (SELECT 1 FROM oauth_codes WHERE client_id = c.client_id)
+		   AND NOT EXISTS (SELECT 1 FROM oauth_tokens WHERE client_id = c.client_id)`, before)
+	return tag.RowsAffected(), err
+}

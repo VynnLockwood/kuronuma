@@ -98,9 +98,21 @@ func (o *OAuth) VerifyAccessToken(ctx context.Context, token string) (TokenInfo,
 	return TokenInfo{UserID: t.UserID, ClientID: t.ClientID, Scopes: t.Scopes}, nil
 }
 
-// CleanupExpired removes expired codes and tokens.
+// unusedClientAge is how old a registered client must be before it can be removed for holding nothing. Registration
+// is open, so without this clients that were never used would accumulate forever. It is long on purpose: a client
+// also holds nothing once its owner has been away longer than a refresh token lasts (30 days), and that user has to
+// remove and re-add the connector, which the error page says (see authzHint).
+const unusedClientAge = 180 * 24 * time.Hour
+
+// CleanupExpired removes expired codes and tokens, then clients that are over 180 days old and hold neither.
 func (o *OAuth) CleanupExpired(ctx context.Context) (int64, error) {
-	return o.store.DeleteExpiredOAuth(ctx, o.opt.Now())
+	now := o.opt.Now()
+	n, err := o.store.DeleteExpiredOAuth(ctx, now)
+	if err != nil {
+		return n, err
+	}
+	c, err := o.store.DeleteUnusedClients(ctx, now.Add(-unusedClientAge))
+	return n + c, err
 }
 
 // ---- discovery ----
@@ -508,8 +520,12 @@ func (o *OAuth) fail(w http.ResponseWriter, r *http.Request, req authzReq, e *au
 	// are never logged; the redirect is reduced to its origin.
 	o.log.Warn("oauth authorize rejected", "code", e.code, "reason", e.desc, "client_id", cleanText(req.ClientID, 60),
 		"redirect_origin", redirectOrigins([]string{req.RedirectURI})[0])
-	o.errorPage(w, http.StatusBadRequest, e.desc)
+	o.errorPage(w, http.StatusBadRequest, e.desc+" "+authzHint)
 }
+
+// authzHint tells the person on an error page how to recover. The assistant that started the connection never
+// receives these errors, so only the person can act on them. It also covers a client that was removed as unused.
+const authzHint = "Go back to your assistant and start the connection again. If it keeps failing, remove Kuronuma from its connectors and add it again."
 
 func (o *OAuth) redirect(w http.ResponseWriter, r *http.Request, req authzReq, params map[string]string) {
 	params["state"] = req.State
