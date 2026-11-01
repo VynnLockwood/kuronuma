@@ -318,9 +318,12 @@ type authzReq struct {
 	Client      OAuthClient
 }
 
+// authzErr is a problem found before the user has signed in and approved. It is always shown on our own error page,
+// never sent back to the client: client registration is open, so a registered redirect_uri only means that someone
+// registered it, and redirecting a visitor there would make this server an open redirector. (After the user decides,
+// a denial does go back to the client; that is their own choice.)
 type authzErr struct {
 	code, desc string
-	redirect   bool // true when it is safe to send the error back to the client's redirect_uri
 }
 
 func (o *OAuth) parseAuthz(ctx context.Context, v url.Values) (authzReq, *authzErr) {
@@ -333,35 +336,35 @@ func (o *OAuth) parseAuthz(ctx context.Context, v url.Values) (authzReq, *authzE
 		Resource:    v.Get("resource"),
 	}
 	if req.ClientID == "" || req.RedirectURI == "" {
-		return req, &authzErr{"invalid_request", "client_id and redirect_uri are required", false}
+		return req, &authzErr{"invalid_request", "client_id and redirect_uri are required"}
 	}
 	client, err := o.store.GetClient(ctx, req.ClientID)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return req, &authzErr{"invalid_client", "unknown client_id", false}
+			return req, &authzErr{"invalid_client", "unknown client_id"}
 		}
 		o.log.Error("get oauth client failed", "err", err)
-		return req, &authzErr{"server_error", "temporary failure", false}
+		return req, &authzErr{"server_error", "temporary failure"}
 	}
 	req.Client = client
 	if !slices.Contains(client.RedirectURIs, req.RedirectURI) {
-		return req, &authzErr{"invalid_request", "redirect_uri is not registered for this client", false}
+		return req, &authzErr{"invalid_request", "redirect_uri is not registered for this client"}
 	}
 
-	// From here on the redirect_uri is trusted, so errors go back to the client.
+	// The redirect_uri is registered, but that is not trust (registration is open), so errors stay on our page.
 	if v.Get("response_type") != "code" {
-		return req, &authzErr{"unsupported_response_type", "response_type must be code", true}
+		return req, &authzErr{"unsupported_response_type", "response_type must be code"}
 	}
 	if v.Get("code_challenge_method") != "S256" || !reChallenge.MatchString(req.Challenge) {
-		return req, &authzErr{"invalid_request", "PKCE with code_challenge_method=S256 is required", true}
+		return req, &authzErr{"invalid_request", "PKCE with code_challenge_method=S256 is required"}
 	}
 	scopes, ok := o.parseScopes(req.ScopeRaw)
 	if !ok {
-		return req, &authzErr{"invalid_scope", "unknown scope requested: " + cleanText(strings.Join(o.unknownScopes(req.ScopeRaw), " "), 100), true}
+		return req, &authzErr{"invalid_scope", "unknown scope requested: " + cleanText(strings.Join(o.unknownScopes(req.ScopeRaw), " "), 100)}
 	}
 	req.Scopes = scopes
 	if req.Resource != "" && req.Resource != o.Resource() {
-		return req, &authzErr{"invalid_target", "resource must be " + o.Resource(), true}
+		return req, &authzErr{"invalid_target", "resource must be " + o.Resource()}
 	}
 	return req, nil
 }
@@ -504,12 +507,8 @@ func (o *OAuth) fail(w http.ResponseWriter, r *http.Request, req authzReq, e *au
 	// Say why in the log so an incompatible client can be diagnosed. The state, PKCE challenge and full redirect URI
 	// are never logged; the redirect is reduced to its origin.
 	o.log.Warn("oauth authorize rejected", "code", e.code, "reason", e.desc, "client_id", cleanText(req.ClientID, 60),
-		"redirect_origin", redirectOrigins([]string{req.RedirectURI})[0], "redirected", e.redirect)
-	if !e.redirect {
-		o.errorPage(w, http.StatusBadRequest, e.desc)
-		return
-	}
-	o.redirect(w, r, req, map[string]string{"error": e.code, "error_description": e.desc})
+		"redirect_origin", redirectOrigins([]string{req.RedirectURI})[0])
+	o.errorPage(w, http.StatusBadRequest, e.desc)
 }
 
 func (o *OAuth) redirect(w http.ResponseWriter, r *http.Request, req authzReq, params map[string]string) {

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -551,45 +552,58 @@ func TestRefreshTokenBoundToClientAndScope(t *testing.T) {
 	}
 }
 
+// Every problem found before the user has signed in and approved is shown on our own error page and never sent
+// back to the client's redirect_uri: registration is open, so a registered URI only means someone registered it.
 func TestAuthorizeRequestValidation(t *testing.T) {
 	cases := []struct {
-		name       string
-		mutate     func(v url.Values)
-		wantPage   bool   // error shown on our page, never redirected
-		wantErrKey string // otherwise: error code sent back to the client
+		name   string
+		mutate func(v url.Values)
 	}{
-		{"unregistered redirect_uri", func(v url.Values) { v.Set("redirect_uri", "http://localhost:7777/evil") }, true, ""},
-		{"unknown client", func(v url.Values) { v.Set("client_id", "kuro_c_missing") }, true, ""},
-		{"missing client_id", func(v url.Values) { v.Del("client_id") }, true, ""},
-		{"missing PKCE", func(v url.Values) { v.Del("code_challenge") }, false, "invalid_request"},
-		{"plain PKCE", func(v url.Values) { v.Set("code_challenge_method", "plain") }, false, "invalid_request"},
-		{"short challenge", func(v url.Values) { v.Set("code_challenge", "abc") }, false, "invalid_request"},
-		{"implicit flow", func(v url.Values) { v.Set("response_type", "token") }, false, "unsupported_response_type"},
-		{"unknown scope", func(v url.Values) { v.Set("scope", "plutus:read admin") }, false, "invalid_scope"},
-		{"wrong resource", func(v url.Values) { v.Set("resource", "https://evil.example/mcp") }, false, "invalid_target"},
+		{"unregistered redirect_uri", func(v url.Values) { v.Set("redirect_uri", "http://localhost:7777/evil") }},
+		{"unknown client", func(v url.Values) { v.Set("client_id", "kuro_c_missing") }},
+		{"missing client_id", func(v url.Values) { v.Del("client_id") }},
+		{"missing PKCE", func(v url.Values) { v.Del("code_challenge") }},
+		{"plain PKCE", func(v url.Values) { v.Set("code_challenge_method", "plain") }},
+		{"short challenge", func(v url.Values) { v.Set("code_challenge", "abc") }},
+		{"implicit flow", func(v url.Values) { v.Set("response_type", "token") }},
+		{"unknown scope", func(v url.Values) { v.Set("scope", "plutus:read admin") }},
+		{"wrong resource", func(v url.Values) { v.Set("resource", "https://evil.example/mcp") }},
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			h := newOH(t)
-			cid := h.registerClient("App", testRedirect)
-			vals := authzValues(cid, testRedirect, "st-9", "")
-			tc.mutate(vals)
-			rec := h.send("GET", "/api/oauth/authorize?"+vals.Encode(), "", "", []*http.Cookie{h.session}, nil)
-			if tc.wantPage {
+	for _, signedIn := range []bool{true, false} {
+		for _, tc := range cases {
+			t.Run(fmt.Sprintf("%s signedIn=%v", tc.name, signedIn), func(t *testing.T) {
+				h := newOH(t)
+				cid := h.registerClient("App", testRedirect)
+				vals := authzValues(cid, testRedirect, "st-9", "")
+				tc.mutate(vals)
+				var cookies []*http.Cookie
+				if signedIn {
+					cookies = []*http.Cookie{h.session}
+				}
+				rec := h.send("GET", "/api/oauth/authorize?"+vals.Encode(), "", "", cookies, nil)
 				if rec.Code != http.StatusBadRequest || rec.Header().Get("Location") != "" {
 					t.Fatalf("want error page without redirect, got %d loc=%q", rec.Code, rec.Header().Get("Location"))
 				}
-				return
-			}
-			if rec.Code != http.StatusSeeOther {
-				t.Fatalf("want redirect with error, got %d", rec.Code)
-			}
-			loc, _ := url.Parse(rec.Header().Get("Location"))
-			if loc.Host != "localhost:7777" || loc.Query().Get("error") != tc.wantErrKey || loc.Query().Get("state") != "st-9" {
-				t.Fatalf("redirect = %s", loc)
-			}
-		})
+				if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
+					t.Fatalf("content type = %q, want our HTML error page", ct)
+				}
+				mustContain(t, rec.Body.String(), "KURONUMA")
+			})
+		}
 	}
+}
+
+// The text on the error page can include what the client sent (an unknown scope); it is escaped.
+func TestAuthorizeErrorPageEscapesWhatTheClientSent(t *testing.T) {
+	h := newOH(t)
+	cid := h.registerClient("App", testRedirect)
+	vals := authzValues(cid, testRedirect, "st", "")
+	vals.Set("scope", `<script>alert(1)</script> "x"`)
+	rec := h.send("GET", "/api/oauth/authorize?"+vals.Encode(), "", "", nil, nil)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d", rec.Code)
+	}
+	mustNotContain(t, rec.Body.String(), "<script>alert", `"x"`)
 }
 
 func TestAuthorizeAcceptsMatchingResource(t *testing.T) {
