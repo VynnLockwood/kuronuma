@@ -1,14 +1,17 @@
 import { Logo } from "@/components/Logo";
 import { RepoLink } from "@/components/RepoLink";
 
-// Thin, translucent header shared by every page. `nav` sits in the middle, `children` on the right.
+// Thin, translucent header shared by every page. `nav` sits in the middle. The right-hand group reads, in order:
+// `lead` (the app navigation on signed-in pages), the repository button, then `children` (language switch, sign-in, avatar).
 export function SiteHeader({
   home = "/",
   nav,
+  lead,
   children,
 }: {
   home?: string;
   nav?: React.ReactNode;
+  lead?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
@@ -17,6 +20,7 @@ export function SiteHeader({
         <Logo href={home} />
         {nav}
         <div className="flex items-center gap-2 sm:gap-3">
+          {lead}
           <RepoLink lang={home === "/th" ? "th" : "en"} />
           {children}
         </div>

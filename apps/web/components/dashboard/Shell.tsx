@@ -162,8 +162,7 @@ export function Shell({ lang }: { lang: Lang }) {
 
   return (
     <div lang={copy.htmlLang} data-dashboard>
-      <SiteHeader home={lang === "th" ? "/th" : "/"}>
-        <AppNav current="/dashboard" lang={lang} />
+      <SiteHeader home={lang === "th" ? "/th" : "/"} lead={<AppNav current="/dashboard" lang={lang} />}>
         {user && <Avatar user={user} />}
       </SiteHeader>
 
