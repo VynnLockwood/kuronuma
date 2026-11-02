@@ -73,6 +73,13 @@ const paths = {
   google: (
     <path d="M21 12.2c0-.6-.1-1.3-.2-1.9H12v3.6h5a4.3 4.3 0 0 1-1.9 2.8v2.3h3C19.9 17.4 21 15 21 12.2zM12 21c2.5 0 4.6-.8 6.1-2.3l-3-2.3c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H3.8v2.4A9 9 0 0 0 12 21zM6.9 13.5a5.4 5.4 0 0 1 0-3.4V7.7H3.8a9 9 0 0 0 0 8.2zM12 6.6c1.3 0 2.5.5 3.5 1.4l2.6-2.6A9 9 0 0 0 3.8 7.7l3.1 2.4C7.6 8.1 9.6 6.6 12 6.6z" />
   ),
+  // The GitHub mark (Octicons "mark-github", MIT licence), 16 px grid scaled into the 24 px box.
+  github: (
+    <path
+      transform="translate(2 2) scale(1.25)"
+      d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+    />
+  ),
   camera: (
     <>
       <path d="M4 8h3l2-3h6l2 3h3v11H4V8z" />
@@ -84,7 +91,7 @@ const paths = {
 export type IconName = keyof typeof paths;
 
 // Solid glyphs (brand marks) are filled; every other icon is a 1.8 px stroke.
-const filled: ReadonlySet<IconName> = new Set<IconName>(["google"]);
+const filled: ReadonlySet<IconName> = new Set<IconName>(["google", "github"]);
 
 export function Icon({ name, size = 24, className }: { name: IconName; size?: number; className?: string }) {
   const solid = filled.has(name);

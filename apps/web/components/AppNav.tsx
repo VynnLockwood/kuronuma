@@ -11,7 +11,7 @@ export function AppNav({ current, lang = "en" }: { current: "/dashboard" | "/con
     { href: "/connect", to: "/connect", label: nav.connect },
   ];
   return (
-    <nav aria-label="App" lang={dashboardCopy[lang].htmlLang} className="flex items-center gap-6 text-[13px]">
+    <nav aria-label="App" lang={dashboardCopy[lang].htmlLang} className="flex items-center gap-3 text-[13px] sm:gap-6">
       {links.map((l) => (
         <Link
           key={l.href}
