@@ -4,26 +4,47 @@
 
 > Memory for your AI assistant.
 
-Kuronuma is an open-source personal data hub exposed to AI assistants over [MCP](https://modelcontextprotocol.io). Users keep their spending, tasks, routines and work data in one place, and their own assistant reads and writes it through scoped tools.
+Kuronuma keeps your spending, tasks, to-dos and notes in one place that you own, and lets your own AI assistant (Claude and others that speak [MCP](https://modelcontextprotocol.io)) read and write them through a small set of scoped tools. You sign in with Google, you approve each assistant, and the assistant can only do what you allowed.
 
-**Status:** early. Working: Google sign-in (Cerberus), web shell (Olympus), Docker/nginx. Built and awaiting real-world testing: the MCP endpoint (Hermes), OAuth for assistants, and the spending (Plutus), category (Themis) and memory (Atlas) tools. See [docs/design.md](docs/design.md).
+Source: [github.com/VynnLockwood/kuronuma](https://github.com/VynnLockwood/kuronuma) · MIT licence · self-hostable with Docker Compose.
 
-**AI agents working in this repo:** read [AGENTS.md](AGENTS.md) first. It has the rules, and each agent keeps a log in `agent-logs/<name>/`.
+![Architecture diagram. Your browser and your AI assistant reach a reverse proxy over HTTPS. The proxy sends page requests to the web dashboard, sign-in requests to the sign-in and OAuth service (which talks to Google), and tool requests to the MCP endpoint. The MCP endpoint calls the memory modules, which read and write a private PostgreSQL database.](docs/assets/architecture.png)
+
+## Status
+
+Early. Everything under "Working now" is covered by automated tests in CI, and it has had little real-world use yet.
+
+### Working now
+
+- **Sign-in with Google**, with an optional list of allowed email addresses.
+- **Web dashboard in English and Thai:** an overview with totals, a spending page (add, filter and delete records) and a tasks and notes page (add, edit, complete and delete).
+- **MCP endpoint with 15 tools:** spending (add, list, totals, delete), tasks, to-dos and notes (add, list, update, delete), categories shared by everything (list, create, rename, merge) and payee rules that file new spending under a category automatically (set, list, delete).
+- **Assistants sign in with OAuth.** A consent page shows what each assistant asks for; tokens are scoped, and every query is limited to the signed-in user.
+- **A Kuronuma voice:** connected assistants are asked to sound quiet, sincere and brief when they talk about what Kuronuma keeps.
+- **Self-hosting:** Docker Compose runs the web app, the API, PostgreSQL and an nginx front door with rate limits.
+
+### In progress
+
+- Dashboard pages for categories and payee rules.
+- A dashboard page that shows which assistants are connected, with a way to disconnect them.
+
+### Planned
+
+- Encryption of sensitive fields.
+- Routines and work data as new kinds of memory.
+- A review queue for photographed slips, and background jobs.
 
 ## Getting started
 
-Prerequisites: Docker, and Go 1.26+ once to generate `go.sum`.
+You need Docker.
 
 ```bash
-# 1. Generate go.sum with Go 1.26 and commit it (CI fails until it is committed)
-cd apps/api && go mod tidy && cd ../..
-
-# 2. Configure
+# 1. Configure
 cp .env.example .env
 #    set POSTGRES_PASSWORD, SESSION_SECRET (openssl rand -base64 48),
 #    GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET, and ALLOWED_EMAILS=you@gmail.com
 
-# 3. Run
+# 2. Run
 docker compose -f deploy/docker-compose.yml --env-file .env up --build
 # open http://localhost:8080
 ```
@@ -44,10 +65,10 @@ Until a client is configured the app runs with sign-in disabled.
 | Route | What it is |
 |---|---|
 | `/` and `/th` | Public homepage in English and Thai |
-| `/dashboard` | Sign in and your modules (sign-in returns here) |
-| `/connect` | MCP URL and setup steps for assistants |
+| `/dashboard` and `/th/dashboard` | Sign in and see your memory (overview, spending, tasks and notes) |
+| `/connect` | The MCP URL and setup steps for assistants |
 
-Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` adds a "Source code" link in the footer (leave unset while the repository is private), and `NEXT_PUBLIC_SITE_URL` (for example `https://kuronuma.example.com`) enables the social-preview image. The Docker build does not pass either yet.
+Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` sets the "Source code" link in the footer, and `NEXT_PUBLIC_SITE_URL` (for example `https://kuronuma.example.com`) enables the social-preview image. The Docker build does not pass either yet.
 
 ### Connect an assistant
 
@@ -56,18 +77,13 @@ Once signed in, open **/connect** on your deployment for the MCP URL (`https://y
 - **Claude:** Settings, Connectors, add a custom connector, paste the URL, then sign in with Google and approve.
 - **Claude Code:** `claude mcp add --transport http kuronuma https://your-domain/mcp`, then `/mcp` to sign in.
 
-Kuronuma also tells the connected assistant how to sound: quiet, sincere and brief (see "Voice" in [docs/design.md](docs/design.md)). Self-hosters who want a plain voice change `VoiceGuide` in `apps/api/internal/core/hermes/instructions.go`.
+Remote assistants need a public HTTPS address; if you run Kuronuma on your own computer, only apps on that computer can reach it. A connector added before a tool existed keeps its old permissions, so re-add or re-authorize it to see new tools.
 
-Remote assistants need a public HTTPS address. Tools: `add_transaction`, `list_transactions`, `get_spending_summary`, `delete_transaction`, `list_categories`, `create_category`, `rename_category`, `merge_categories`, `set_payee_rule`, `list_payee_rules`, `delete_payee_rule`, `add_memory`, `list_memories`, `update_memory`, `delete_memory`. Scopes: `plutus:read`, `plutus:write`, `categories:read`, `categories:write`, `atlas:read`, `atlas:write`. A connector added before the category tools existed keeps its old scopes; re-add or re-authorize it to see them.
-
-### CI
-
-GitHub Actions (`.github/workflows/ci.yml`) runs on every PR: Go vet and race tests, a check that `go.mod`/`go.sum` are committed and tidy, the web typecheck and build, Docker image builds, and `docker compose config` and `nginx -t`. Dependabot proposes weekly dependency updates.
+Kuronuma also tells the connected assistant how to sound (see "Voice" in [docs/design.md](docs/design.md)). Self-hosters who want a plain voice change the `VoiceGuide` text in the API's instructions file, which the design document points to.
 
 ### Develop without Docker
 
 Enable the commit template once: `git config commit.template .gitmessage` (Conventional Commits; CI checks PR titles).
-
 
 ```bash
 # API (needs a Postgres and the env vars from .env.example)
@@ -76,38 +92,26 @@ cd apps/api && go test ./... && go run ./cmd/kuronuma-api
 cd apps/web && npm install && npm run dev
 ```
 
-## First use case
+### CI
 
-Snap a bank slip, attach it in your assistant's chat, confirm the extracted amount, payee and date, and Kuronuma stores it. Ask for reports any time.
+GitHub Actions (`.github/workflows/ci.yml`) runs on every PR: Go vet and race tests, a check that `go.mod`/`go.sum` are committed and tidy, the web typecheck and build, Docker image builds, and `docker compose config` and `nginx -t`. Dependabot proposes weekly dependency updates.
 
-## Stack
+## How it is built
 
-| Layer | Choice |
+| Part | Choice |
 |---|---|
-| Frontend | Next.js (TypeScript) |
-| Backend | Go |
+| Web app | Next.js (TypeScript), Tailwind CSS |
+| API | Go |
 | Database | PostgreSQL |
-| Edge | nginx |
-| Packaging | Docker / Docker Compose |
-| Protocol | MCP over Streamable HTTP, OAuth for remote clients |
+| Front door | nginx |
+| Packaging | Docker Compose |
+| Protocol | MCP over Streamable HTTP, OAuth for remote assistants |
 
-## The pantheon
+[docs/design.md](docs/design.md) has the full design, the decisions behind it, and the code name of each part.
 
-| Name | Role |
-|---|---|
-| **Olympus** | Next.js web dashboard |
-| **Propylaea** | nginx edge: TLS and routing |
-| **Hermes** | MCP gateway between assistants and data |
-| **Cerberus** | Auth and OAuth guard |
-| **Hades** | Encrypted vault: field-level encryption and keys |
-| **Gaia** | PostgreSQL storage |
-| **Pythia** | Slip intake: validation, dedupe, review queue |
-| **Plutus** | Spending module (first module) |
-| **Themis** | Categories shared by every module |
-| **Atlas** | Tasks, to-dos and notes module |
-| **Horae** | Routines module |
-| **Hephaestus** | Work data module |
-| **Moirai** | Background jobs and scheduling (later) |
+## Agents and diagrams
+
+AI agents working in this repository must read [AGENTS.md](AGENTS.md) first; each agent keeps a log in `agent-logs/<name>/`. Agent skills live in [skills/](skills/README.md); the architecture picture above was made with the `diagram-design` skill and its editable source is [docs/assets/architecture.html](docs/assets/architecture.html).
 
 ## Security
 
