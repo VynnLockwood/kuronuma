@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/themis"
 )
 
 // TestPostgresCategories needs a real database, so it only runs when TEST_DATABASE_URL is set

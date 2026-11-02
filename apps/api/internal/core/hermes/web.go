@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/webguard"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/webguard"
 )
 
 // SessionUser resolves the signed-in user of a request from the session cookie. main.go adapts the sign-in code to

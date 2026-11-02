@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/hermes"
 )
 
 // testMCPAuth mirrors the adapter in cmd/kuronuma-api: Hermes verifies tokens that Cerberus issued.
