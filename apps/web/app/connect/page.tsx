@@ -48,9 +48,7 @@ export default function Connect() {
 
   return (
     <>
-      <SiteHeader>
-        <AppNav current="/connect" />
-      </SiteHeader>
+      <SiteHeader lead={<AppNav current="/connect" />} />
 
       <main>
         <section className="px-6 pt-20 pb-14 text-center md:pt-22">
