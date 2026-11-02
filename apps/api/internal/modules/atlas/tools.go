@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/themis"
 )
 
 // The one fixed sentence Atlas writes itself, in Kuronuma's voice (see plutus for the rules).

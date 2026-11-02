@@ -6,8 +6,8 @@ import (
 	"sort"
 	"unicode/utf8"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/themis"
 )
 
 const (

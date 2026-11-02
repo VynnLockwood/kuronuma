@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/plutus"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/modules/plutus"
 )
 
 // TestPostgresPayeeRules needs a real database, so it only runs when TEST_DATABASE_URL is set

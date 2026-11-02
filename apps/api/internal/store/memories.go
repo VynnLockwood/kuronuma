@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/modules/atlas"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/modules/atlas"
 )
 
 var _ atlas.Store = (*Postgres)(nil)

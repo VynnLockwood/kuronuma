@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/hermes"
 )
 
 // cookieSession stands in for the real session: the cookie "s" names the user.

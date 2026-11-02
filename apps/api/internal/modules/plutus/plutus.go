@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/themis"
 )
 
 // Fixed sentences Plutus writes itself, in Kuronuma's voice: gentle, short, no user text, and each still says what

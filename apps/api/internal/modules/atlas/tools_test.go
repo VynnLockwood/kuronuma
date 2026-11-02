@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/hermes"
-	"github.com/VynnLockwood/kuronuma-mcp/apps/api/internal/core/themis"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/hermes"
+	"github.com/VynnLockwood/kuronuma/apps/api/internal/core/themis"
 )
 
 // ---- in-memory store, per user, mirroring the Postgres store's behaviour ----

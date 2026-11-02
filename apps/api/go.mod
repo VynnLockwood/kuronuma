@@ -1,4 +1,4 @@
-module github.com/VynnLockwood/kuronuma-mcp/apps/api
+module github.com/VynnLockwood/kuronuma/apps/api
 
 go 1.26.0
 
