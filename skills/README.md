@@ -21,10 +21,15 @@ Without the copy the skill says the profile is missing and asks which one to use
 
 PNG export needs Playwright (`pip install playwright && playwright install chromium`). SVG and HTML export need nothing.
 
+## Do not let the skill edit itself
+
+`.claude/skills` points here, so the vendored `skills/diagram-design/` is the skill's "installed copy". The skill's own onboarding, `save` and markerless `load` commands write into that copy. **Never run the skill's onboarding, `save` or `load` in this repository.** If it says the profile is missing, copy ours (above) instead of choosing one of its setup options. After any diagram session, `git status` must show nothing under `skills/diagram-design/`. If it does, discard those changes.
+
 ## Adding or updating a skill
 
 1. Read the skill first: its scripts and its instructions. A skill is third-party text an agent will follow with full permissions, so treat it like a dependency.
 2. Get the owner's approval (see [AGENTS.md](../AGENTS.md)).
-3. Put it in `skills/<name>/` unmodified, record the source, commit, licence and what you checked in [THIRD_PARTY.md](THIRD_PARTY.md), and keep `skills-lock.json` current.
-4. Updating: `npx skills update`, then review the diff against the pinned commit before committing, and change the commit in `THIRD_PARTY.md`.
-5. Restoring from the lock file: `npx skills experimental_install` (the tool restores into its own folder, for example `.agents/skills`; copy the result into `skills/` and keep `skills/` as the real folder).
+3. Put it in `skills/<name>/` unmodified, record the source, commit, licence, bundled third-party content and what you checked in [THIRD_PARTY.md](THIRD_PARTY.md), and keep `skills-lock.json` current.
+4. Updating: do not run the installer inside this repository. Run it in a scratch repo (`mkdir /tmp/scratch && cd /tmp/scratch && git init && DISABLE_TELEMETRY=1 npx skills@1.7.4 add <source> -y --copy -a claude-code`), copy the result over `skills/<name>/`, check `diff -r` against the upstream commit, review the diff, then update the commit in `THIRD_PARTY.md` and `skills-lock.json`. The installer replaces folders it manages, and through the `.claude/skills` link that would be the tracked copy.
+5. Restoring from the lock file: do the same in a scratch repo with `npx skills@1.7.4 experimental_install` and copy the restored skill into `skills/`.
+6. The installer sends an install telemetry event unless `DISABLE_TELEMETRY` or `DO_NOT_TRACK` is set.

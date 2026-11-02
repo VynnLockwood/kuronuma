@@ -20,7 +20,7 @@ To generate your own from a website URL, see [`onboarding.md`](onboarding.md).
 
 ### Semantic roles
 
-Every token is referred to by **semantic role**, not by its hex value. Type references (`type-*.md`) and SKILL.md say `accent`, not `#bf4520`.
+Every token is referred to by **semantic role**, not by its hex value. Type references (`type-*.md`) and SKILL.md say `accent`, not `#c23b69`.
 
 | Role | Purpose | Default (light) | Default (dark) |
 |---|---|---|---|
@@ -34,9 +34,9 @@ Every token is referred to by **semantic role**, not by its hex value. Type refe
 | `rule-solid` | Stronger borders, baselines | `#efd3dd` | `rgba(213,188,199,0.25)` |
 | `accent` | Focal / 1–2 max per diagram | `#c23b69` (raspberry) | `#f08aa8` |
 | `accent-tint` | Fill for accent-bordered boxes | `rgba(194,59,105,0.08)` | `rgba(240,138,168,0.10)` |
-| `link` | HTTP/API calls, external arrows | `#b03361` | `#f2a0bb` |
+| `link` | HTTP/API calls, external arrows | `#6b4fa3` (plum-lilac) | `#c3b1f0` |
 
-> **Brand palette source:** this skin maps to a five-color brand palette: `jet-black #2d3142`, `silver #bfc0c0`, `white-smoke #f5f5f5`, `atomic-tangerine`, `blue-slate #4f5d75`. The light `accent` is not the raw brand tangerine. Raw atomic-tangerine reads 2.86:1 on `paper`, too faint for an arrow or a label, so the skin uses `#bf4520`, the same hue darkened until it clears 4.5:1 as text. The `soft`, `rule`, and `link` tokens are derived (a darker slate, ink at opacity, and a saturated variant in the blue-slate hue family) to cover roles the brand palette doesn't name directly. Every derived value is held to the contrast contract below.
+> **Brand palette source:** this skin is the Blush palette of the Kuronuma website (`apps/web/app/globals.css`): blush-white `#fffafb`, plum ink `#2a2024`, soft pink `#fdf0f4`, one raspberry `accent` `#c23b69`. The `link` token is a plum-lilac (`#6b4fa3` light, `#c3b1f0` dark) rather than the site's raspberry link, so `accent` stays the one focal colour in a diagram; `soft`, `rule` and the dark skin are derived. Every value is held to the contrast contract below.
 
 ### Contrast contract
 
@@ -52,11 +52,11 @@ Every token must clear the threshold for each role it plays, against the backgro
 - **A token used in several roles must pass each one.** `accent` is a stroke in one place and a label in another, so it is held to 4.5:1, not the 3:1 its strokes alone would need. Don't assume a token is non-text because it usually is.
 - **Translucent colors are composited first.** An `rgba()` fill or stroke is blended over `paper` before its ratio is measured. A value that clears the bar at full strength can fail at 0.5 opacity.
 - **Surfaces other than `paper` cost contrast.** Inside an `accent-tint` box or on `paper-2` every ratio drops. Measure text placed there against that surface, not against `paper`.
-- **Current defaults:** light `accent` 4.71:1, `soft` 5.34:1, `link` 6.13:1, `muted` 6.11:1 on `#f5f5f5`; dark `accent` 5.21:1, `soft` 4.78:1, `link` 4.76:1 on `#2d3142`.
+- **Current values:** on `paper`, light `accent` 4.93:1, `soft` 5.46:1, `link` 6.21:1, `muted` 5.71:1; dark `accent` 6.69:1, `soft` 6.62:1, `link` 8.17:1, `muted` 8.90:1.
 
 ### Inversion rule (light → dark)
 
-Any `rgba(45,49,66, X)` in light becomes `rgba(245,245,245, X)` in dark. Same opacities, RGB flipped. The accent gets a slight hue-shift brighter to read on dark paper.
+Any `rgba(42,32,36, X)` in light becomes `rgba(255,250,251, X)` in dark. Same opacities, RGB flipped. The accent gets a lighter rose to read on dark paper.
 
 ### Series palette (multi-series chart types only)
 
@@ -234,7 +234,7 @@ Four options:
 - **Contrast**: every text token (`ink`, `muted`, `soft`, `link`, and `accent`) must clear 4.5:1 on `paper`, in both skins. See the [contrast contract](#contrast-contract); `scripts/verify-contrast.py` checks it.
 - **One accent**: pick one color for `accent`. Two accents erases the focal signal.
 - **No rainbow palette**: if your brand ships 8 colors, pick 3 (paper, ink, accent). The rest become `muted` variants.
-- **Serif + sans + mono**: three families, not more. If brand typography is all sans, keep Instrument Serif for `title` and `callout` anyway — the contrast is load-bearing.
+- **Sans + mono**: this skin uses two families, Inter for `title`, `node-name` and `callout` and Geist Mono for technical labels; there is no serif.
 - **Paper is warm-neutral, not pure white**: pure white turns the design sterile. Pick a cream, bone, or light grey with a hint of warmth.
 - **Dot pattern is optional, not default**: the 22×22 dot pattern is an opt-in "dotted paper" variant (good for long-form editorial hero diagrams). The default background is a clean `paper` fill, no pattern. When the pattern is enabled, it should sit at ~10% opacity of `ink` on `paper` — visible but quiet.
 - **Container is clean by default**: the diagram sits directly on the page paper, no secondary container background or border. A framed variant (`paper-2` bg + `rule` border + 8px radius + padding) is available as an opt-in for card-heavy layouts, but don't reach for it by default — the extra chrome fights the figure.
