@@ -8,11 +8,11 @@ Kuronuma keeps your spending, tasks, to-dos and notes in one place that you own,
 
 Source: [github.com/VynnLockwood/kuronuma](https://github.com/VynnLockwood/kuronuma) · MIT licence · self-hostable with Docker Compose.
 
-![Architecture diagram. Your browser and your AI assistant reach a reverse proxy over HTTPS. The proxy sends page requests to the web dashboard, sign-in requests to the sign-in and OAuth service (which talks to Google), and tool requests to the MCP endpoint. The MCP endpoint calls the memory modules, which read and write a private PostgreSQL database.](docs/assets/architecture.png)
+![Architecture diagram. Your browser and your AI assistant reach a reverse proxy over HTTPS. The proxy sends page requests to the web dashboard, sign-in requests to the sign-in and OAuth service (which talks to Google), and tool requests to the MCP endpoint. The MCP endpoint calls the memory modules, which read and write a private PostgreSQL database. The sign-in service also stores users, sessions and tokens in that database.](docs/assets/architecture.png)
 
 ## Status
 
-Early. Everything under "Working now" is covered by automated tests in CI, and it has had little real-world use yet.
+Early, with little real-world use yet. In CI the API has automated tests; the web app is type-checked and built, and the deployment files are config-checked (nothing there starts the full stack).
 
 ### Working now
 
@@ -32,7 +32,6 @@ Early. Everything under "Working now" is covered by automated tests in CI, and i
 
 - Encryption of sensitive fields.
 - Routines and work data as new kinds of memory.
-- A review queue for photographed slips, and background jobs.
 
 ## Getting started
 

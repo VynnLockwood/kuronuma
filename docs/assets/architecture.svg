@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg viewBox="0 0 1040 628" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="kuronuma-arch-title kuronuma-arch-desc" id="architecture-root">
 <title id="kuronuma-arch-title">How Kuronuma fits together</title>
-<desc id="kuronuma-arch-desc">Your browser and your AI assistant reach Kuronuma through a reverse proxy. The proxy sends page requests to the web dashboard, sign-in requests to the sign-in and OAuth service, which talks to Google, and tool requests to the MCP endpoint. The MCP endpoint calls the memory modules, which read and write a private PostgreSQL database.</desc>
+<desc id="kuronuma-arch-desc">Your browser and your AI assistant reach Kuronuma through a reverse proxy. The proxy sends page requests to the web dashboard, sign-in requests to the sign-in and OAuth service, which talks to Google, and tool requests to the MCP endpoint. The MCP endpoint calls the memory modules, which read and write a private PostgreSQL database. The sign-in and OAuth service also stores users, sessions and tokens in the same database.</desc>
 <defs>
       <style>#architecture-root { --color-paper: #fffafb;
       --color-ink: #2a2024;
@@ -29,6 +29,7 @@
 <path d="M480,240 H560" fill="none" stroke="#7a5c68" stroke-width="1.2" marker-end="url(#architecture-arrow)"/>
 <path d="M480,272 H512 Q520,272 520,280 V348 Q520,356 528,356 H560" fill="none" stroke="#7a5c68" stroke-width="1.2" marker-end="url(#architecture-arrow)"/>
 <path d="M760,228 H840" fill="none" stroke="#6b4fa3" stroke-width="1.2" marker-end="url(#architecture-arrow-link)"/>
+<path d="M760,252 H792 Q800,252 800,260 V460 Q800,468 808,468 H840" fill="none" stroke="#7a5c68" stroke-width="1.2" marker-end="url(#architecture-arrow)"/>
 <path d="M660,388 V452" fill="none" stroke="#7a5c68" stroke-width="1.2" marker-end="url(#architecture-arrow)"/>
 <path d="M760,484 H840" fill="none" stroke="#7a5c68" stroke-width="1.2" marker-end="url(#architecture-arrow)"/>
 <rect x="268.0" y="168" width="40" height="12" rx="2" fill="#fffafb"/>
@@ -45,8 +46,10 @@
 <text x="800" y="219" fill="#6b4fa3" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">OIDC</text>
 <rect x="670.0" y="414" width="44" height="12" rx="2" fill="#fffafb"/>
 <text x="692" y="423" fill="#7a5c68" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">TOOLS</text>
-<rect x="784.0" y="466" width="32" height="12" rx="2" fill="#fffafb"/>
-<text x="800" y="475" fill="#7a5c68" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">SQL</text>
+<rect x="784.0" y="490" width="32" height="12" rx="2" fill="#fffafb"/>
+<text x="800" y="499" fill="#7a5c68" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">SQL</text>
+<rect x="808.0" y="336" width="56" height="12" rx="2" fill="#fffafb"/>
+<text x="836" y="345" fill="#7a5c68" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">SESSIONS</text>
 <rect x="40" y="100" width="160" height="64" rx="6" fill="#fffafb"/>
 <rect x="40" y="100" width="160" height="64" rx="6" fill="#7a5c68" stroke="#7d5f6b" stroke-width="1" fill-opacity="0.10"/>
 <rect x="48" y="108" width="31" height="12" rx="2" fill="none" stroke="#7d5f6b" stroke-width="0.8" stroke-opacity="0.40"/>
@@ -64,7 +67,7 @@
 <rect x="328" y="184" width="36" height="12" rx="2" fill="none" stroke="#2a2024" stroke-width="0.8" stroke-opacity="0.22"/>
 <text x="346.0" y="193" fill="#7d5f6b" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">EDGE</text>
 <text x="400.0" y="216" fill="#2a2024" font-size="12" font-weight="600" font-family="'Inter', system-ui, sans-serif" text-anchor="middle">Reverse proxy</text>
-<text x="400.0" y="232" fill="#7a5c68" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">nginx · TLS · limits</text>
+<text x="400.0" y="232" fill="#7a5c68" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">nginx · routing · limits</text>
 <rect x="560" y="60" width="200" height="64" rx="6" fill="#fffafb"/>
 <rect x="560" y="60" width="200" height="64" rx="6" fill="#ffffff" stroke="#2a2024" stroke-width="1"/>
 <rect x="568" y="68" width="31" height="12" rx="2" fill="none" stroke="#2a2024" stroke-width="0.8" stroke-opacity="0.40"/>
