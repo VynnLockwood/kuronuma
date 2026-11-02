@@ -67,7 +67,7 @@ Until a client is configured the app runs with sign-in disabled.
 | `/dashboard` and `/th/dashboard` | Sign in and see your memory (overview, spending, tasks and notes) |
 | `/connect` | The MCP URL and setup steps for assistants |
 
-Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` sets the "Source code" link in the footer, and `NEXT_PUBLIC_SITE_URL` (for example `https://kuronuma.example.com`) enables the social-preview image. The Docker build does not pass either yet.
+Optional build-time settings for the web app: `NEXT_PUBLIC_REPO_URL` sets the repository link in the header and footer. It defaults to the public repository (`https://github.com/VynnLockwood/kuronuma`); set it to your fork's address, or to an empty value to hide the link. `NEXT_PUBLIC_SITE_URL` (for example `https://kuronuma.example.com`) enables the social-preview image. The Docker build does not pass either variable yet, so Docker images use the defaults.
 
 ### Connect an assistant
 
