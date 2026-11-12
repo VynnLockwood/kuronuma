@@ -17,8 +17,8 @@ Early, with little real-world use yet. In CI the API has automated tests; the we
 ### Working now
 
 - **Sign-in with Google**, with an optional list of allowed email addresses.
-- **Web dashboard in English and Thai:** an overview with totals, a spending page (add, filter and delete records) and a tasks and notes page (add, edit, complete and delete).
-- **MCP endpoint with 15 tools:** spending (add, list, totals, delete), tasks, to-dos and notes (add, list, update, delete), categories shared by everything (list, create, rename, merge) and payee rules that file new spending under a category automatically (set, list, delete).
+- **Web dashboard in English and Thai:** an overview with totals, a spending page (add, filter and delete records, plus a Bills tab for fixed monthly bills) and a tasks and notes page (add, edit, complete and delete).
+- **MCP endpoint with 22 tools:** spending (add, list, totals, delete), fixed monthly bills (add, list, update, end, delete, confirm a payment, monthly summary), tasks, to-dos and notes (add, list, update, delete), categories shared by everything (list, create, rename, merge) and payee rules that file new spending under a category automatically (set, list, delete).
 - **Assistants sign in with OAuth.** A consent page shows what each assistant asks for; tokens are scoped, and every query is limited to the signed-in user.
 - **A Kuronuma voice:** connected assistants are asked to sound quiet, sincere and brief when they talk about what Kuronuma keeps.
 - **Self-hosting:** Docker Compose runs the web app, the API, PostgreSQL and an nginx front door with rate limits.
