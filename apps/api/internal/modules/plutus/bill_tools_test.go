@@ -402,3 +402,285 @@ func TestBillTextIsCleanedAndFlaggedAsData(t *testing.T) {
 		t.Fatal("list_bills must carry the untrusted-text note")
 	}
 }
+
+// ---- payments and the monthly summary ----
+
+func (e *env) confirm(token string, args any) (map[string]any, string, bool) {
+	e.t.Helper()
+	return e.call(token, "confirm_bill_payment", args)
+}
+
+func (e *env) mustConfirm(token string, args map[string]any) map[string]any {
+	e.t.Helper()
+	data, text, isErr := e.confirm(token, args)
+	if isErr {
+		e.t.Fatalf("confirm_bill_payment %v failed: %s", args, text)
+	}
+	return data
+}
+
+func TestConfirmBillPayment(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"name": "Netflix", "amount": "419", "category": "food", "start_month": "2026-09"}))
+
+	got := e.mustConfirm("alice", map[string]any{"bill_id": id})
+	if got["status"] != "saved" {
+		t.Fatalf("confirm: %v", got)
+	}
+	tx := got["transaction"].(map[string]any)
+	if tx["amount"] != "419.00" || tx["currency"] != "THB" || tx["merchant"] != "Netflix" || tx["category"] != "food" ||
+		tx["occurred_on"] != "2026-10-30" || tx["reference"] != BillReference(id, m(2026, 10)) {
+		t.Fatalf("transaction: %v", tx)
+	}
+	if got["bill"].(map[string]any)["id"] != id {
+		t.Fatalf("bill: %v", got["bill"])
+	}
+	if e.store.count("alice") != 1 {
+		t.Fatal("one transaction expected")
+	}
+
+	// A different amount and a date in a past month.
+	got = e.mustConfirm("alice", map[string]any{"bill_id": id, "month": "2026-09", "amount": "399.50", "date": "2026-09-05"})
+	tx = got["transaction"].(map[string]any)
+	if tx["amount"] != "399.50" || tx["occurred_on"] != "2026-09-05" || tx["reference"] != "bill:"+id+":2026-09" {
+		t.Fatalf("past month: %v", tx)
+	}
+
+	list, _, _ := e.call("alice", "list_bills", map[string]any{})
+	b := list["bills"].([]any)[0].(map[string]any)
+	if b["paid"] != true || b["paid_amount"] != "419.00" || b["paid_on"] != "2026-10-30" || b["has_payments"] != true {
+		t.Fatalf("list_bills after confirm: %v", b)
+	}
+}
+
+func TestConfirmTwiceRefused(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", nil))
+	e.mustConfirm("alice", map[string]any{"bill_id": id})
+	got := e.mustConfirm("alice", map[string]any{"bill_id": id, "amount": "1"})
+	if got["status"] != "already_paid" {
+		t.Fatalf("second confirm: %v", got)
+	}
+	if got["transaction"].(map[string]any)["amount"] != "419.00" {
+		t.Fatalf("the existing record is returned unchanged: %v", got["transaction"])
+	}
+	if e.store.count("alice") != 1 {
+		t.Fatalf("no second transaction: %d", e.store.count("alice"))
+	}
+	// A repeat for a past month with no date is still just "already paid".
+	e.mustConfirm("alice", map[string]any{"bill_id": id, "month": "2026-10", "date": "2026-10-01"})
+}
+
+func TestConfirmOutsideCountingMonthRefused(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"start_month": "2026-08"}))
+	e.call("alice", "end_bill", map[string]any{"bill_id": id, "ended_from": "2026-10"})
+	for _, month := range []string{"2026-07", "2026-10", "2026-11"} {
+		_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": month, "date": month + "-02"})
+		if !isErr || !strings.Contains(text, "does not count in "+month) {
+			t.Errorf("%s: isErr=%v %q", month, isErr, text)
+		}
+	}
+	if e.store.count("alice") != 0 {
+		t.Fatal("a refused confirmation must not save")
+	}
+	e.mustConfirm("alice", map[string]any{"bill_id": id, "month": "2026-09", "date": "2026-09-02"})
+}
+
+func TestConfirmDateOutsideMonthRefused(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"start_month": "2026-08"}))
+	for _, date := range []string{"2026-09-30", "2026-11-01", "2026-10-32", "soon"} {
+		_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": "2026-10", "date": date})
+		if !isErr || !strings.Contains(text, "date must") {
+			t.Errorf("date %q: isErr=%v %q", date, isErr, text)
+		}
+	}
+	if _, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": "2026-10", "date": ""}); !isErr {
+		t.Errorf("an empty date must be refused: %q", text)
+	}
+	if e.store.count("alice") != 0 {
+		t.Fatal("a refused confirmation must not save")
+	}
+}
+
+func TestConfirmNoDateOutsideCurrentMonthAsksForDate(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"start_month": "2026-06"}))
+	for _, month := range []string{"2026-09", "2026-11"} {
+		_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": month})
+		if !isErr || !strings.Contains(text, "date") || !strings.Contains(text, month) {
+			t.Errorf("%s: isErr=%v %q", month, isErr, text)
+		}
+	}
+	if e.store.count("alice") != 0 {
+		t.Fatal("a refused confirmation must not save")
+	}
+	e.mustConfirm("alice", map[string]any{"bill_id": id, "month": "2026-09", "date": "2026-09-30"})
+}
+
+func TestConfirmAmountTooPreciseRefused(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", nil))
+	cases := map[string]string{"12.345": "2 decimal", "-5": "positive", "0": "greater than 0", "": "required", "1,000": "positive"}
+	for amt, want := range cases {
+		_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "amount": amt})
+		if !isErr || !strings.Contains(text, want) {
+			t.Errorf("amount %q: isErr=%v %q, want %q", amt, isErr, text, want)
+		}
+	}
+	// A JSON number is checked the same way.
+	if _, _, isErr := e.confirm("alice", `{"bill_id":"`+id+`","amount":-5}`); !isErr {
+		t.Error("a negative JSON number must be refused")
+	}
+	if e.store.count("alice") != 0 {
+		t.Fatal("a refused confirmation must not save")
+	}
+}
+
+func TestConfirmAppliesTransactionCap(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"name": "Rent"}))
+	other := billID0(e, e.addBill("alice", map[string]any{"name": "Phone"}))
+	e.store.padding = map[string]int{"alice": maxTransactions - 1}
+	e.mustConfirm("alice", map[string]any{"bill_id": id})
+
+	_, text, isErr := e.confirm("alice", map[string]any{"bill_id": other})
+	if !isErr || !strings.Contains(text, "delete") {
+		t.Fatalf("at the cap: isErr=%v %q", isErr, text)
+	}
+	if n, _ := e.store.CountTransactions(context.Background(), "alice"); n != maxTransactions {
+		t.Fatalf("count = %d", n)
+	}
+	// A repeat at the cap is still "already paid", not an error.
+	if got := e.mustConfirm("alice", map[string]any{"bill_id": id}); got["status"] != "already_paid" {
+		t.Fatalf("repeat at the cap: %v", got)
+	}
+	// Another user is not affected.
+	bob := billID0(e, e.addBill("bob", nil))
+	e.mustConfirm("bob", map[string]any{"bill_id": bob})
+}
+
+func TestDeletedPaymentMakesMonthUnpaid(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", nil))
+	txID := e.mustConfirm("alice", map[string]any{"bill_id": id})["transaction"].(map[string]any)["id"].(string)
+	if _, text, isErr := e.call("alice", "delete_transaction", map[string]any{"id": txID}); isErr {
+		t.Fatal(text)
+	}
+	list, _, _ := e.call("alice", "list_bills", map[string]any{})
+	b := list["bills"].([]any)[0].(map[string]any)
+	if b["paid"] != false || b["has_payments"] != false {
+		t.Fatalf("after deleting the payment: %v", b)
+	}
+	if _, has := b["paid_amount"]; has {
+		t.Fatalf("an unpaid bill has no paid_amount: %v", b)
+	}
+	if got := e.mustConfirm("alice", map[string]any{"bill_id": id}); got["status"] != "saved" {
+		t.Fatalf("confirm again: %v", got)
+	}
+}
+
+func TestMonthlySummaryPerCurrency(t *testing.T) {
+	e := newEnv(t)
+	rent := billID0(e, e.addBill("alice", map[string]any{"name": "Rent", "amount": "10000", "currency": "THB", "start_month": "2026-01"}))
+	e.addBill("alice", map[string]any{"name": "Phone", "amount": "500.50", "currency": "THB", "start_month": "2026-01"})
+	cloud := billID0(e, e.addBill("alice", map[string]any{"name": "Cloud", "amount": "20", "currency": "USD", "start_month": "2026-01"}))
+	e.addBill("alice", map[string]any{"name": "Future", "amount": "99", "currency": "EUR", "start_month": "2026-11"})
+	ended := billID0(e, e.addBill("alice", map[string]any{"name": "Gone", "amount": "7", "currency": "USD", "start_month": "2026-01"}))
+	e.call("alice", "end_bill", map[string]any{"bill_id": ended, "ended_from": "2026-10"})
+	// A payment for an earlier month must not count in October.
+	e.mustConfirm("alice", map[string]any{"bill_id": rent, "month": "2026-09", "date": "2026-09-01"})
+	e.mustConfirm("alice", map[string]any{"bill_id": rent, "amount": "9999.99"})
+	e.mustConfirm("alice", map[string]any{"bill_id": cloud})
+
+	data, text, isErr := e.call("alice", "monthly_bills_summary", map[string]any{})
+	if isErr {
+		t.Fatal(text)
+	}
+	if data["month"] != "2026-10" || data["_note"] == nil {
+		t.Fatalf("summary: %v", data)
+	}
+	want := []map[string]any{
+		{"currency": "THB", "planned": "10500.50", "paid": "9999.99", "paid_count": 1.0, "unpaid_count": 1.0},
+		{"currency": "USD", "planned": "20.00", "paid": "20.00", "paid_count": 1.0, "unpaid_count": 0.0},
+	}
+	totals := data["totals"].([]any)
+	if len(totals) != len(want) {
+		t.Fatalf("totals: %v", totals)
+	}
+	for i, w := range want {
+		got := totals[i].(map[string]any)
+		for k, v := range w {
+			if got[k] != v {
+				t.Errorf("totals[%d][%s] = %v, want %v", i, k, got[k], v)
+			}
+		}
+	}
+
+	// September: only the September payment is paid; Gone still counted then.
+	data, _, _ = e.call("alice", "monthly_bills_summary", map[string]any{"month": "2026-09"})
+	sept := data["totals"].([]any)
+	thb := sept[0].(map[string]any)
+	if thb["currency"] != "THB" || thb["paid"] != "10000.00" || thb["paid_count"] != 1.0 || thb["unpaid_count"] != 1.0 {
+		t.Fatalf("september THB: %v", thb)
+	}
+	usd := sept[1].(map[string]any)
+	if usd["planned"] != "27.00" || usd["paid"] != "0.00" || usd["unpaid_count"] != 2.0 {
+		t.Fatalf("september USD: %v", usd)
+	}
+
+	// No bills counting: an empty list, not null.
+	data, _, _ = e.call("alice", "monthly_bills_summary", map[string]any{"month": "2020-01"})
+	if got, ok := data["totals"].([]any); !ok || len(got) != 0 {
+		t.Fatalf("empty month: %v", data["totals"])
+	}
+	if _, text, isErr := e.call("alice", "monthly_bills_summary", map[string]any{"month": "Oct"}); !isErr || !strings.Contains(text, "YYYY-MM") {
+		t.Fatalf("bad month: %q", text)
+	}
+	if _, text, isErr := e.call("reader", "monthly_bills_summary", map[string]any{}); isErr {
+		t.Fatalf("a read-only token may use the summary: %q", text)
+	}
+	if _, text, isErr := e.confirm("reader", map[string]any{"bill_id": rent}); !isErr || !strings.Contains(text, ScopeWrite) {
+		t.Fatalf("a read-only token must not confirm: %q", text)
+	}
+}
+
+func TestConfirmUsersIsolation(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", nil))
+	if _, text, isErr := e.confirm("bob", map[string]any{"bill_id": id}); !isErr || !strings.Contains(text, "No bill") {
+		t.Fatalf("bob confirming alice's bill: isErr=%v %q", isErr, text)
+	}
+	if e.store.count("bob") != 0 || e.store.count("alice") != 0 {
+		t.Fatal("nothing may be saved")
+	}
+	e.mustConfirm("alice", map[string]any{"bill_id": id})
+
+	list, _, _ := e.call("bob", "list_bills", map[string]any{})
+	if int(list["count"].(float64)) != 0 {
+		t.Fatalf("bob sees alice's bills: %v", list)
+	}
+	sum, _, _ := e.call("bob", "monthly_bills_summary", map[string]any{})
+	if len(sum["totals"].([]any)) != 0 {
+		t.Fatalf("bob sees alice's totals: %v", sum)
+	}
+	// Bob's own bill with the same reference shape is unaffected by alice's payment.
+	bobID := billID0(e, e.addBill("bob", nil))
+	e.mustConfirm("bob", map[string]any{"bill_id": bobID})
+}
+
+func TestConfirmBillIDValidated(t *testing.T) {
+	e := newEnv(t)
+	for _, id := range []string{"", "abc", "1' OR '1'='1"} {
+		if _, text, isErr := e.confirm("alice", map[string]any{"bill_id": id}); !isErr || !strings.Contains(text, "bill_id must be a bill id") {
+			t.Errorf("bill_id %q: isErr=%v %q", id, isErr, text)
+		}
+	}
+	if _, text, isErr := e.confirm("alice", map[string]any{"bill_id": "00000000-0000-0000-0000-000000000099"}); !isErr || !strings.Contains(text, "No bill") {
+		t.Errorf("unknown bill: %q", text)
+	}
+	if _, text, isErr := e.confirm("alice", map[string]any{"bill_id": "x", "surprise": 1}); !isErr || !strings.Contains(text, "Invalid arguments") {
+		t.Errorf("unknown argument: %q", text)
+	}
+}

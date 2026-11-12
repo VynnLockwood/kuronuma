@@ -522,10 +522,10 @@ func TestScopes(t *testing.T) {
 		}
 		return strings.Join(n, ",")
 	}
-	if got := names("reader"); got != "list_transactions,get_spending_summary,list_payee_rules,list_bills" {
+	if got := names("reader"); got != "list_transactions,get_spending_summary,list_payee_rules,list_bills,monthly_bills_summary" {
 		t.Fatalf("read-only token sees: %s", got)
 	}
-	if got := names("alice"); got != "add_transaction,list_transactions,get_spending_summary,delete_transaction,set_payee_rule,list_payee_rules,delete_payee_rule,add_bill,list_bills,update_bill,end_bill,delete_bill" {
+	if got := names("alice"); got != "add_transaction,list_transactions,get_spending_summary,delete_transaction,set_payee_rule,list_payee_rules,delete_payee_rule,add_bill,list_bills,update_bill,end_bill,delete_bill,confirm_bill_payment,monthly_bills_summary" {
 		t.Fatalf("full token sees: %s", got)
 	}
 
@@ -549,6 +549,7 @@ func TestScopes(t *testing.T) {
 			"get_spending_summary": {true, false}, "delete_transaction": {false, true},
 			"set_payee_rule": {false, false}, "list_payee_rules": {true, false}, "delete_payee_rule": {false, true},
 			"add_bill": {false, false}, "list_bills": {true, false}, "update_bill": {false, false}, "end_bill": {false, false}, "delete_bill": {false, true},
+			"confirm_bill_payment": {false, false}, "monthly_bills_summary": {true, false},
 		}[tool["name"].(string)]
 		if ann["readOnlyHint"] != want[0] || ann["destructiveHint"] != want[1] {
 			t.Errorf("%v annotations = %v, want readOnly=%v destructive=%v", tool["name"], ann, want[0], want[1])
