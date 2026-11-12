@@ -43,6 +43,13 @@ function shiftMonth(ym: string, n: number): string {
   return `${Math.floor(idx / 12)}-${String((idx % 12) + 1).padStart(2, "0")}`;
 }
 
+/** The latest day a payment for the month can have: the month's last day, or today if that comes first. */
+function maxPayDate(ym: string, today: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  const last = `${ym}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+  return last < today ? last : today;
+}
+
 function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -103,14 +110,23 @@ export function Bills() {
     return r.data;
   }
 
-  // Mark paid: the planned amount, no date; the server applies its own rules for the date.
+  // Mark paid: the planned amount. A date is sent only when the user picked one; the server applies its own rules for it.
+  // The date field is always shown for a month other than this one, and after any refusal for the current one.
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [payDates, setPayDates] = useState<Record<string, string>>({});
+  const [dateShown, setDateShown] = useState<Record<string, boolean>>({});
+  const today = localISODate(new Date());
   async function markPaid(b: Bill) {
+    const key = `${month}:${b.id}`;
+    const date = payDates[key];
     setBusyId(b.id);
     setMessage(null);
-    const d = await run<{ status?: string; message?: string }>("confirm_bill_payment", { bill_id: b.id, month, amount: b.amount });
+    const d = await run<{ status?: string; message?: string }>("confirm_bill_payment", { bill_id: b.id, month, amount: b.amount, ...(date && { date }) });
     setBusyId(null);
-    if (!d) return;
+    if (!d) {
+      setDateShown((s) => ({ ...s, [key]: true }));
+      return;
+    }
     setMessage(d.status === "already_paid" ? { kind: "info", text: d.message ?? c.statusPaid } : { kind: "ok", text: c.markedPaid });
     refresh();
   }
@@ -329,7 +345,19 @@ export function Bills() {
                         <Badge variant={b.paid ? "success" : "muted"}>{b.paid ? c.statusPaid : c.statusUnpaid}</Badge>
                       </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap items-end gap-2">
+                      {!b.paid && (month !== thisMonth || dateShown[`${month}:${b.id}`]) && (
+                        <Field id={`bl-paid-${b.id}`} label={c.payDate} hint={c.payDateHint}>
+                          <Input
+                            id={`bl-paid-${b.id}`}
+                            type="date"
+                            min={`${month}-01`}
+                            max={maxPayDate(month, today)}
+                            value={payDates[`${month}:${b.id}`] ?? ""}
+                            onChange={(e) => setPayDates((s) => ({ ...s, [`${month}:${b.id}`]: e.target.value }))}
+                          />
+                        </Field>
+                      )}
                       {!b.paid && (
                         <Button size="sm" className="h-10" aria-label={c.markPaidLabel(b.name, shown)} disabled={busyId !== null} onClick={() => void markPaid(b)}>
                           {busyId === b.id ? c.marking : c.markPaid}

@@ -157,6 +157,8 @@ export type DashboardCopy = {
     markPaidLabel: (name: string, amount: string) => string;
     marking: string;
     markedPaid: string;
+    payDate: string;
+    payDateHint: string;
     edit: string;
     editLabel: (name: string) => string;
     end: string;
@@ -393,6 +395,8 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       markPaidLabel: (n, a) => `Mark ${n}, ${a}, as paid`,
       marking: "Saving…",
       markedPaid: "Marked as paid.",
+      payDate: "Date paid",
+      payDateHint: "Pick a day in this month, no later than today.",
       edit: "Edit",
       editLabel: (n) => `Edit ${n}`,
       end: "End",
@@ -627,6 +631,8 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       markPaidLabel: (n, a) => `ทำเครื่องหมายว่าจ่าย ${n} ${a} แล้ว`,
       marking: "กำลังบันทึก…",
       markedPaid: "บันทึกว่าจ่ายแล้ว",
+      payDate: "วันที่จ่าย",
+      payDateHint: "เลือกวันในเดือนนี้ ไม่เกินวันนี้",
       edit: "แก้ไข",
       editLabel: (n) => `แก้ไข ${n}`,
       end: "สิ้นสุด",
