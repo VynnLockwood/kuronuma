@@ -91,9 +91,14 @@ func (p *Postgres) UpdateBill(ctx context.Context, userID, id string, patch plut
 	return b, err == nil, err
 }
 
-// DeleteBill removes the user's bill and reports whether it existed.
+// DeleteBill removes the user's bill unless it has a payment, in one statement so a payment confirmed at the
+// same moment cannot be lost. It reports whether a row was deleted; false means no such bill or it has payments.
 func (p *Postgres) DeleteBill(ctx context.Context, userID, id string) (bool, error) {
-	tag, err := p.pool.Exec(ctx, `DELETE FROM bills WHERE user_id = $1::uuid AND id = $2::uuid`, userID, id)
+	tag, err := p.pool.Exec(ctx, `
+		DELETE FROM bills b
+		 WHERE b.user_id = $1::uuid AND b.id = $2::uuid
+		   AND NOT EXISTS (SELECT 1 FROM transactions t
+		                    WHERE t.user_id = $1::uuid AND starts_with(t.reference, 'bill:' || b.id::text || ':'))`, userID, id)
 	if err != nil {
 		return false, err
 	}
@@ -107,12 +112,13 @@ func (p *Postgres) CountBills(ctx context.Context, userID string) (int, error) {
 	return n, err
 }
 
-// HasPayments reports whether the user has a transaction whose reference starts with bill:<billID>:.
+// HasPayments reports whether the user has a transaction whose reference starts with bill:<billID>:. The prefix is
+// compared as plain text (no wildcards), so billID must be lowercase, as the plutus tools make it.
 func (p *Postgres) HasPayments(ctx context.Context, userID, billID string) (bool, error) {
 	var ok bool
 	err := p.pool.QueryRow(ctx, `
 		SELECT EXISTS (SELECT 1 FROM transactions
-		                WHERE user_id = $1::uuid AND reference LIKE 'bill:' || $2::text || ':%')`,
+		                WHERE user_id = $1::uuid AND starts_with(reference, 'bill:' || $2::text || ':'))`,
 		userID, billID).Scan(&ok)
 	return ok, err
 }

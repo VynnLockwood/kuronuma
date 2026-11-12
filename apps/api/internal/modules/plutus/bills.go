@@ -82,7 +82,7 @@ func BillReference(billID string, month time.Time) string {
 
 // Totals sums the bills that count in month per currency, sorted by currency.
 // payments is keyed by payment reference; a bill is paid when its reference is
-// present, and the paid amount is that transaction's amount.
+// present with the bill's currency, and the paid amount is that transaction's amount.
 func Totals(bills []Bill, month time.Time, payments map[string]Transaction) []BillTotal {
 	byCurrency := map[string]*BillTotal{}
 	for _, b := range bills {
@@ -95,7 +95,8 @@ func Totals(bills []Bill, month time.Time, payments map[string]Transaction) []Bi
 			byCurrency[b.Currency] = t
 		}
 		t.PlannedMinor += b.AmountMinor
-		if p, ok := payments[BillReference(b.ID, month)]; ok {
+		// A payment in another currency is not a payment of this bill, so it never counts as paid.
+		if p, ok := payments[BillReference(b.ID, month)]; ok && p.Currency == b.Currency {
 			t.PaidMinor += p.AmountMinor
 			t.Paid++
 		} else {

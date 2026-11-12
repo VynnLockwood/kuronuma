@@ -21,6 +21,9 @@ const (
 	msgBillNotFound    = "No bill with that id was found. list_bills shows the user's bills."
 	msgBillHasPayments = "Sorry, this bill has confirmed payments, so it cannot be deleted. Use end_bill to stop it counting from a month instead."
 	msgBillAlreadyPaid = "Just so you know, this bill is already confirmed as paid for %s, so nothing new was saved."
+	msgBillEndNotAfter = "Sorry, the end month must be after the start month (%s). Choose a later month."
+	msgBillFuture      = "Sorry, %s is in the future, so a payment cannot be confirmed for it yet. Only the current month and earlier months can be confirmed."
+	msgBillFutureDate  = "date is in the future. Check the date with the user."
 	msgBillNeedsDate   = "Sorry, %s is not the current month, so there is no default date. Ask the user which day they paid and call again with date (YYYY-MM-DD, within %s)."
 )
 
@@ -160,17 +163,19 @@ type listedBill struct {
 	HasPayments bool   `json:"has_payments"`
 }
 
-// billID validates a bill id before any store call.
+// billID validates a bill id before any store call and lowercases it: the database writes ids in lowercase and
+// the payment references built from them are compared as text, so an uppercase id must never reach the store.
 func billID(s string) (string, error) {
 	id := strings.TrimSpace(s)
 	if !reUUID.MatchString(id) {
 		return "", hermes.Errorf("bill_id must be a bill id from list_bills.")
 	}
-	return id, nil
+	return strings.ToLower(id), nil
 }
 
 // billName cleans a bill name; it refuses an empty one and one longer than the limit rather than cutting it.
 func billName(s string) (string, error) {
+	// The 101 is deliberate: an over-long name is refused rather than cut, and users see a limit of 100.
 	name := hermes.Untrusted(s, maxBillNameLen+1)
 	switch {
 	case name == "":
@@ -346,9 +351,10 @@ func (m *Module) updateBill(ctx context.Context, c hermes.Caller, raw json.RawMe
 	if !found {
 		return "", hermes.Errorf(msgBillNotFound)
 	}
-	// A start month after the month the bill ends would hit the database CHECK; say it in plain words instead.
-	if p.StartMonth != nil && cur.EndedFrom != nil && !p.ClearEnded && p.StartMonth.After(MonthStart(*cur.EndedFrom)) {
-		return "", hermes.Errorf("start_month %s is after the month this bill ends (%s). Choose an earlier start, or set clear_ended to true to undo the ending.",
+	// A start month that is not before the month the bill ends would hit the database CHECK (a bill that
+	// starts and ends in the same month counts in no month); say it in plain words instead.
+	if p.StartMonth != nil && cur.EndedFrom != nil && !p.ClearEnded && !p.StartMonth.Before(MonthStart(*cur.EndedFrom)) {
+		return "", hermes.Errorf("start_month %s is not before the month this bill ends (%s). Choose an earlier start, or set clear_ended to true to undo the ending.",
 			p.StartMonth.Format(monthLayout), cur.EndedFrom.Format(monthLayout))
 	}
 	// Nothing is created until every check has passed.
@@ -396,9 +402,9 @@ func (m *Module) endBill(ctx context.Context, c hermes.Caller, raw json.RawMessa
 	if !found {
 		return "", hermes.Errorf(msgBillNotFound)
 	}
-	if ended.Before(MonthStart(cur.StartMonth)) {
-		return "", hermes.Errorf("ended_from %s is earlier than the month this bill starts (%s). Choose %s or later.",
-			ended.Format(monthLayout), cur.StartMonth.Format(monthLayout), cur.StartMonth.Format(monthLayout))
+	// Ending in the start month would leave a bill that counts in no month, so it must be strictly later.
+	if !ended.After(MonthStart(cur.StartMonth)) {
+		return "", hermes.Errorf(msgBillEndNotAfter, cur.StartMonth.Format(monthLayout))
 	}
 	b, found, err := m.store.UpdateBill(ctx, c.UserID, id, BillPatch{EndedFrom: &ended})
 	if err != nil {
@@ -421,18 +427,22 @@ func (m *Module) deleteBill(ctx context.Context, c hermes.Caller, raw json.RawMe
 	if err != nil {
 		return "", err
 	}
-	paid, err := m.store.HasPayments(ctx, c.UserID, id)
-	if err != nil {
-		return "", err
-	}
-	if paid {
-		return "", hermes.Errorf(msgBillHasPayments)
-	}
+	// DeleteBill refuses atomically when a payment exists; when it deletes nothing, say why.
 	deleted, err := m.store.DeleteBill(ctx, c.UserID, id)
 	if err != nil {
 		return "", err
 	}
 	if !deleted {
+		if _, found, err := m.store.GetBill(ctx, c.UserID, id); err != nil {
+			return "", err
+		} else if !found {
+			return "", hermes.Errorf(msgBillNotFound)
+		}
+		if paid, err := m.store.HasPayments(ctx, c.UserID, id); err != nil {
+			return "", err
+		} else if paid {
+			return "", hermes.Errorf(msgBillHasPayments)
+		}
 		return "", hermes.Errorf(msgBillNotFound)
 	}
 	return hermes.Respond(map[string]any{"status": "deleted", "id": id})
@@ -533,8 +543,10 @@ func (m *Module) confirmBillPayment(ctx context.Context, c hermes.Caller, raw js
 			return "", hermes.Errorf("date must be within %s, the month being confirmed.", label)
 		}
 		if date.After(today.AddDate(0, 0, 1)) {
-			return "", hermes.Errorf("date is in the future. Check the date with the user.")
+			return "", hermes.Errorf(msgBillFutureDate)
 		}
+	} else if month.After(MonthStart(today)) {
+		return "", hermes.Errorf(msgBillFuture, label)
 	} else if !MonthStart(today).Equal(month) {
 		return "", hermes.Errorf(msgBillNeedsDate, label, label)
 	}

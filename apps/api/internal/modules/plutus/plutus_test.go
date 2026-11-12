@@ -169,7 +169,7 @@ func (m *memStore) AddBill(_ context.Context, userID string, b NewBill) (Bill, e
 	defer m.mu.Unlock()
 	m.billSeq++
 	bill := Bill{
-		ID:   fmt.Sprintf("00000000-0000-0000-0001-%012d", m.billSeq),
+		ID:   fmt.Sprintf("0000abcd-0000-0000-0001-%012d", m.billSeq),
 		Name: b.Name, AmountMinor: b.AmountMinor, Currency: b.Currency, Category: b.Category, StartMonth: b.StartMonth,
 	}
 	if m.bills == nil {
@@ -234,11 +234,15 @@ func (m *memStore) UpdateBill(_ context.Context, userID, id string, p BillPatch)
 	return Bill{}, false, nil
 }
 
+// DeleteBill mirrors the Postgres statement: nothing is deleted when a payment with the exact reference prefix exists.
 func (m *memStore) DeleteBill(_ context.Context, userID, id string) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for i, b := range m.bills[userID] {
 		if b.ID == id {
+			if m.hasPaymentsLocked(userID, b.ID) {
+				return false, nil
+			}
 			m.bills[userID] = append(m.bills[userID][:i], m.bills[userID][i+1:]...)
 			return true, nil
 		}
@@ -255,13 +259,18 @@ func (m *memStore) CountBills(_ context.Context, userID string) (int, error) {
 func (m *memStore) HasPayments(_ context.Context, userID, billID string) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	return m.hasPaymentsLocked(userID, billID), nil
+}
+
+// hasPaymentsLocked is an exact, case-sensitive prefix match with no wildcards, like starts_with in Postgres.
+func (m *memStore) hasPaymentsLocked(userID, billID string) bool {
 	prefix := "bill:" + billID + ":"
 	for _, r := range m.rows {
 		if r.userID == userID && strings.HasPrefix(r.tx.Reference, prefix) {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
 
 func (m *memStore) PaymentsByReference(_ context.Context, userID string, refs []string) (map[string]Transaction, error) {
@@ -752,5 +761,22 @@ func TestAtTheCapARepeatedReferenceIsNotAnError(t *testing.T) {
 	}
 	if _, text, isErr := e.call("alice", "add_transaction", base(map[string]any{"reference": "SLIP-2"})); !isErr || !strings.Contains(text, "delete") {
 		t.Fatalf("a new slip at the cap must be refused: isErr=%v %q", isErr, text)
+	}
+}
+
+// References starting with bill: belong to confirm_bill_payment; a manual record with one could fake a paid bill.
+func TestAddTransactionRefusesTheReservedBillReference(t *testing.T) {
+	e := newEnv(t)
+	for _, ref := range []string{"bill:abc:2026-10", "BILL:abc", "  bill:x"} {
+		_, text, isErr := e.call("alice", "add_transaction", base(map[string]any{"reference": ref}))
+		if !isErr || !strings.Contains(text, "reserved for bill payments") || !strings.Contains(text, "confirm_bill_payment") {
+			t.Errorf("reference %q: isErr=%v %q", ref, isErr, text)
+		}
+	}
+	if e.store.count("alice") != 0 {
+		t.Fatal("a refused record must not be saved")
+	}
+	if got := e.add("alice", base(map[string]any{"reference": "billing-1"})); got["status"] != "saved" {
+		t.Fatalf("a reference that only starts with the letters bill is fine: %v", got)
 	}
 }

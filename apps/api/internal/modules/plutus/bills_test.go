@@ -100,6 +100,19 @@ func TestTotalsPerCurrencyAndPaid(t *testing.T) {
 	}
 }
 
+func TestTotalsIgnoresPaymentInOtherCurrency(t *testing.T) {
+	nov := m(2026, 11)
+	bills := []Bill{{ID: "rent", AmountMinor: 1200000, Currency: "THB", StartMonth: m(2026, 1)}}
+	payments := map[string]Transaction{
+		BillReference("rent", nov): {AmountMinor: 1200000, Currency: "USD"},
+	}
+	got := Totals(bills, nov, payments)
+	want := BillTotal{Currency: "THB", PlannedMinor: 1200000, PaidMinor: 0, Paid: 0, Unpaid: 1}
+	if len(got) != 1 || got[0] != want {
+		t.Fatalf("Totals = %+v, want [%+v]", got, want)
+	}
+}
+
 func TestTotalsEmpty(t *testing.T) {
 	got := Totals(nil, m(2026, 11), nil)
 	if got == nil || len(got) != 0 {

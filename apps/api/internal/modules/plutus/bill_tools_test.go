@@ -233,17 +233,25 @@ func TestEndBill(t *testing.T) {
 	if isErr || data["status"] != "ended" || data["bill"].(map[string]any)["ended_from"] != "2026-12" {
 		t.Fatalf("end_bill: isErr=%v %s", isErr, text)
 	}
-	// D3: earlier than start_month is refused in plain words, and the bill is unchanged.
+	// D3: not after start_month is refused in plain words, and the bill is unchanged.
 	_, text, isErr = e.call("alice", "end_bill", map[string]any{"bill_id": id, "ended_from": "2026-04"})
-	if !isErr || !strings.Contains(text, "earlier than the month this bill starts") {
+	if !isErr || !strings.Contains(text, "end month must be after the start month") {
 		t.Fatalf("ended_from before start: isErr=%v %q", isErr, text)
 	}
 	if got, _, _ := e.store.GetBill(context.Background(), "alice", id); got.EndedFrom == nil || !got.EndedFrom.Equal(m(2026, 12)) {
 		t.Fatalf("refused end changed the bill: %+v", got)
 	}
-	// The same month as the start is allowed (the bill never counts).
-	if _, text, isErr := e.call("alice", "end_bill", map[string]any{"bill_id": id, "ended_from": "2026-05"}); isErr {
-		t.Fatalf("ended_from == start_month: %s", text)
+	// The same month as the start is refused too: the bill would count in no month and disappear.
+	_, text, isErr = e.call("alice", "end_bill", map[string]any{"bill_id": id, "ended_from": "2026-05"})
+	if !isErr || !strings.Contains(text, "end month must be after the start month") {
+		t.Fatalf("ended_from == start_month: isErr=%v %q", isErr, text)
+	}
+	if got, _, _ := e.store.GetBill(context.Background(), "alice", id); got.EndedFrom == nil || !got.EndedFrom.Equal(m(2026, 12)) {
+		t.Fatalf("refused end changed the bill: %+v", got)
+	}
+	// The month after the start is the earliest valid ending.
+	if _, text, isErr := e.call("alice", "end_bill", map[string]any{"bill_id": id, "ended_from": "2026-06"}); isErr {
+		t.Fatalf("ended_from the month after start: %s", text)
 	}
 	if _, _, isErr := e.call("alice", "end_bill", map[string]any{"bill_id": id, "ended_from": "soon"}); !isErr {
 		t.Fatal("a bad month must be refused")
@@ -272,13 +280,43 @@ func TestDeleteBill(t *testing.T) {
 	}
 
 	paid := billID0(e, e.addBill("alice", map[string]any{"name": "Paid"}))
-	e.add("alice", base(map[string]any{"reference": BillReference(paid, m(2026, 10))}))
+	e.mustConfirm("alice", map[string]any{"bill_id": paid})
 	_, text, isErr := e.call("alice", "delete_bill", map[string]any{"bill_id": paid})
 	if !isErr || !strings.Contains(text, "end_bill") {
 		t.Fatalf("delete with a payment: isErr=%v %q", isErr, text)
 	}
 	if e.billCount("alice") != 1 {
 		t.Fatal("a refused delete must keep the bill")
+	}
+}
+
+// An uppercase bill id must reach the store in lowercase, or the payment check and the lookup would disagree.
+func TestBillIDIsLowercasedBeforeTheStore(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"name": "Paid", "start_month": "2026-09"}))
+	upper := strings.ToUpper(id)
+	if upper == id {
+		t.Fatalf("the test needs an id with letters: %s", id)
+	}
+	e.mustConfirm("alice", map[string]any{"bill_id": upper})
+	if e.store.count("alice") != 1 {
+		t.Fatal("the payment should be saved for the bill")
+	}
+	if _, text, isErr := e.call("alice", "delete_bill", map[string]any{"bill_id": upper}); !isErr || !strings.Contains(text, "end_bill") {
+		t.Fatalf("an uppercase id must not delete a bill with payments: isErr=%v %q", isErr, text)
+	}
+	if e.billCount("alice") != 1 {
+		t.Fatal("the paid bill must still exist")
+	}
+	if data, text, isErr := e.call("alice", "update_bill", map[string]any{"bill_id": upper, "name": "Renamed"}); isErr || data["bill"].(map[string]any)["id"] != id {
+		t.Fatalf("update_bill with an uppercase id: %q", text)
+	}
+	if data, text, isErr := e.call("alice", "end_bill", map[string]any{"bill_id": upper, "ended_from": "2026-12"}); isErr || data["bill"].(map[string]any)["id"] != id {
+		t.Fatalf("end_bill with an uppercase id: %q", text)
+	}
+	free := billID0(e, e.addBill("alice", map[string]any{"name": "Free"}))
+	if data, text, isErr := e.call("alice", "delete_bill", map[string]any{"bill_id": strings.ToUpper(free)}); isErr || data["id"] != free {
+		t.Fatalf("an unpaid bill is deleted by its uppercase id, and the result shows the lowercase id: %q", text)
 	}
 }
 
@@ -504,19 +542,37 @@ func TestConfirmDateOutsideMonthRefused(t *testing.T) {
 	}
 }
 
-func TestConfirmNoDateOutsideCurrentMonthAsksForDate(t *testing.T) {
+func TestConfirmNoDateForPastMonthAsksForDate(t *testing.T) {
 	e := newEnv(t)
 	id := billID0(e, e.addBill("alice", map[string]any{"start_month": "2026-06"}))
-	for _, month := range []string{"2026-09", "2026-11"} {
-		_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": month})
-		if !isErr || !strings.Contains(text, "date") || !strings.Contains(text, month) {
-			t.Errorf("%s: isErr=%v %q", month, isErr, text)
-		}
+	_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": "2026-09"})
+	if !isErr || !strings.Contains(text, "Ask the user which day") || !strings.Contains(text, "2026-09") {
+		t.Errorf("past month without a date: isErr=%v %q", isErr, text)
 	}
 	if e.store.count("alice") != 0 {
 		t.Fatal("a refused confirmation must not save")
 	}
 	e.mustConfirm("alice", map[string]any{"bill_id": id, "month": "2026-09", "date": "2026-09-30"})
+}
+
+// A month after the current one cannot be confirmed: with no date the answer says it is in the future (not "ask for
+// a date", which would send the assistant into a dead end), and a date more than a day ahead is refused.
+func TestConfirmFutureMonthRefused(t *testing.T) {
+	e := newEnv(t)
+	id := billID0(e, e.addBill("alice", map[string]any{"start_month": "2026-06"}))
+	_, text, isErr := e.confirm("alice", map[string]any{"bill_id": id, "month": "2026-11"})
+	if !isErr || !strings.Contains(text, "in the future") || strings.Contains(text, "Ask the user which day") {
+		t.Errorf("future month without a date: isErr=%v %q", isErr, text)
+	}
+	_, text, isErr = e.confirm("alice", map[string]any{"bill_id": id, "month": "2026-11", "date": "2026-11-05"})
+	if !isErr || !strings.Contains(text, "date is in the future") {
+		t.Errorf("future date: isErr=%v %q", isErr, text)
+	}
+	if e.store.count("alice") != 0 {
+		t.Fatal("a refused confirmation must not save")
+	}
+	// The one-day slack stays: the test clock is 2026-10-30, so 2026-10-31 is accepted.
+	e.mustConfirm("alice", map[string]any{"bill_id": id, "date": "2026-10-31"})
 }
 
 func TestConfirmAmountTooPreciseRefused(t *testing.T) {

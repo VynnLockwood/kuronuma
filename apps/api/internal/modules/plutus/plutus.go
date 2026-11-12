@@ -17,6 +17,7 @@ import (
 // Fixed sentences Plutus writes itself, in Kuronuma's voice: gentle, short, no user text, and each still says what
 // happened and what to do next. Facts and instructions to the assistant must not be softened away.
 const (
+	msgReferenceReserved = "Sorry, references starting with bill: are reserved for bill payments. Use confirm_bill_payment to record a bill payment, or leave the reference out."
 	msgRefExists         = "Just so you know, a record with this reference already exists, so nothing new was saved."
 	msgPossibleDuplicate = "Sorry, a record with the same amount, currency, date and merchant already exists, so nothing was saved. Ask the user whether this is a separate payment; if so, call again with allow_duplicate=true."
 	msgTransactionLimit  = "Sorry, the user already has %d transactions, the most Kuronuma keeps. Ask the user whether to delete some with delete_transaction."
@@ -287,6 +288,10 @@ func (m *Module) add(ctx context.Context, c hermes.Caller, raw json.RawMessage) 
 	currency := strings.ToUpper(strings.TrimSpace(a.Currency))
 	if !reCurrency.MatchString(currency) {
 		return "", hermes.Errorf("currency must be a 3-letter ISO 4217 code such as THB.")
+	}
+	// References starting with bill: belong to confirm_bill_payment; a manual one could fake a paid bill.
+	if strings.HasPrefix(strings.ToLower(hermes.Untrusted(a.Reference, 100)), "bill:") {
+		return "", hermes.Errorf(msgReferenceReserved)
 	}
 	merchant := hermes.Untrusted(a.Merchant, 100)
 	if merchant == "" {

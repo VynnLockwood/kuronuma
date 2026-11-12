@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -97,6 +98,10 @@ func TestPostgresBills(t *testing.T) {
 	if _, _, err := db.UpdateBill(ctx, alice, rent.ID, plutus.BillPatch{EndedFrom: ptrTime(billMonth(2025, time.December))}); err == nil {
 		t.Fatal("ended_from before start_month should be rejected")
 	}
+	// ended_from equal to start_month would leave a bill that counts in no month, so the table refuses it too.
+	if _, _, err := db.UpdateBill(ctx, alice, rent.ID, plutus.BillPatch{EndedFrom: &jan}); err == nil {
+		t.Fatal("ended_from equal to start_month should be rejected")
+	}
 
 	// Payments: only the requested references come back; HasPayments follows the reference prefix.
 	if _, _, err := db.AddTransaction(ctx, alice, plutus.NewTransaction{
@@ -157,6 +162,50 @@ func TestPostgresBills(t *testing.T) {
 	if _, ok, err := db.GetBill(ctx, alice, internetID); err != nil || ok {
 		t.Fatalf("deleted bill still found: ok=%v err=%v", ok, err)
 	}
+}
+
+// A bill with a payment cannot be deleted, even when the id is written in uppercase: the guard is part of the
+// DELETE statement and compares the reference as plain text against the stored lowercase id.
+func TestPostgresDeleteBillRefusesWhenPaid(t *testing.T) {
+	db, newUser := billsTestDB(t)
+	ctx := context.Background()
+	alice := newUser()
+	jan := billMonth(2026, time.January)
+
+	b, err := db.AddBill(ctx, alice, plutus.NewBill{Name: "Rent", AmountMinor: 1200000, Currency: "THB", Category: "housing", StartMonth: jan})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, created, err := db.AddTransaction(ctx, alice, plutus.NewTransaction{
+		AmountMinor: 1200000, Currency: "THB", Merchant: "Rent", Category: "housing",
+		OccurredOn: jan, Reference: plutus.BillReference(b.ID, jan)}); err != nil || !created {
+		t.Fatalf("payment: created=%v err=%v", created, err)
+	}
+	for _, id := range []string{b.ID, strings.ToUpper(b.ID)} {
+		if ok, err := db.DeleteBill(ctx, alice, id); err != nil || ok {
+			t.Fatalf("DeleteBill(%q) = %v err=%v, want false: the bill has a payment", id, ok, err)
+		}
+	}
+	if _, ok, err := db.GetBill(ctx, alice, b.ID); err != nil || !ok {
+		t.Fatalf("the paid bill must still exist: ok=%v err=%v", ok, err)
+	}
+
+	// Once the payment is gone the bill can be deleted.
+	if ok, err := db.DeleteTransaction(ctx, alice, mustTxID(t, db, alice, plutus.BillReference(b.ID, jan))); err != nil || !ok {
+		t.Fatalf("delete payment: ok=%v err=%v", ok, err)
+	}
+	if ok, err := db.DeleteBill(ctx, alice, strings.ToUpper(b.ID)); err != nil || !ok {
+		t.Fatalf("DeleteBill without payments = %v err=%v, want true", ok, err)
+	}
+}
+
+func mustTxID(t *testing.T, db *Postgres, userID, ref string) string {
+	t.Helper()
+	tx, found, err := db.TransactionByReference(context.Background(), userID, ref)
+	if err != nil || !found {
+		t.Fatalf("payment %q: found=%v err=%v", ref, found, err)
+	}
+	return tx.ID
 }
 
 func ptrTime(t time.Time) *time.Time { return &t }

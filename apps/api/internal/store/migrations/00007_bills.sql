@@ -1,5 +1,6 @@
 -- +goose Up
 -- Fixed monthly bills. A bill counts in every month from start_month up to, but not including, ended_from.
+-- A bill must end after the month it starts, or it would count in no month.
 -- Months are stored as first-day-of-month dates. Payments are ordinary transactions whose reference is
 -- bill:<id>:<YYYY-MM>.
 CREATE TABLE bills (
@@ -13,7 +14,7 @@ CREATE TABLE bills (
     ended_from   date,
     created_at   timestamptz NOT NULL DEFAULT now(),
     updated_at   timestamptz NOT NULL DEFAULT now(),
-    CHECK (ended_from IS NULL OR ended_from >= start_month)
+    CHECK (ended_from IS NULL OR ended_from > start_month)
 );
 CREATE INDEX bills_user_idx ON bills (user_id);
 
