@@ -111,11 +111,13 @@ export function Bills() {
   }
 
   // Mark paid: the planned amount. A date is sent only when the user picked one; the server applies its own rules for it.
-  // The date field is always shown for a month other than this one, and after any refusal for the current one.
+  // The date field is always shown for an earlier month, and after any refusal for the current one.
   const [busyId, setBusyId] = useState<string | null>(null);
   const [payDates, setPayDates] = useState<Record<string, string>>({});
   const [dateShown, setDateShown] = useState<Record<string, boolean>>({});
   const today = localISODate(new Date());
+  // A month after this one cannot be confirmed (the server refuses it), so it gets no Mark paid button or date field.
+  const futureMonth = month > thisMonth;
   async function markPaid(b: Bill) {
     const key = `${month}:${b.id}`;
     const date = payDates[key];
@@ -346,7 +348,7 @@ export function Bills() {
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-end gap-2">
-                      {!b.paid && (month !== thisMonth || dateShown[`${month}:${b.id}`]) && (
+                      {!b.paid && !futureMonth && (month !== thisMonth || dateShown[`${month}:${b.id}`]) && (
                         <Field id={`bl-paid-${b.id}`} label={c.payDate} hint={c.payDateHint}>
                           <Input
                             id={`bl-paid-${b.id}`}
@@ -358,7 +360,7 @@ export function Bills() {
                           />
                         </Field>
                       )}
-                      {!b.paid && (
+                      {!b.paid && !futureMonth && (
                         <Button size="sm" className="h-10" aria-label={c.markPaidLabel(b.name, shown)} disabled={busyId !== null} onClick={() => void markPaid(b)}>
                           {busyId === b.id ? c.marking : c.markPaid}
                         </Button>
