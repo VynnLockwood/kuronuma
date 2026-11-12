@@ -203,6 +203,7 @@ func (m *Module) Register(s *hermes.Server) {
 		Handler:     m.delete,
 	})
 	m.registerPayeeTools(s)
+	m.registerBillTools(s)
 }
 
 // amount accepts a JSON number or a string, so a value like "1,000" reaches parseMinor
