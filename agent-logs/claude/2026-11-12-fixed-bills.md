@@ -48,7 +48,7 @@ Decisions made while planning, as built:
 - D4: `confirm_bill_payment` applies the 50,000 transaction cap.
 - D5: `update_bill` takes `clear_ended` to undo an ending; `end_bill` takes `ended_from`.
 
-D1 to D5 were put to the owner in the plan's handoff for confirmation; the plan did not record an answer, so treat them as proposed until the owner confirms.
+D1 to D5 were approved with the plan on 2026-11-12.
 
 ## Next steps
 - Run CI on a PR (Go vet and race tests, Postgres tests, web build) and fix what it finds; run goose up, down, up for 00007 and a browser smoke test of the Bills tab.
