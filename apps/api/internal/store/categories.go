@@ -19,6 +19,7 @@ var categoryRefs = []struct{ table, label string }{
 	{"transactions", "spending"},
 	{"payee_rules", "payee_rules"},
 	{"memories", "memory"},
+	{"bills", "bills"},
 }
 
 // ListCategories returns the user's listed names plus every in-use name that is missing from the list.

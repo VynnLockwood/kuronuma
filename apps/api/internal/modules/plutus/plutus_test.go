@@ -32,6 +32,8 @@ type memStore struct {
 	names   map[string][]string    // per-user category list
 	rules   map[string][]PayeeRule // per-user payee rules
 	ruleSeq int
+	bills   map[string][]Bill // per-user fixed bills
+	billSeq int
 	padding map[string]int // records a user is pretended to have already, to reach a cap without inserting thousands
 }
 
@@ -160,6 +162,120 @@ func (m *memStore) DeleteTransaction(_ context.Context, userID, id string) (bool
 		}
 	}
 	return false, nil
+}
+
+func (m *memStore) AddBill(_ context.Context, userID string, b NewBill) (Bill, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.billSeq++
+	bill := Bill{
+		ID:   fmt.Sprintf("00000000-0000-0000-0001-%012d", m.billSeq),
+		Name: b.Name, AmountMinor: b.AmountMinor, Currency: b.Currency, Category: b.Category, StartMonth: b.StartMonth,
+	}
+	if m.bills == nil {
+		m.bills = map[string][]Bill{}
+	}
+	m.bills[userID] = append(m.bills[userID], bill)
+	return bill, nil
+}
+
+func (m *memStore) GetBill(_ context.Context, userID, id string) (Bill, bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, b := range m.bills[userID] {
+		if b.ID == id {
+			return b, true, nil
+		}
+	}
+	return Bill{}, false, nil
+}
+
+func (m *memStore) ListBills(_ context.Context, userID string) ([]Bill, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := append([]Bill(nil), m.bills[userID]...)
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Name != out[j].Name {
+			return out[i].Name < out[j].Name
+		}
+		return out[i].ID < out[j].ID
+	})
+	return out, nil
+}
+
+func (m *memStore) UpdateBill(_ context.Context, userID, id string, p BillPatch) (Bill, bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i, b := range m.bills[userID] {
+		if b.ID != id {
+			continue
+		}
+		if p.Name != nil {
+			b.Name = *p.Name
+		}
+		if p.Category != nil {
+			b.Category = *p.Category
+		}
+		if p.AmountMinor != nil {
+			b.AmountMinor = *p.AmountMinor
+		}
+		if p.StartMonth != nil {
+			b.StartMonth = *p.StartMonth
+		}
+		if p.ClearEnded {
+			b.EndedFrom = nil
+		} else if p.EndedFrom != nil {
+			e := *p.EndedFrom
+			b.EndedFrom = &e
+		}
+		m.bills[userID][i] = b
+		return b, true, nil
+	}
+	return Bill{}, false, nil
+}
+
+func (m *memStore) DeleteBill(_ context.Context, userID, id string) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i, b := range m.bills[userID] {
+		if b.ID == id {
+			m.bills[userID] = append(m.bills[userID][:i], m.bills[userID][i+1:]...)
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *memStore) CountBills(_ context.Context, userID string) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return len(m.bills[userID]), nil
+}
+
+func (m *memStore) HasPayments(_ context.Context, userID, billID string) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	prefix := "bill:" + billID + ":"
+	for _, r := range m.rows {
+		if r.userID == userID && strings.HasPrefix(r.tx.Reference, prefix) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *memStore) PaymentsByReference(_ context.Context, userID string, refs []string) (map[string]Transaction, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := map[string]Transaction{}
+	for _, ref := range refs {
+		for _, r := range m.rows {
+			if r.userID == userID && r.tx.Reference == ref {
+				out[ref] = r.tx
+			}
+		}
+	}
+	return out, nil
 }
 
 func (m *memStore) count(userID string) int {

@@ -96,6 +96,23 @@ type Store interface {
 	SetPayeeRule(ctx context.Context, userID string, r PayeeRule) (rule PayeeRule, created bool, err error)
 	// DeletePayeeRule removes the user's rule for payeeNorm and reports whether it existed.
 	DeletePayeeRule(ctx context.Context, userID, payeeNorm string) (bool, error)
+
+	// AddBill inserts a fixed monthly bill.
+	AddBill(ctx context.Context, userID string, b NewBill) (Bill, error)
+	// GetBill returns the user's bill, if any.
+	GetBill(ctx context.Context, userID, id string) (Bill, bool, error)
+	// ListBills returns all of the user's bills, ordered by name, then id.
+	ListBills(ctx context.Context, userID string) ([]Bill, error)
+	// UpdateBill applies the patch; found is false when the user has no such bill.
+	UpdateBill(ctx context.Context, userID, id string, p BillPatch) (Bill, bool, error)
+	// DeleteBill removes the bill and reports whether it existed.
+	DeleteBill(ctx context.Context, userID, id string) (bool, error)
+	// CountBills returns how many bills the user has, for the per-user cap.
+	CountBills(ctx context.Context, userID string) (int, error)
+	// HasPayments is true when a transaction with reference prefix bill:<billID>: exists.
+	HasPayments(ctx context.Context, userID, billID string) (bool, error)
+	// PaymentsByReference returns only the transactions with the listed references, keyed by reference.
+	PaymentsByReference(ctx context.Context, userID string, refs []string) (map[string]Transaction, error)
 }
 
 // Module wires the spending tools into the MCP server.
