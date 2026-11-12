@@ -7,8 +7,10 @@ import { Alert } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { callTool, type Lang } from "@/lib/web";
 import { formatAmount, formatDate, formatMonth, lastMonths, localISODate, share } from "@/lib/format";
+import { Bills } from "./Bills";
 import { BarList } from "./charts";
 import { Confirm } from "./Confirm";
 import { useDash } from "./context";
@@ -150,6 +152,16 @@ export function Spending() {
   const filtered = Boolean(from || to || category);
 
   return (
+    <Tabs defaultValue="records" className="gap-8">
+      <TabsList aria-label={copy.bills.tabsLabel} className="w-full md:w-fit">
+        <TabsTrigger value="records" className="md:flex-none md:px-5">
+          {copy.bills.records}
+        </TabsTrigger>
+        <TabsTrigger value="bills" className="md:flex-none md:px-5">
+          {copy.bills.tab}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="records">
     <div className="flex flex-col gap-12">
       {/* Totals */}
       <section aria-labelledby="sp-totals">
@@ -403,5 +415,10 @@ export function Spending() {
         onCancel={() => setDup(null)}
       />
     </div>
+      </TabsContent>
+      <TabsContent value="bills">
+        <Bills />
+      </TabsContent>
+    </Tabs>
   );
 }

@@ -135,6 +135,64 @@ export type DashboardCopy = {
       dontSave: string;
     };
   };
+  bills: {
+    tabsLabel: string;
+    records: string;
+    tab: string;
+    month: string;
+    prevMonth: string;
+    nextMonth: string;
+    totals: string;
+    planned: string;
+    paid: string;
+    counts: (paid: number, unpaid: number) => string;
+    noTotals: string;
+    listTitle: string;
+    empty: string;
+    statusPaid: string;
+    statusUnpaid: string;
+    paidOn: (amount: string, date: string) => string;
+    endsFrom: (month: string) => string;
+    markPaid: string;
+    markPaidLabel: (name: string, amount: string) => string;
+    marking: string;
+    markedPaid: string;
+    edit: string;
+    editLabel: (name: string) => string;
+    end: string;
+    endLabel: (name: string) => string;
+    deleteLabel: (name: string) => string;
+    deleteTitle: string;
+    deleteBody: (name: string) => string;
+    actionFailed: string;
+    form: {
+      addTitle: string;
+      editTitle: (name: string) => string;
+      name: string;
+      amount: string;
+      currency: string;
+      currencyLocked: string;
+      category: string;
+      categoryHint: string;
+      startMonth: string;
+      startMonthHint: string;
+      add: string;
+      save: string;
+      saving: string;
+      saved: string;
+      savedNewCategory: (name: string) => string;
+      cancel: string;
+      nothingToChange: string;
+    };
+    endForm: {
+      title: (name: string) => string;
+      from: string;
+      hint: string;
+      confirm: string;
+      ending: string;
+      ended: string;
+    };
+  };
   common: {
     retry: string;
     cancel: string;
@@ -313,6 +371,64 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         dontSave: "Don’t save",
       },
     },
+    bills: {
+      tabsLabel: "Spending sections",
+      records: "Records",
+      tab: "Bills",
+      month: "Month",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
+      totals: "Totals for the month",
+      planned: "Planned",
+      paid: "Paid",
+      counts: (p, u) => `${p} paid, ${u} not yet paid`,
+      noTotals: "No bills count in this month.",
+      listTitle: "Fixed monthly bills",
+      empty: "No bills in this month. Add one below.",
+      statusPaid: "Paid",
+      statusUnpaid: "Unpaid",
+      paidOn: (a, d) => `${a} paid on ${d}`,
+      endsFrom: (m) => `Ends from ${m}`,
+      markPaid: "Mark paid",
+      markPaidLabel: (n, a) => `Mark ${n}, ${a}, as paid`,
+      marking: "Saving…",
+      markedPaid: "Marked as paid.",
+      edit: "Edit",
+      editLabel: (n) => `Edit ${n}`,
+      end: "End",
+      endLabel: (n) => `End ${n}`,
+      deleteLabel: (n) => `Delete ${n}`,
+      deleteTitle: "Delete this bill?",
+      deleteBody: (n) => `${n} will be permanently deleted. This can’t be undone.`,
+      actionFailed: "That didn’t work",
+      form: {
+        addTitle: "Add a bill",
+        editTitle: (n) => `Edit ${n}`,
+        name: "Name",
+        amount: "Monthly amount",
+        currency: "Currency",
+        currencyLocked: "The currency can’t be changed.",
+        category: "Category",
+        categoryHint: "Pick one of yours or type a new name.",
+        startMonth: "First month",
+        startMonthHint: "Leave empty to start this month.",
+        add: "Add bill",
+        save: "Save changes",
+        saving: "Saving…",
+        saved: "Saved.",
+        savedNewCategory: (n) => `Saved. “${n}” is a new category.`,
+        cancel: "Cancel",
+        nothingToChange: "Nothing to change.",
+      },
+      endForm: {
+        title: (n) => `End ${n}`,
+        from: "First month it no longer counts",
+        hint: "Earlier months still show the bill.",
+        confirm: "End bill",
+        ending: "Ending…",
+        ended: "The bill has ended.",
+      },
+    },
     common: {
       retry: "Try again",
       cancel: "Cancel",
@@ -487,6 +603,64 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         dupBody: "มีรายการที่จำนวนเงิน สกุลเงิน วันที่ และร้านค้าเหมือนกันอยู่แล้ว นี่เป็นการจ่ายเงินคนละครั้งใช่ไหม",
         saveAnyway: "บันทึกอยู่ดี",
         dontSave: "ไม่บันทึก",
+      },
+    },
+    bills: {
+      tabsLabel: "ส่วนของค่าใช้จ่าย",
+      records: "รายการ",
+      tab: "บิล",
+      month: "เดือน",
+      prevMonth: "เดือนก่อนหน้า",
+      nextMonth: "เดือนถัดไป",
+      totals: "ยอดรวมของเดือน",
+      planned: "ที่ตั้งไว้",
+      paid: "จ่ายแล้ว",
+      counts: (p, u) => `จ่ายแล้ว ${p} ยังไม่จ่าย ${u}`,
+      noTotals: "เดือนนี้ไม่มีบิลที่นับ",
+      listTitle: "บิลประจำเดือน",
+      empty: "เดือนนี้ไม่มีบิล เพิ่มได้ด้านล่าง",
+      statusPaid: "จ่ายแล้ว",
+      statusUnpaid: "ยังไม่จ่าย",
+      paidOn: (a, d) => `จ่าย ${a} เมื่อ ${d}`,
+      endsFrom: (m) => `สิ้นสุดตั้งแต่ ${m}`,
+      markPaid: "ทำเครื่องหมายว่าจ่ายแล้ว",
+      markPaidLabel: (n, a) => `ทำเครื่องหมายว่าจ่าย ${n} ${a} แล้ว`,
+      marking: "กำลังบันทึก…",
+      markedPaid: "บันทึกว่าจ่ายแล้ว",
+      edit: "แก้ไข",
+      editLabel: (n) => `แก้ไข ${n}`,
+      end: "สิ้นสุด",
+      endLabel: (n) => `สิ้นสุด ${n}`,
+      deleteLabel: (n) => `ลบ ${n}`,
+      deleteTitle: "ลบบิลนี้ไหม",
+      deleteBody: (n) => `${n} จะถูกลบถาวร และเรียกคืนไม่ได้`,
+      actionFailed: "ดำเนินการไม่สำเร็จ",
+      form: {
+        addTitle: "เพิ่มบิล",
+        editTitle: (n) => `แก้ไข ${n}`,
+        name: "ชื่อ",
+        amount: "จำนวนเงินต่อเดือน",
+        currency: "สกุลเงิน",
+        currencyLocked: "เปลี่ยนสกุลเงินไม่ได้",
+        category: "หมวดหมู่",
+        categoryHint: "เลือกจากหมวดหมู่ของคุณ หรือพิมพ์ชื่อใหม่",
+        startMonth: "เดือนแรก",
+        startMonthHint: "เว้นว่างไว้เพื่อเริ่มเดือนนี้",
+        add: "เพิ่มบิล",
+        save: "บันทึกการเปลี่ยนแปลง",
+        saving: "กำลังบันทึก…",
+        saved: "บันทึกแล้ว",
+        savedNewCategory: (n) => `บันทึกแล้ว “${n}” เป็นหมวดหมู่ใหม่`,
+        cancel: "ยกเลิก",
+        nothingToChange: "ไม่มีอะไรที่เปลี่ยน",
+      },
+      endForm: {
+        title: (n) => `สิ้นสุด ${n}`,
+        from: "เดือนแรกที่ไม่นับอีกต่อไป",
+        hint: "เดือนก่อนหน้ายังแสดงบิลนี้อยู่",
+        confirm: "สิ้นสุดบิล",
+        ending: "กำลังดำเนินการ…",
+        ended: "สิ้นสุดบิลแล้ว",
       },
     },
     common: {
