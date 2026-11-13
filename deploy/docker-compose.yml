@@ -8,7 +8,7 @@ name: nemosyne
 services:
   # Gaia: storage. Not published to the host; only the api can reach it.
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: nemosyne
