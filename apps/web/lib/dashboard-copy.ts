@@ -102,6 +102,9 @@ export type DashboardCopy = {
     recordsHead: string;
     totalHead: string;
     noTotals: string;
+    other: string;
+    topLabel: string;
+    shareHead: string;
     records: string;
     from: string;
     to: string;
@@ -280,6 +283,9 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       recordsHead: "Records",
       totalHead: "Total",
       noTotals: "No spending in this period.",
+      other: "Other",
+      topLabel: "Largest",
+      shareHead: "Share",
       records: "Records",
       from: "From",
       to: "To",
@@ -456,6 +462,9 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       recordsHead: "รายการ",
       totalHead: "รวม",
       noTotals: "ไม่มีค่าใช้จ่ายในช่วงนี้",
+      other: "อื่น ๆ",
+      topLabel: "สูงสุด",
+      shareHead: "สัดส่วน",
       records: "รายการ",
       from: "ตั้งแต่",
       to: "ถึง",

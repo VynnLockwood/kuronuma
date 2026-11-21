@@ -38,6 +38,14 @@
   --ink-2: #5c4650;
   --live: #34c759;
 
+  /* Chart series, in the order the charts use them. Each is at least 3:1 on white and they differ in lightness. */
+  --chart-1: #c23b69;
+  --chart-2: #5646c4;
+  --chart-3: #1f7a4d;
+  --chart-4: #b26a12;
+  --chart-5: #2b7bb0;
+  --chart-6: #7a5c68;
+
   /* Motif colours: a fill and a line colour per motif family (components/motifs). */
   --motif-gold: #ffd66b;
   --motif-gold-line: #c99a1d;

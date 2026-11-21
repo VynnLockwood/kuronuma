@@ -6,8 +6,8 @@ import { Icon } from "@/components/icons";
 import { Spot } from "@/components/motifs/Spot";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { compactAmount, compareAmount, dueBucket, formatAmount, lastMonths, localISODate, monthName, monthStartISO, share } from "@/lib/format";
-import { BarList, Columns } from "./charts";
+import { compactAmount, dueBucket, formatAmount, lastMonths, localISODate, monthName, monthStartISO, share, sumAmount } from "@/lib/format";
+import { Donut, Trend, type Point } from "./SpendCharts";
 import { useDash } from "./context";
 import { BlockError, BlockSkeleton } from "./states";
 import { useTool } from "./useTool";
@@ -18,6 +18,7 @@ type Memory = { id: string; kind: string; title: string; status: string; due_on?
 type Memories = { memories: Memory[] };
 type Categories = { categories: { name: string }[] };
 
+const SLICES = 5;
 const plain = (amount: string) => formatAmount(amount, "").trim();
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -122,15 +123,21 @@ export function Overview() {
                 ))}
               </ul>
               {currencies.map((c) => {
-                const rows = month.data.groups
-                  .filter((g) => g.currency === c.currency)
-                  .map((g) => ({ label: g.key, value: formatAmount(g.total, c.currency), share: share(g.total, c.total) }));
+                const sorted = month.data.groups.filter((g) => g.currency === c.currency).sort((a, b) => Number(b.total) - Number(a.total));
+                const pts: Point[] = sorted.map((g) => ({ label: g.key, value: formatAmount(g.total, c.currency), amount: Number(g.total), raw: g.total, share: share(g.total, c.total) }));
+                const rest = pts.slice(SLICES);
+                const rows: Point[] =
+                  pts.length <= SLICES + 1
+                    ? pts
+                    : [...pts.slice(0, SLICES), { label: copy.spending.other, value: formatAmount(sumAmount(rest.map((p) => p.raw)), c.currency), amount: rest.reduce((n, p) => n + p.amount, 0), raw: sumAmount(rest.map((p) => p.raw)), share: rest.reduce((n, p) => n + p.share, 0) }];
                 return (
                   <div key={c.currency}>
                     <h3 className="mb-3 text-[15px] font-semibold text-ink-2">
                       {o.byCategory} · {c.currency}
                     </h3>
-                    <BarList caption={`${o.byCategory} (${c.currency})`} rows={rows} labelHead={o.categoryHead} valueHead={o.amountHead} />
+                    <Card className="rounded-[28px] border border-hairline bg-card p-5 md:p-7">
+                      <Donut caption={`${o.byCategory} (${c.currency})`} rows={rows} total={formatAmount(c.total, c.currency)} labelHead={o.categoryHead} valueHead={o.amountHead} />
+                    </Card>
                   </div>
                 );
               })}
@@ -149,17 +156,13 @@ export function Overview() {
               {Array.from(new Set(series.data.groups.map((g) => g.currency))).map((cur) => {
                 const byMonth = new Map(series.data.groups.filter((g) => g.currency === cur).map((g) => [g.key, g.total]));
                 const totals = months.map((m) => byMonth.get(m) ?? "0.00");
-                const max = totals.reduce((a, b) => (compareAmount(b, a) > 0 ? b : a), "0.00");
-                const rows = months.map((m, i) => ({
-                  label: monthName(m, lang),
-                  value: `${plain(totals[i])} ${cur}`,
-                  display: share(totals[i], max) > 0 ? compactAmount(totals[i]) : "",
-                  share: share(totals[i], max),
-                }));
+                const rows: Point[] = months.map((m, i) => ({ label: monthName(m, lang), value: `${plain(totals[i])} ${cur}`, amount: Number(totals[i]), raw: totals[i], share: 0 }));
                 return (
                   <div key={cur}>
                     <h3 className="mb-3 text-[15px] font-semibold text-ink-2">{cur}</h3>
-                    <Columns caption={`${o.lastMonths} (${cur})`} rows={rows} labelHead={o.monthHead} valueHead={o.amountHead} />
+                    <Card className="rounded-[28px] border border-hairline bg-card p-5 md:p-7">
+                      <Trend caption={`${o.lastMonths} (${cur})`} rows={rows} compact={(n) => compactAmount(String(Math.trunc(n)))} labelHead={o.monthHead} valueHead={o.amountHead} />
+                    </Card>
                   </div>
                 );
               })}

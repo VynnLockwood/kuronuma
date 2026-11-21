@@ -8,8 +8,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { callTool, type Lang } from "@/lib/web";
-import { formatAmount, formatDate, formatMonth, lastMonths, localISODate, share } from "@/lib/format";
-import { BarList } from "./charts";
+import { compactAmount, formatAmount, formatDate, formatMonth, lastMonths, localISODate, share, sumAmount } from "@/lib/format";
+import { Donut, Kpi, Ranked, Trend, type Point } from "./SpendCharts";
 import { Confirm } from "./Confirm";
 import { useDash } from "./context";
 import { BlockError, BlockSkeleton } from "./states";
@@ -23,6 +23,17 @@ type Categories = { categories: { name: string }[] };
 type GroupBy = "category" | "month" | "merchant";
 
 const LIMIT = 200;
+const SLICES = 5;
+/** The biggest groups as slices; the rest are folded into one "Other" slice so a donut stays readable. */
+function slices(points: Point[], other: string, currency: string): Point[] {
+  const sorted = [...points].sort((a, b) => b.amount - a.amount);
+  if (sorted.length <= SLICES + 1) return sorted;
+  const head = sorted.slice(0, SLICES);
+  const rest = sorted.slice(SLICES);
+  const amount = rest.reduce((n, p) => n + p.amount, 0);
+  const sh = rest.reduce((n, p) => n + p.share, 0);
+  return [...head, { label: other, value: formatAmount(sumAmount(rest.map((p) => p.raw)), currency), amount, raw: sumAmount(rest.map((p) => p.raw)), share: sh }];
+}
 const groupLabel = (g: GroupBy, key: string, lang: Lang) => (g === "month" ? formatMonth(key, lang) : key);
 
 function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
@@ -186,16 +197,21 @@ export function Spending() {
             <div className="flex flex-col gap-8">
               {summary.data.totals_by_currency.map((tot) => {
                 const rows = summary.data.groups.filter((g) => g.currency === tot.currency);
+                const cap = `${c.totals} (${tot.currency})`;
+                const points: Point[] = rows.map((g) => ({ key: g.key, label: groupLabel(group, g.key, lang), value: formatAmount(g.total, tot.currency), amount: Number(g.total), raw: g.total, share: share(g.total, tot.total) }));
+                const top = group === "month" ? [...points].sort((a, b) => b.amount - a.amount)[0] : points[0];
                 return (
                   <div key={tot.currency} className="flex flex-col gap-4">
-                    <h3 className="text-[15px] font-semibold text-ink-2">{formatAmount(tot.total, tot.currency)}</h3>
-                    <BarList
-                      table={false}
-                      caption={`${c.totals} (${tot.currency})`}
-                      labelHead={c.groups[group]}
-                      valueHead={c.totalHead}
-                      rows={rows.map((g) => ({ label: groupLabel(group, g.key, lang), value: formatAmount(g.total, tot.currency), share: share(g.total, tot.total) }))}
-                    />
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <Kpi label={`${c.totals} · ${tot.currency}`} value={formatAmount(tot.total, tot.currency)} />
+                      <Kpi label={c.recordsHead} value={String(tot.count)} />
+                      {top && <Kpi label={c.topLabel} value={top.label} hint={`${Math.round(top.share * 100)}% · ${top.value}`} />}
+                    </div>
+                    <Card className="rounded-[28px] border border-hairline bg-card p-5 md:p-7">
+                      {group === "category" && <Donut caption={cap} rows={slices(points, c.other, tot.currency)} total={formatAmount(tot.total, tot.currency)} labelHead={c.groups[group]} valueHead={c.totalHead} />}
+                      {group === "month" && <Trend caption={cap} rows={[...points].sort((a, b) => ((a.key ?? "") < (b.key ?? "") ? -1 : 1))} compact={(n) => compactAmount(String(Math.trunc(n)))} labelHead={c.groups[group]} valueHead={c.totalHead} />}
+                      {group === "merchant" && <Ranked caption={cap} rows={points.slice(0, 8)} labelHead={c.groups[group]} valueHead={c.totalHead} />}
+                    </Card>
                     <div className="overflow-x-auto rounded-2xl border border-hairline">
                       <table className="w-full min-w-[320px] text-left text-sm">
                         <caption className="sr-only">{`${c.totals} (${tot.currency})`}</caption>
