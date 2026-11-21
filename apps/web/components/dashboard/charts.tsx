@@ -8,7 +8,7 @@ export type Datum = { label: string; value: string; share: number; display?: str
 
 const pct = (share: number) => `${Math.max(0, Math.min(1, share)) * 100}%`;
 
-function SrTable({ caption, rows, labelHead, valueHead }: { caption: string; rows: Datum[]; labelHead: string; valueHead: string }) {
+export function SrTable({ caption, rows, labelHead, valueHead }: { caption: string; rows: Datum[]; labelHead: string; valueHead: string }) {
   return (
     <table className="sr-only">
       <caption>{caption}</caption>

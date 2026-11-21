@@ -100,6 +100,13 @@ export function compareAmount(a: string, b: string): number {
   return d > 0n ? 1 : d < 0n ? -1 : 0;
 }
 
+/** Adds plain amount strings in whole minor units, without floating point. Unusable input counts as zero. */
+export function sumAmount(amounts: string[]): string {
+  const t = amounts.reduce((n, a) => n + (minor(a) ?? 0n), 0n);
+  const abs = t < 0n ? -t : t;
+  return `${t < 0n ? "-" : ""}${abs / 100n}.${String(abs % 100n).padStart(2, "0")}`;
+}
+
 /** "2026-05" becomes "May" (Thai: "พ.ค."), for the label under a column. */
 export function monthName(ym: string, lang: Lang): string {
   const m = /^(\d{4})-(\d{2})$/.exec(ym);

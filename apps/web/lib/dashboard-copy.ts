@@ -102,12 +102,25 @@ export type DashboardCopy = {
     recordsHead: string;
     totalHead: string;
     noTotals: string;
+    other: string;
+    topLabel: string;
+    shareHead: string;
     records: string;
     from: string;
     to: string;
     category: string;
     allCategories: string;
     clearFilters: string;
+    presetsLabel: string;
+    presets: { month: string; days30: string; months3: string; year: string };
+    search: string;
+    searchHint: string;
+    sortRecords: string;
+    sortOptions: { newest: string; oldest: string; highest: string; lowest: string; merchant: string };
+    sortTotals: string;
+    sortTotalsOptions: { amount: string; name: string };
+    showing: (shown: number, total: number) => string;
+    noMatches: string;
     fullNote: (n: number) => string;
     emptyNone: string;
     emptyFiltered: string;
@@ -280,12 +293,25 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       recordsHead: "Records",
       totalHead: "Total",
       noTotals: "No spending in this period.",
+      other: "Other",
+      topLabel: "Largest",
+      shareHead: "Share",
       records: "Records",
       from: "From",
       to: "To",
       category: "Category",
       allCategories: "All categories",
       clearFilters: "Clear filters",
+      presetsLabel: "Quick period",
+      presets: { month: "This month", days30: "Last 30 days", months3: "Last 3 months", year: "This year" },
+      search: "Search records",
+      searchHint: "Merchant or note",
+      sortRecords: "Sort records",
+      sortOptions: { newest: "Newest first", oldest: "Oldest first", highest: "Highest amount", lowest: "Lowest amount", merchant: "Merchant A to Z" },
+      sortTotals: "Sort totals",
+      sortTotalsOptions: { amount: "Largest first", name: "Name A to Z" },
+      showing: (shown, total) => `Showing ${shown} of ${total} records`,
+      noMatches: "No records match your search.",
       fullNote: (n) => `Showing the newest ${n} records. Use the dates to narrow it down.`,
       emptyNone: "No spending saved yet.",
       emptyFiltered: "No records match these filters.",
@@ -456,12 +482,25 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
       recordsHead: "รายการ",
       totalHead: "รวม",
       noTotals: "ไม่มีค่าใช้จ่ายในช่วงนี้",
+      other: "อื่น ๆ",
+      topLabel: "สูงสุด",
+      shareHead: "สัดส่วน",
       records: "รายการ",
       from: "ตั้งแต่",
       to: "ถึง",
       category: "หมวดหมู่",
       allCategories: "ทุกหมวดหมู่",
       clearFilters: "ล้างตัวกรอง",
+      presetsLabel: "ช่วงเวลาด่วน",
+      presets: { month: "เดือนนี้", days30: "30 วันล่าสุด", months3: "3 เดือนล่าสุด", year: "ปีนี้" },
+      search: "ค้นหารายการ",
+      searchHint: "ร้านค้าหรือโน้ต",
+      sortRecords: "เรียงรายการ",
+      sortOptions: { newest: "ใหม่สุดก่อน", oldest: "เก่าสุดก่อน", highest: "จำนวนมากสุด", lowest: "จำนวนน้อยสุด", merchant: "ร้านค้า ก-ฮ" },
+      sortTotals: "เรียงยอดรวม",
+      sortTotalsOptions: { amount: "มากสุดก่อน", name: "ชื่อ ก-ฮ" },
+      showing: (shown, total) => `แสดง ${shown} จาก ${total} รายการ`,
+      noMatches: "ไม่พบรายการที่ตรงกับคำค้นหา",
       fullNote: (n) => `แสดง ${n} รายการล่าสุด ใช้ช่วงวันที่เพื่อจำกัดให้แคบลง`,
       emptyNone: "ยังไม่มีค่าใช้จ่ายที่บันทึกไว้",
       emptyFiltered: "ไม่พบรายการที่ตรงกับตัวกรอง",
