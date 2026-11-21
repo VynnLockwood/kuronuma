@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { callTool, type Lang } from "@/lib/web";
-import { compactAmount, formatAmount, formatDate, formatMonth, lastMonths, localISODate, share, sumAmount } from "@/lib/format";
+import { addDaysISO, compactAmount, compareAmount, formatAmount, formatDate, formatMonth, lastMonths, localISODate, monthStartISO, share, sumAmount } from "@/lib/format";
 import { Donut, Kpi, Ranked, Trend, type Point } from "./SpendCharts";
 import { Confirm } from "./Confirm";
 import { useDash } from "./context";
@@ -21,6 +21,9 @@ type Group = { count: number; currency: string; key: string; total: string };
 type Summary = { groups: Group[]; totals_by_currency: { count: number; currency: string; total: string }[]; period?: { from: string; to: string } };
 type Categories = { categories: { name: string }[] };
 type GroupBy = "category" | "month" | "merchant";
+type RecordSort = "newest" | "oldest" | "highest" | "lowest" | "merchant";
+type TotalsSort = "amount" | "name";
+const presetIds = ["month", "days30", "months3", "year"] as const;
 
 const LIMIT = 200;
 const SLICES = 5;
@@ -61,6 +64,18 @@ export function Spending() {
   const [to, setTo] = useState("");
   const [category, setCategory] = useState("");
   const [group, setGroup] = useState<GroupBy>("category");
+  // Client-side view options: they only reorder or narrow what was already fetched.
+  const [query, setQuery] = useState("");
+  const [recordSort, setRecordSort] = useState<RecordSort>("newest");
+  const [totalsSort, setTotalsSort] = useState<TotalsSort>("amount");
+  const range = (id: (typeof presetIds)[number]) =>
+    id === "month"
+      ? { from: monthStartISO(today), to: today }
+      : id === "days30"
+        ? { from: addDaysISO(today, -29), to: today }
+        : id === "months3"
+          ? { from: `${lastMonths(today, 3)[0]}-01`, to: today }
+          : { from: `${today.slice(0, 4)}-01-01`, to: today };
 
   const listArgs = { ...(from && { from }), ...(to && { to }), ...(category && { category }), limit: LIMIT };
   const [list, reloadList] = useTool<TxList>("list_transactions", listArgs);
@@ -158,7 +173,20 @@ export function Spending() {
     }
   }, [toDelete]);
 
-  const filtered = Boolean(from || to || category);
+  const filtered = Boolean(from || to || category || query.trim());
+  const needle = query.trim().toLowerCase();
+  const visible =
+    list.status === "ok"
+      ? list.data.transactions
+          .filter((t) => !needle || t.merchant.toLowerCase().includes(needle) || (t.note ?? "").toLowerCase().includes(needle))
+          .sort((a, b) =>
+            recordSort === "oldest" ? (a.occurred_on < b.occurred_on ? -1 : 1)
+            : recordSort === "highest" ? compareAmount(b.amount, a.amount)
+            : recordSort === "lowest" ? compareAmount(a.amount, b.amount)
+            : recordSort === "merchant" ? a.merchant.localeCompare(b.merchant)
+            : a.occurred_on < b.occurred_on ? 1 : -1,
+          )
+      : [];
 
   return (
     <div className="flex flex-col gap-12">
@@ -181,6 +209,20 @@ export function Spending() {
               ))}
             </div>
           </fieldset>
+          {group !== "month" && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="sp-sort-totals" className="text-sm font-semibold text-ink-2">
+                {c.sortTotals}
+              </label>
+              <select id="sp-sort-totals" className={selectClass + " h-10 w-auto"} value={totalsSort} onChange={(e) => setTotalsSort(e.target.value as TotalsSort)}>
+                {(["amount", "name"] as const).map((k) => (
+                  <option key={k} value={k}>
+                    {c.sortTotalsOptions[k]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         {summary.status === "loading" && <BlockSkeleton />}
         {summary.status === "error" && <BlockError message={summary.message} onRetry={reloadSummary} />}
@@ -196,7 +238,9 @@ export function Spending() {
           ) : (
             <div className="flex flex-col gap-8">
               {summary.data.totals_by_currency.map((tot) => {
-                const rows = summary.data.groups.filter((g) => g.currency === tot.currency);
+                const rows = summary.data.groups
+                  .filter((g) => g.currency === tot.currency)
+                  .sort((a, b) => (group === "month" ? (a.key < b.key ? 1 : -1) : totalsSort === "name" ? a.key.localeCompare(b.key) : compareAmount(b.total, a.total)));
                 const cap = `${c.totals} (${tot.currency})`;
                 const points: Point[] = rows.map((g) => ({ key: g.key, label: groupLabel(group, g.key, lang), value: formatAmount(g.total, tot.currency), amount: Number(g.total), raw: g.total, share: share(g.total, tot.total) }));
                 const top = group === "month" ? [...points].sort((a, b) => b.amount - a.amount)[0] : points[0];
@@ -315,6 +359,40 @@ export function Spending() {
         <h2 id="sp-records" ref={recordsHeading} tabIndex={-1} className="mb-4 text-[22px] font-bold tracking-[-0.02em] outline-none">
           {c.records}
         </h2>
+        <div role="group" aria-label={c.presetsLabel} className="mb-4 flex flex-wrap gap-2">
+          {presetIds.map((id) => {
+            const r = range(id);
+            const active = from === r.from && to === r.to;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => {
+                  setFrom(r.from);
+                  setTo(r.to);
+                }}
+                className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-muted text-ink-2 hover:bg-hairline"}`}
+              >
+                {c.presets[id]}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mb-4 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+          <Field id="sp-search" label={c.search} hint={c.searchHint}>
+            <Input id="sp-search" type="search" autoComplete="off" maxLength={100} value={query} onChange={(e) => setQuery(e.target.value)} />
+          </Field>
+          <Field id="sp-sort" label={c.sortRecords}>
+            <select id="sp-sort" className={selectClass} value={recordSort} onChange={(e) => setRecordSort(e.target.value as RecordSort)}>
+              {(["newest", "oldest", "highest", "lowest", "merchant"] as const).map((k) => (
+                <option key={k} value={k}>
+                  {c.sortOptions[k]}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
         <div className="mb-6 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-3">
           <Field id="sp-from" label={c.from}>
             <Input id="sp-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -342,6 +420,7 @@ export function Spending() {
               setFrom("");
               setTo("");
               setCategory("");
+              setQuery("");
             }}
           >
             {c.clearFilters}
@@ -358,10 +437,10 @@ export function Spending() {
         {list.status === "loading" && <BlockSkeleton className="h-48" />}
         {list.status === "error" && <BlockError message={list.message} onRetry={reloadList} />}
         {list.status === "ok" &&
-          (list.data.transactions.length === 0 ? (
+          (visible.length === 0 ? (
             <div className="rounded-[28px] bg-muted p-8 text-center">
               <Spot motif={filtered ? "mushroom" : "cupcake"} size={filtered ? 64 : 96} className="mb-4" />
-              <p className="text-[15px] text-muted-foreground">{filtered ? c.emptyFiltered : c.emptyNone}</p>
+              <p className="text-[15px] text-muted-foreground">{query.trim() && list.data.transactions.length > 0 ? c.noMatches : filtered ? c.emptyFiltered : c.emptyNone}</p>
               {!filtered && (
                 <Link href="/connect" className={buttonVariants({ className: "mt-4" })}>
                   {copy.common.connectLink}
@@ -375,8 +454,11 @@ export function Spending() {
                   {c.fullNote(LIMIT)}
                 </p>
               )}
+              <p role="status" className="mb-3 text-sm text-muted-foreground">
+                {c.showing(visible.length, list.data.transactions.length)}
+              </p>
               <ul className="divide-y divide-hairline rounded-[28px] border border-hairline px-5 md:px-6">
-                {list.data.transactions.map((t) => (
+                {visible.map((t) => (
                   <li key={t.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-1 py-4">
                     <div className="min-w-0">
                       <p className="font-semibold break-words">{t.merchant}</p>
