@@ -100,11 +100,42 @@ export function compareAmount(a: string, b: string): number {
   return d > 0n ? 1 : d < 0n ? -1 : 0;
 }
 
-/** Adds plain amount strings in whole minor units, without floating point. Unusable input counts as zero. */
-export function sumAmount(amounts: string[]): string {
-  const t = amounts.reduce((n, a) => n + (minor(a) ?? 0n), 0n);
+/** Whole minor units back to a plain amount string with two decimals. */
+const fromMinor = (t: bigint): string => {
   const abs = t < 0n ? -t : t;
   return `${t < 0n ? "-" : ""}${abs / 100n}.${String(abs % 100n).padStart(2, "0")}`;
+};
+
+/** Adds plain amount strings in whole minor units, without floating point. Unusable input counts as zero. */
+export function sumAmount(amounts: string[]): string {
+  return fromMinor(amounts.reduce((n, a) => n + (minor(a) ?? 0n), 0n));
+}
+
+/** a minus b in whole minor units, signed, two decimals. Unusable input counts as zero. */
+export function diffAmount(a: string, b: string): string {
+  return fromMinor((minor(a) ?? 0n) - (minor(b) ?? 0n));
+}
+
+/**
+ * part / whole as a whole percent, rounded half away from zero, in whole minor units. A zero whole or unusable
+ * input gives null (there is nothing to compare with), never NaN or Infinity.
+ */
+export function percentOf(part: string, whole: string): number | null {
+  const a = minor(part);
+  const b = minor(whole);
+  if (a === null || b === null || b === 0n) return null;
+  const abs = (x: bigint) => (x < 0n ? -x : x);
+  const num = abs(a) * 100n;
+  const den = abs(b);
+  let q = num / den;
+  if ((num % den) * 2n >= den) q += 1n;
+  return Number((a < 0n) !== (b < 0n) ? -q : q);
+}
+
+/** a x num / den in whole minor units, rounded toward zero. A zero or negative den, or a non-integer factor, gives "0.00". */
+export function scaleAmount(a: string, num: number, den: number): string {
+  if (!Number.isInteger(num) || !Number.isInteger(den) || den <= 0) return "0.00";
+  return fromMinor(((minor(a) ?? 0n) * BigInt(num)) / BigInt(den));
 }
 
 /** "2026-05" becomes "May" (Thai: "พ.ค."), for the label under a column. */
