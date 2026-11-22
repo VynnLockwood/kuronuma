@@ -40,6 +40,30 @@ export type DashboardCopy = {
     tryAsking: string;
     prompts: string[];
     connect: { title: string; body: string; button: string; guide: string };
+    check: {
+      title: string;
+      soFar: (a: string) => string;
+      up: (p: number) => string;
+      down: (p: number) => string;
+      same: string;
+      noLast: string;
+      thisMonthBar: string;
+      lastMonthBar: string;
+      projected: (a: string) => string;
+      projectedNote: string;
+      tooEarly: string;
+      lastMonthTotal: (a: string) => string;
+      changedTitle: string;
+      isNew: string;
+      changedLine: (c: string, a: string) => string;
+      unusualTitle: string;
+      unusualHint: (c: string) => string;
+      recurringTitle: string;
+      notYet: string;
+      recurringTotal: (a: string) => string;
+      usuallyDay: (n: number) => string;
+      capped: (n: number) => string;
+    };
   };
   tasks: {
     title: string;
@@ -220,6 +244,30 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         body: "Add Kuronuma to Claude or any assistant that supports MCP connectors. It takes one URL.",
         button: "Connect",
         guide: "Read the setup guide ›",
+      },
+      check: {
+        title: "Month check",
+        soFar: (a) => `${a} so far`,
+        up: (p) => `${p}% more than the same days last month`,
+        down: (p) => `${p}% less than the same days last month`,
+        same: "The same as the same days last month",
+        noLast: "No spending in these days last month",
+        thisMonthBar: "This month so far",
+        lastMonthBar: "Same days last month",
+        projected: (a) => `About ${a} by the end of the month`,
+        projectedNote: "An estimate from your pace so far.",
+        tooEarly: "Too early in the month to estimate.",
+        lastMonthTotal: (a) => `Last month: ${a}`,
+        changedTitle: "What changed",
+        isNew: "New this month",
+        changedLine: (c, a) => `${c}: ${a} more`,
+        unusualTitle: "Larger than usual",
+        unusualHint: (c) => `Usually smaller in ${c}`,
+        recurringTitle: "Looks recurring",
+        notYet: "Not yet this month",
+        recurringTotal: (a) => `About ${a} a month`,
+        usuallyDay: (n) => `usually around day ${n}`,
+        capped: (n) => `Based on your newest ${n} records.`,
       },
     },
     tasks: {
@@ -409,6 +457,30 @@ export const dashboardCopy: Record<Lang, DashboardCopy> = {
         body: "เพิ่มคุโรนุมะใน Claude หรือผู้ช่วยใดก็ได้ที่รองรับ MCP ใช้ URL เดียวเท่านั้น",
         button: "เชื่อมต่อ",
         guide: "อ่านคู่มือการตั้งค่า ›",
+      },
+      check: {
+        title: "ตรวจเงินประจำเดือน",
+        soFar: (a) => `ใช้ไปแล้ว ${a}`,
+        up: (p) => `มากกว่าช่วงเดียวกันของเดือนก่อน ${p}%`,
+        down: (p) => `น้อยกว่าช่วงเดียวกันของเดือนก่อน ${p}%`,
+        same: "เท่ากับช่วงเดียวกันของเดือนก่อน",
+        noLast: "ช่วงเดียวกันของเดือนก่อนไม่มีรายจ่าย",
+        thisMonthBar: "เดือนนี้ถึงตอนนี้",
+        lastMonthBar: "ช่วงเดียวกันของเดือนก่อน",
+        projected: (a) => `ประมาณ ${a} เมื่อสิ้นเดือน`,
+        projectedNote: "ประมาณการจากอัตราการใช้จ่ายถึงตอนนี้",
+        tooEarly: "ยังเร็วเกินไปที่จะประมาณการ",
+        lastMonthTotal: (a) => `เดือนก่อน: ${a}`,
+        changedTitle: "สิ่งที่เปลี่ยนไป",
+        isNew: "ใหม่เดือนนี้",
+        changedLine: (c, a) => `${c}: เพิ่มขึ้น ${a}`,
+        unusualTitle: "สูงกว่าปกติ",
+        unusualHint: (c) => `ปกติต่ำกว่านี้ในหมวด ${c}`,
+        recurringTitle: "ดูเหมือนรายการประจำ",
+        notYet: "เดือนนี้ยังไม่มี",
+        recurringTotal: (a) => `ประมาณ ${a} ต่อเดือน`,
+        usuallyDay: (n) => `มักประมาณวันที่ ${n}`,
+        capped: (n) => `อ้างอิงจาก ${n} รายการล่าสุด`,
       },
     },
     tasks: {

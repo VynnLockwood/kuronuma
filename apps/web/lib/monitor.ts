@@ -140,3 +140,13 @@ export function recurring(txs: Tx[], today: string, limit = 5): Recurring[] {
   }
   return out.sort((x, y) => bySize(y.amount, x.amount) || x.merchant.localeCompare(y.merchant)).slice(0, limit);
 }
+
+/**
+ * The records a detection may use. When the list hit its cap, the oldest month it reaches is only partly covered, so
+ * that month and anything older is dropped: a merchant is never called recurring from a month that is half missing.
+ */
+export function coveredRecords(txs: Tx[], capped: boolean): Tx[] {
+  if (!capped || txs.length === 0) return txs;
+  const oldest = txs.reduce((m, t) => (t.occurred_on < m ? t.occurred_on : m), txs[0].occurred_on).slice(0, 7);
+  return txs.filter((t) => t.occurred_on.slice(0, 7) > oldest);
+}
