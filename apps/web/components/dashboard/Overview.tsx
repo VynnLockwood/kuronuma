@@ -111,11 +111,13 @@ export function Overview() {
   const currencies = month.status === "ok" ? month.data.totals_by_currency : [];
 
   const monthCheck = () => {
-    const failed = [month, prev, series].find((s) => s.status === "error");
+    // The card needs this month and the same days last month. The 6-month series only adds the "Last month" line, so
+    // its failure or delay never hides the rest.
+    const failed = [month, prev].find((s) => s.status === "error");
     if (failed && failed.status === "error") {
-      return <BlockError message={failed.message} onRetry={() => { reloadMonth(); reloadPrev(); reloadSeries(); }} />;
+      return <BlockError message={failed.message} onRetry={() => { reloadMonth(); reloadPrev(); }} />;
     }
-    if (month.status !== "ok" || prev.status !== "ok" || series.status !== "ok") return <BlockSkeleton />;
+    if (month.status !== "ok" || prev.status !== "ok") return <BlockSkeleton />;
     const txs = recent.status === "ok" ? recent.data.transactions : [];
     const capped = txs.length >= RECENT_LIMIT;
     const used = coveredRecords(txs, capped);
@@ -136,7 +138,7 @@ export function Overview() {
             prev={prev.data.groups}
             monthTotal={month.data.totals_by_currency.find((t) => t.currency === cur)?.total ?? "0.00"}
             prevTotal={prev.data.totals_by_currency.find((t) => t.currency === cur)?.total ?? "0.00"}
-            prevFull={series.data.groups.find((g) => g.currency === cur && g.key === lastMonth)?.total ?? "0.00"}
+            prevFull={series.status === "ok" ? (series.data.groups.find((g) => g.currency === cur && g.key === lastMonth)?.total ?? "0.00") : null}
             unusual={odd.filter((t) => t.currency === cur).slice(0, CHECK_ROWS)}
             recurring={repeating.filter((r) => r.currency === cur).slice(0, 5)}
             recentLoading={recent.status === "loading"}

@@ -114,26 +114,25 @@ export function unusual(txs: Tx[], today: string, limit = 3): Tx[] {
 export type Recurring = { merchant: string; currency: string; amount: string; day: number; seenThisMonth: boolean };
 
 /**
- * Merchants charged in each of the last two full months, in one currency, with the two amounts within 10% of the
- * larger one. Shows the latest amount and day of month, and whether the merchant has appeared this month. Largest
- * first.
+ * Merchants charged exactly once in each of the last two full months, in one currency, with the two amounts within
+ * 10% of the larger one. A merchant bought from many times a month (a cafe, a shop) is not a monthly charge. Shows
+ * the latest amount and day of month, and whether the merchant has appeared this month. Largest first.
  */
 export function recurring(txs: Tx[], today: string, limit = 5): Recurring[] {
   const [older, newer, current] = lastMonths(today, 3);
-  const latest = new Map<string, Map<string, Tx>>(); // key -> month -> the month's latest record
+  const byKey = new Map<string, Map<string, Tx[]>>(); // key -> month -> that month's records
   for (const t of txs) {
     const month = t.occurred_on.slice(0, 7);
     if (month !== older && month !== newer && month !== current) continue;
     const k = `${t.currency}\u0000${t.merchant.trim().toLowerCase()}`;
-    const months = latest.get(k) ?? latest.set(k, new Map()).get(k)!;
-    const seen = months.get(month);
-    if (!seen || t.occurred_on > seen.occurred_on || (t.occurred_on === seen.occurred_on && t.id > seen.id)) months.set(month, t);
+    const months = byKey.get(k) ?? byKey.set(k, new Map()).get(k)!;
+    (months.get(month) ?? months.set(month, []).get(month)!).push(t);
   }
   const out: Recurring[] = [];
-  for (const months of latest.values()) {
-    const a = months.get(newer);
-    const b = months.get(older);
-    if (!a || !b) continue;
+  for (const months of byKey.values()) {
+    const [a, ...moreA] = months.get(newer) ?? [];
+    const [b, ...moreB] = months.get(older) ?? [];
+    if (!a || !b || moreA.length > 0 || moreB.length > 0) continue;
     const [big, small] = compareAmount(a.amount, b.amount) >= 0 ? [a.amount, b.amount] : [b.amount, a.amount];
     if (compareAmount(scaleAmount(diffAmount(big, small), 10, 1), big) > 0) continue;
     out.push({ merchant: a.merchant.trim(), currency: a.currency, amount: a.amount, day: Number(a.occurred_on.slice(8, 10)), seenThisMonth: months.has(current) });
